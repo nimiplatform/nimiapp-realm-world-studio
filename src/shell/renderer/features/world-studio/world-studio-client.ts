@@ -1,9 +1,17 @@
 import type {
-  OwnerAgentSettingsDto,
+  RealmApplyCreatorWorldAgentAuthoringDraftBatchOperationResponse,
+  RealmCreateCreatorWorldAgentAuthoringDraftBatchOperationRequest,
+  RealmCreateCreatorWorldAgentAuthoringDraftBatchOperationResponse,
+  RealmGetCreatorWorldAgentAuthoringGenerationContextOperationResponse,
+  RealmGetCreatorWorldAgentChatReadinessOperationResponse,
   RealmGetCreatorWorldAgentOperationResponse,
   RealmGetCreatorWorldAgentSettingsOperationResponse,
+  RealmGetCreatorWorldAgentSourceSkeletonOperationResponse,
+  RealmListCreatorWorldAgentAuthoringDraftBatchesOperationResponse,
   RealmListCreatorWorldAgentsOperationResponse,
   RealmListMyCreatorWorldsOperationResponse,
+  RealmReviewCreatorWorldAgentAuthoringDraftCandidateOperationRequest,
+  RealmReviewCreatorWorldAgentAuthoringDraftCandidateOperationResponse,
   RealmUpdateCreatorWorldAgentProfileMediaOperationRequest,
   RealmUpdateCreatorWorldAgentSettingsOperationRequest,
   RealmUpdateCreatorWorldAgentVoiceOperationRequest,
@@ -14,6 +22,20 @@ type StudioRealmClient = StudioRealmSurface;
 type CreatorWorldDto = RealmListMyCreatorWorldsOperationResponse['items'][number];
 type CreatorWorldAgentDto = RealmListCreatorWorldAgentsOperationResponse[number];
 type CreatorWorldAgentSettingsDto = RealmGetCreatorWorldAgentSettingsOperationResponse;
+export type CreatorWorldAgentSourceSkeleton =
+  RealmGetCreatorWorldAgentSourceSkeletonOperationResponse;
+export type CreatorWorldAgentChatReadiness =
+  RealmGetCreatorWorldAgentChatReadinessOperationResponse;
+export type CreatorWorldAgentAuthoringGenerationContext =
+  RealmGetCreatorWorldAgentAuthoringGenerationContextOperationResponse;
+export type CreatorWorldAgentAuthoringDraftBatch =
+  RealmListCreatorWorldAgentAuthoringDraftBatchesOperationResponse['items'][number];
+export type CreatorWorldAgentAuthoringDraftCandidate =
+  CreatorWorldAgentAuthoringDraftBatch['candidates'][number];
+export type CreatorWorldAgentAuthoringReviewStatus =
+  RealmReviewCreatorWorldAgentAuthoringDraftCandidateOperationRequest['body']['status'];
+export type CreateCreatorWorldAgentAuthoringDraftBatchInput =
+  RealmCreateCreatorWorldAgentAuthoringDraftBatchOperationRequest['body'];
 type CreatorWorldAgentSettingsPatch = RealmUpdateCreatorWorldAgentSettingsOperationRequest['body'];
 type CreatorWorldAgentProfileMediaPatch = RealmUpdateCreatorWorldAgentProfileMediaOperationRequest['body'];
 type CreatorWorldAgentVoicePatch = RealmUpdateCreatorWorldAgentVoiceOperationRequest['body'];
@@ -55,6 +77,10 @@ export type CreatorWorldDetail = CreatorWorldSummary & {
 
 export type CreatorWorldAgentDetail = Omit<CreatorWorldAgentSummary, 'source'> & {
   settings: CreatorWorldAgentSettingsDto;
+  sourceSkeleton: CreatorWorldAgentSourceSkeleton;
+  authoringContext: CreatorWorldAgentAuthoringGenerationContext;
+  authoringDraftBatches: CreatorWorldAgentAuthoringDraftBatch[];
+  chatReadiness: CreatorWorldAgentChatReadiness;
   source: 'Realm AgentService.getCreatorWorldAgent';
 };
 
@@ -78,6 +104,27 @@ export type CreatorWorldAgentUpdateResult = {
   agent: CreatorWorldAgentDetail;
 };
 
+export type CreatorWorldAgentDetailLoadStage =
+  | 'agent-detail'
+  | 'settings'
+  | 'source-skeleton'
+  | 'authoring-context'
+  | 'authoring-draft-batches'
+  | 'chat-readiness';
+
+export class CreatorWorldAgentDetailLoadError extends Error {
+  readonly stage: CreatorWorldAgentDetailLoadStage;
+  readonly originalMessage: string;
+
+  constructor(stage: CreatorWorldAgentDetailLoadStage, cause: unknown) {
+    const originalMessage = describeUnknownError(cause);
+    super(`Creator-world agent ${stage} request failed: ${originalMessage}`);
+    this.name = 'CreatorWorldAgentDetailLoadError';
+    this.stage = stage;
+    this.originalMessage = originalMessage;
+  }
+}
+
 function readRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? value as Record<string, unknown> : null;
 }
@@ -88,6 +135,16 @@ function readString(value: unknown): string | null {
 
 function readNumber(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function describeUnknownError(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+  if (typeof error === 'string' && error.trim()) {
+    return error.trim();
+  }
+  return 'Realm request failed without a typed message.';
 }
 
 function normalizeWorld(world: CreatorWorldDto): CreatorWorldSummary {
@@ -129,10 +186,28 @@ function normalizeWorldAgent(agent: CreatorWorldAgentDto): CreatorWorldAgentSumm
 function normalizeWorldAgentDetail(
   agent: RealmGetCreatorWorldAgentOperationResponse,
   settings: CreatorWorldAgentSettingsDto,
+  sourceSkeleton: CreatorWorldAgentSourceSkeleton,
+  authoringContext: CreatorWorldAgentAuthoringGenerationContext,
+  authoringDraftBatches: CreatorWorldAgentAuthoringDraftBatch[],
+  chatReadiness: CreatorWorldAgentChatReadiness,
 ): CreatorWorldAgentDetail {
+  if (
+    authoringContext.sourceSkeleton.skeletonId !== sourceSkeleton.skeletonId
+    || authoringContext.sourceSkeleton.agentId !== sourceSkeleton.agentId
+    || authoringContext.sourceSkeleton.worldId !== sourceSkeleton.worldId
+  ) {
+    throw new Error('Creator-world agent source skeleton authority mismatch between source-skeleton and authoring context.');
+  }
   return {
     ...normalizeWorldAgent(agent),
     settings,
+    sourceSkeleton,
+    authoringContext: {
+      ...authoringContext,
+      sourceSkeleton,
+    },
+    authoringDraftBatches,
+    chatReadiness,
     source: 'Realm AgentService.getCreatorWorldAgent',
   };
 }
@@ -143,7 +218,10 @@ function nullableString(value: string): string | undefined {
 }
 
 export function draftFromAgent(agent: CreatorWorldAgentDetail | undefined): CreatorWorldAgentDraft {
-  const voice = readRecord(readRecord(agent?.settings as OwnerAgentSettingsDto | undefined)?.voice);
+  const defaultVoiceReference = readString(agent?.chatReadiness.profile.defaultVoiceReference);
+  const voiceId = defaultVoiceReference?.startsWith('preset_voice_id:')
+    ? defaultVoiceReference.slice('preset_voice_id:'.length)
+    : '';
   return {
     displayName: agent?.settings.displayName || agent?.displayName || '',
     description: agent?.settings.description || agent?.bio || '',
@@ -153,13 +231,10 @@ export function draftFromAgent(agent: CreatorWorldAgentDetail | undefined): Crea
     contentStyle: agent?.settings.communication.contentStyle || '',
     targetAudience: agent?.settings.positioning.targetAudience || '',
     positioning: agent?.settings.positioning.positioning || '',
-    voiceId: readString(voice?.voiceId) || '',
-    voiceDescription: readString(voice?.description) || '',
-    speechModelId: readString(voice?.speechModelId) || '',
-    speechRoutePolicy: readString(voice?.speechRoutePolicy) === 'local'
-      || readString(voice?.speechRoutePolicy) === 'cloud'
-      ? readString(voice?.speechRoutePolicy) as 'local' | 'cloud'
-      : '',
+    voiceId,
+    voiceDescription: '',
+    speechModelId: readString(agent?.chatReadiness.profile.speechModelId) || '',
+    speechRoutePolicy: agent?.chatReadiness.profile.speechRoutePolicy || '',
   };
 }
 
@@ -198,11 +273,85 @@ export async function getCreatorWorldAgentDetail(
   agentId: string,
   realm: StudioRealmClient = createStudioRealmClient(),
 ): Promise<CreatorWorldAgentDetail> {
-  const [agent, settings] = await Promise.all([
+  const [
+    agentResult,
+    settingsResult,
+    sourceSkeletonResult,
+    authoringContextResult,
+    draftBatchesResult,
+    chatReadinessResult,
+  ] =
+    await Promise.allSettled([
     realm.getCreatorWorldAgent({ path: { worldId, agentId } }),
     realm.getCreatorWorldAgentSettings({ path: { worldId, agentId } }),
+    realm.getCreatorWorldAgentSourceSkeleton({ path: { worldId, agentId } }),
+    realm.getCreatorWorldAgentAuthoringGenerationContext({ path: { worldId, agentId } }),
+    realm.listCreatorWorldAgentAuthoringDraftBatches({ path: { worldId, agentId } }),
+    realm.getCreatorWorldAgentChatReadiness({ path: { worldId, agentId } }),
   ]);
-  return normalizeWorldAgentDetail(agent, settings);
+  if (agentResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('agent-detail', agentResult.reason);
+  }
+  if (settingsResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('settings', settingsResult.reason);
+  }
+  if (sourceSkeletonResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('source-skeleton', sourceSkeletonResult.reason);
+  }
+  if (authoringContextResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('authoring-context', authoringContextResult.reason);
+  }
+  if (draftBatchesResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('authoring-draft-batches', draftBatchesResult.reason);
+  }
+  if (chatReadinessResult.status === 'rejected') {
+    throw new CreatorWorldAgentDetailLoadError('chat-readiness', chatReadinessResult.reason);
+  }
+  return normalizeWorldAgentDetail(
+    agentResult.value,
+    settingsResult.value,
+    sourceSkeletonResult.value,
+    authoringContextResult.value,
+    [...draftBatchesResult.value.items],
+    chatReadinessResult.value,
+  );
+}
+
+export async function reviewCreatorWorldAgentAuthoringDraftCandidate(
+  worldId: string,
+  agentId: string,
+  batchId: string,
+  candidateId: string,
+  status: CreatorWorldAgentAuthoringReviewStatus,
+  realm: StudioRealmClient = createStudioRealmClient(),
+): Promise<RealmReviewCreatorWorldAgentAuthoringDraftCandidateOperationResponse> {
+  return realm.reviewCreatorWorldAgentAuthoringDraftCandidate({
+    path: { worldId, agentId, batchId, candidateId },
+    body: { status },
+  });
+}
+
+export async function createCreatorWorldAgentAuthoringDraftBatch(
+  worldId: string,
+  agentId: string,
+  body: CreateCreatorWorldAgentAuthoringDraftBatchInput,
+  realm: StudioRealmClient = createStudioRealmClient(),
+): Promise<RealmCreateCreatorWorldAgentAuthoringDraftBatchOperationResponse> {
+  return realm.createCreatorWorldAgentAuthoringDraftBatch({
+    path: { worldId, agentId },
+    body,
+  });
+}
+
+export async function applyCreatorWorldAgentAuthoringDraftBatch(
+  worldId: string,
+  agentId: string,
+  batchId: string,
+  realm: StudioRealmClient = createStudioRealmClient(),
+): Promise<RealmApplyCreatorWorldAgentAuthoringDraftBatchOperationResponse> {
+  return realm.applyCreatorWorldAgentAuthoringDraftBatch({
+    path: { worldId, agentId, batchId },
+  });
 }
 
 export async function updateCreatorWorldAgent(
