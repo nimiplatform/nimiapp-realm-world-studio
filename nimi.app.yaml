@@ -1,0 +1,27 @@
+app_id: nimi.realm-world-studio
+display_name: Realm World Studio
+profile: standalone
+manifest_role: submitted-input
+summary: >-
+  Creator-facing operation desktop app for creator-owned Realm worlds and
+  world-owned Realm Agents.
+permissions:
+  declared_nimi_api_scopes:
+    - scope: realm.worlds.read
+      qualifier: creator-worlds
+      purpose: List creator worlds available to the signed-in creator account.
+    - scope: realm.creator.worldAgents.read
+      qualifier: creator-world-agents
+      purpose: List and inspect world-owned Realm Agents under signed-in creator worlds.
+    - scope: realm.creator.worldAgents.write
+      qualifier: creator-world-agents
+      purpose: Update world-agent settings, profile media, and voice through Realm creator-world authority.
+    - scope: runtime.ai.text.generate
+      qualifier: studio-text
+      purpose: Generate reviewed creator-world and creator-agent candidate text.
+    - scope: runtime.ai.executeScenario.image.generate
+      qualifier: studio-image
+      purpose: Generate reviewed world, avatar, and profile cover candidates.
+    - scope: runtime.ai.executeScenario.audio.synthesize
+      qualifier: studio-voice
+      purpose: Generate voice-demo candidates for reviewed world-agent voice settings.

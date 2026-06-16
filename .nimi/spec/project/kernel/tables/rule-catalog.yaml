@@ -1,0 +1,529 @@
+table_family: support_registry
+authority: product_authority_table
+app_id: nimi.realm-world-studio
+rule_id_prefix: R-RWS
+rules:
+  - rule_id: R-RWS-CORE-001
+    domain: CORE
+    title: Single authority root
+    source: index.md
+  - rule_id: R-RWS-CORE-002
+    domain: CORE
+    title: Identity consistency
+    source: index.md
+  - rule_id: R-RWS-CORE-003
+    domain: CORE
+    title: External product truth
+    source: index.md
+  - rule_id: R-RWS-CORE-004
+    domain: CORE
+    title: Creator-world write confirmation
+    source: index.md
+  - rule_id: R-RWS-CORE-005
+    domain: CORE
+    title: Fail closed
+    source: index.md
+  - rule_id: R-RWS-CORE-006
+    domain: CORE
+    title: Rule citation
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-007
+    domain: CORE
+    title: Catalog sync
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-008
+    domain: CORE
+    title: No legacy shortcuts
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-009
+    domain: CORE
+    title: Evidence is not authority
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-010
+    domain: CORE
+    title: Runtime account bridge
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-011
+    domain: CORE
+    title: No token custody
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-012
+    domain: CORE
+    title: Mediated Realm calls
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-013
+    domain: CORE
+    title: Runtime route authority
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-014
+    domain: CORE
+    title: No synthesized success
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-015
+    domain: CORE
+    title: AI candidate boundary
+    source: core-rules.md
+  - rule_id: R-RWS-CORE-016
+    domain: CORE
+    title: Kit interaction system
+    source: core-rules.md
+  - rule_id: R-RWS-SCOPE-001
+    domain: SCOPE
+    title: Creator-world list scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-002
+    domain: SCOPE
+    title: World-agent scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-003
+    domain: SCOPE
+    title: World-agent maintenance scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-004
+    domain: SCOPE
+    title: Local preferences are not truth
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-005
+    domain: SCOPE
+    title: Review-gated AI candidates
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-006
+    domain: SCOPE
+    title: AI config as preference
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-007
+    domain: SCOPE
+    title: Typed failure states
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-008
+    domain: SCOPE
+    title: Owner portfolio out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-009
+    domain: SCOPE
+    title: Forge system curation out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-010
+    domain: SCOPE
+    title: Public world catalog out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-011
+    domain: SCOPE
+    title: Adjacent creator agent surfaces out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-012
+    domain: SCOPE
+    title: LocalAgent private state out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-013
+    domain: SCOPE
+    title: Scheduling and economics out of scope
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-014
+    domain: SCOPE
+    title: No fallback authority
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-015
+    domain: SCOPE
+    title: No local admission truth
+    source: product-scope.md
+  - rule_id: R-RWS-AGENT-001
+    domain: AGENT
+    title: Creator world admission
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-002
+    domain: AGENT
+    title: Creator world source fields
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-003
+    domain: AGENT
+    title: Unknown world fails closed
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-004
+    domain: AGENT
+    title: World-agent admission
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-005
+    domain: AGENT
+    title: World id required
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-006
+    domain: AGENT
+    title: No lifecycle ownership
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-007
+    domain: AGENT
+    title: Source-backed agent fields
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-008
+    domain: AGENT
+    title: No invented defaults
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-009
+    domain: AGENT
+    title: Detail and settings before save
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-010
+    domain: AGENT
+    title: Canonical reread after save
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-011
+    domain: AGENT
+    title: No alternate authority construction
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-012
+    domain: AGENT
+    title: No world-agent create
+    source: realm-agent-object.md
+  - rule_id: R-RWS-SETTING-001
+    domain: SETTING
+    title: Core text fields
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-002
+    domain: SETTING
+    title: Communication field
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-003
+    domain: SETTING
+    title: Positioning fields
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-004
+    domain: SETTING
+    title: Profile media fields
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-005
+    domain: SETTING
+    title: Voice fields
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-006
+    domain: SETTING
+    title: Chat readiness read only
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-007
+    domain: SETTING
+    title: Visible reviewed fields
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-008
+    domain: SETTING
+    title: Optional blanks
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-009
+    domain: SETTING
+    title: Separate write operations
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-010
+    domain: SETTING
+    title: Save success confirmation
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-011
+    domain: SETTING
+    title: Forbidden setting mappings
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-SETTING-012
+    domain: SETTING
+    title: AI setting candidates
+    source: agent-setting-field-map.md
+  - rule_id: R-RWS-ASSET-001
+    domain: ASSET
+    title: Media candidate material
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-002
+    domain: ASSET
+    title: Local preview not truth
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-003
+    domain: ASSET
+    title: Admitted upload facade
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-004
+    domain: ASSET
+    title: Profile media confirmation
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-005
+    domain: ASSET
+    title: Admitted profile media fields
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-006
+    domain: ASSET
+    title: No inferred binding points
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-007
+    domain: ASSET
+    title: Binding truth requires ingress
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-008
+    domain: ASSET
+    title: Voice-demo candidate
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-009
+    domain: ASSET
+    title: Runtime audio is not voice ownership
+    source: asset-and-binding.md
+  - rule_id: R-RWS-ASSET-010
+    domain: ASSET
+    title: Asset failure preservation
+    source: asset-and-binding.md
+  - rule_id: R-RWS-POST-001
+    domain: POST
+    title: No post scheduling success
+    source: post-publishing.md
+  - rule_id: R-RWS-POST-002
+    domain: POST
+    title: No post surface reuse
+    source: post-publishing.md
+  - rule_id: R-RWS-POST-003
+    domain: POST
+    title: AI copy boundary
+    source: post-publishing.md
+  - rule_id: R-RWS-POST-004
+    domain: POST
+    title: Local timers not post truth
+    source: post-publishing.md
+  - rule_id: R-RWS-POST-005
+    domain: POST
+    title: Future post success authority
+    source: post-publishing.md
+  - rule_id: R-RWS-POST-006
+    domain: POST
+    title: Deferred post fail closed
+    source: post-publishing.md
+  - rule_id: R-RWS-RUNTIME-001
+    domain: RUNTIME
+    title: Runtime boundary
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-002
+    domain: RUNTIME
+    title: IPC Runtime consumption
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-003
+    domain: RUNTIME
+    title: No Runtime credential persistence
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-004
+    domain: RUNTIME
+    title: Missing defaults fail closed
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-005
+    domain: RUNTIME
+    title: AI inside review flows
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-006
+    domain: RUNTIME
+    title: AI output candidate
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-007
+    domain: RUNTIME
+    title: Model route source
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-008
+    domain: RUNTIME
+    title: No private LocalAgent context
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-009
+    domain: RUNTIME
+    title: Runtime failure class
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-010
+    domain: RUNTIME
+    title: Malformed AI handling
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-METRIC-001
+    domain: METRIC
+    title: Agent count source
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-002
+    domain: METRIC
+    title: Friend count source
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-003
+    domain: METRIC
+    title: Missing count unavailable
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-004
+    domain: METRIC
+    title: No inferred counts
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-005
+    domain: METRIC
+    title: Missing metric source
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-006
+    domain: METRIC
+    title: Operational evidence labels
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-007
+    domain: METRIC
+    title: Platform-owned admission
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-008
+    domain: METRIC
+    title: Metric admission required
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-FAIL-001
+    domain: FAIL
+    title: Realm unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-002
+    domain: FAIL
+    title: Permission missing
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-003
+    domain: FAIL
+    title: Creator world unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-004
+    domain: FAIL
+    title: World agent unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-005
+    domain: FAIL
+    title: Settings unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-006
+    domain: FAIL
+    title: Settings update rejected
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-007
+    domain: FAIL
+    title: Profile media update rejected
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-008
+    domain: FAIL
+    title: Voice update rejected
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-009
+    domain: FAIL
+    title: Runtime unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-010
+    domain: FAIL
+    title: AI generation failed
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-011
+    domain: FAIL
+    title: Source unavailable
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-012
+    domain: FAIL
+    title: Contract invalid
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-013
+    domain: FAIL
+    title: Failure copy
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-014
+    domain: FAIL
+    title: Preserve drafts
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-015
+    domain: FAIL
+    title: Partial failure not full success
+    source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-016
+    domain: FAIL
+    title: No silent fallback
+    source: failure-semantics.md
+  - rule_id: R-RWS-STORY-001
+    domain: STORY
+    title: Open Studio
+    source: storybook.md
+  - rule_id: R-RWS-STORY-002
+    domain: STORY
+    title: Review creator worlds
+    source: storybook.md
+  - rule_id: R-RWS-STORY-003
+    domain: STORY
+    title: Search creator worlds
+    source: storybook.md
+  - rule_id: R-RWS-STORY-004
+    domain: STORY
+    title: Inspect world detail
+    source: storybook.md
+  - rule_id: R-RWS-STORY-005
+    domain: STORY
+    title: Review world agents
+    source: storybook.md
+  - rule_id: R-RWS-STORY-006
+    domain: STORY
+    title: Inspect world-agent detail
+    source: storybook.md
+  - rule_id: R-RWS-STORY-007
+    domain: STORY
+    title: Save settings
+    source: storybook.md
+  - rule_id: R-RWS-STORY-008
+    domain: STORY
+    title: Save profile media
+    source: storybook.md
+  - rule_id: R-RWS-STORY-009
+    domain: STORY
+    title: Save voice settings
+    source: storybook.md
+  - rule_id: R-RWS-STORY-010
+    domain: STORY
+    title: Configure AI
+    source: storybook.md
+  - rule_id: R-RWS-STORY-011
+    domain: STORY
+    title: Handle failures
+    source: storybook.md
+  - rule_id: R-RWS-STORY-012
+    domain: STORY
+    title: Keep adjacent products out
+    source: storybook.md
+  - rule_id: R-RWS-ACCEPT-001
+    domain: ACCEPT
+    title: Verification gate
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-002
+    domain: ACCEPT
+    title: Spec check rejects stale RAS
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-003
+    domain: ACCEPT
+    title: Admission input self-check
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-004
+    domain: ACCEPT
+    title: Pack requires build output
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-005
+    domain: ACCEPT
+    title: CI is not admission
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-006
+    domain: ACCEPT
+    title: W1 identity and bridge
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-007
+    domain: ACCEPT
+    title: W2 world routes
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-008
+    domain: ACCEPT
+    title: W3 world-agent routes
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-009
+    domain: ACCEPT
+    title: W4 media voice AI
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-010
+    domain: ACCEPT
+    title: W5 hardening
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-011
+    domain: ACCEPT
+    title: Code verification
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-012
+    domain: ACCEPT
+    title: Rust verification
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-013
+    domain: ACCEPT
+    title: Spec verification
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-014
+    domain: ACCEPT
+    title: Pre-submission verification
+    source: product-acceptance-and-execution-plan.md
