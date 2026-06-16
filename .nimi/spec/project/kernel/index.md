@@ -48,6 +48,8 @@ The canonical rule catalog lives in
   authority for a creator world already admitted by the list authority.
 - `GET /api/me/creator/worlds/{worldId}/agents/{agentId}` is the Studio
   world-agent detail authority.
+- `GET /api/me/creator/worlds/{worldId}/agents/{agentId}/source-skeleton` is
+  the Studio source-skeleton read authority for CBDB-derived authoring shells.
 - `GET/PATCH /api/me/creator/worlds/{worldId}/agents/{agentId}/settings` is the
   Studio world-agent settings read/write authority.
 - `PATCH /api/me/creator/worlds/{worldId}/agents/{agentId}/profile-media` is

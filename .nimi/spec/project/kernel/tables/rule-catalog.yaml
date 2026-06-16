@@ -175,6 +175,18 @@ rules:
     domain: AGENT
     title: No world-agent create
     source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-013
+    domain: AGENT
+    title: CBDB source skeleton authority
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-014
+    domain: AGENT
+    title: CBDB skeleton visible fields
+    source: realm-agent-object.md
+  - rule_id: R-RWS-AGENT-015
+    domain: AGENT
+    title: Forge-derived brief boundary
+    source: realm-agent-object.md
   - rule_id: R-RWS-SETTING-001
     domain: SETTING
     title: Core text fields
@@ -526,4 +538,8 @@ rules:
   - rule_id: R-RWS-ACCEPT-014
     domain: ACCEPT
     title: Pre-submission verification
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-015
+    domain: ACCEPT
+    title: CBDB source-skeleton acceptance
     source: product-acceptance-and-execution-plan.md

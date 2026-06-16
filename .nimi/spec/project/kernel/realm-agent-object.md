@@ -36,6 +36,17 @@ updated: 2026-06-16
   from creator-world authority before enabling save.
 - **[R-RWS-AGENT-010]** After a save, Studio must refresh or re-read canonical
   world-agent detail before claiming the updated object.
+- **[R-RWS-AGENT-013]** CBDB-derived world-agent detail must read
+  `/api/me/creator/worlds/{worldId}/agents/{agentId}/source-skeleton` before
+  claiming source identity, timeline, relationship, completion-gap, or
+  authoring-brief state.
+- **[R-RWS-AGENT-014]** A CBDB source skeleton must render canonical name,
+  aliases, source profile, birth/death years, timeline or office fact count,
+  representative facts, relationships, missing runtime fields, Forge-derived
+  completion brief, and runtime readiness as source-backed fields.
+- **[R-RWS-AGENT-015]** Forge-derived completion brief is not AI-generated
+  output. Studio must not label it as AI-generated or use it as runtime-ready
+  dialogue, voice, greeting, portrait, or behavior without creator review.
 
 ## Anti-Targets
 

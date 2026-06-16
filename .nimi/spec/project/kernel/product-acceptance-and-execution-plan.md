@@ -45,3 +45,11 @@ updated: 2026-06-16
   `pnpm check:spec-consistency`.
 - **[R-RWS-ACCEPT-014]** Pre-submission verification is `pnpm run validate`,
   `pnpm run local-audit`, and `pnpm run pack`.
+- **[R-RWS-ACCEPT-015]** CBDB source-skeleton acceptance for the Su Shi chain
+  requires the Studio agent detail page to visibly render `蘇軾`, aliases
+  including `子瞻`, `文忠`, and `東坡居士`, source profile `CBDB historical`,
+  birth/death years `1036` and `1101`, timeline or office fact count, at least
+  one representative office or timeline fact, relationship `蘇轍`, missing
+  fields for portrait/voice/greeting/dialogue/behavior, Forge-derived brief
+  fields for description/content style/positioning/avatar/voice/greeting/DNA,
+  and blocked roleplay readiness with the creator-review reason.
