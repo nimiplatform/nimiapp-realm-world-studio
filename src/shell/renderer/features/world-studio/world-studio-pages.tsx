@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -49,6 +50,7 @@ import {
 } from './world-studio-client.js';
 import { studioQueryClient } from '@renderer/infra/query-client.js';
 import { generateCreatorWorldAgentAuthoringDraftBatch } from './agent-authoring-draft-generation.js';
+import type { TFunction } from 'i18next';
 
 const WORLD_LIST_QUERY_KEY = ['realm-world-studio', 'creator-worlds'] as const;
 
@@ -71,6 +73,8 @@ function FailureState({
   loading: boolean;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="ras-card">
       <div className="grid grid-cols-[64px_1fr_auto] items-center gap-4">
@@ -84,7 +88,7 @@ function FailureState({
           </p>
         </div>
         <Button tone="primary" loading={loading} onClick={onRetry}>
-          Retry
+          {t('common.retry')}
         </Button>
       </div>
     </section>
@@ -109,17 +113,22 @@ function matchesQuery(values: readonly (string | null | undefined)[], query: str
   return values.some((value) => String(value || '').toLocaleLowerCase().includes(normalized));
 }
 
-function creatorWorldAgentFailureDetail(error: unknown): string {
+function creatorWorldAgentFailureDetail(error: unknown, t: TFunction): string {
   if (error instanceof CreatorWorldAgentDetailLoadError) {
-    return `Realm ${error.stage} request failed: ${error.originalMessage}`;
+    return t('worldStudio.agentDetail.stageFailureDetail', {
+      stage: error.stage,
+      message: error.originalMessage,
+    });
   }
   if (error instanceof Error && error.message.trim()) {
     return error.message.trim();
   }
-  return 'Realm did not return this WORLD_OWNED agent under creator-world authority.';
+  return t('worldStudio.agentDetail.defaultUnavailableDetail');
 }
 
 function WorldCard({ world }: { world: CreatorWorldSummary }) {
+  const { t } = useTranslation();
+
   return (
     <Surface
       as={Link}
@@ -135,14 +144,14 @@ function WorldCard({ world }: { world: CreatorWorldSummary }) {
             {world.name}
           </div>
           <div className="ras-break-anywhere mt-1 text-[length:var(--nimi-type-body-sm-size)] text-[var(--nimi-text-muted)]">
-            {world.tagline || world.description || 'World summary unavailable'}
+            {world.tagline || world.description || t('worldStudio.world.summaryUnavailable')}
           </div>
         </div>
         <StatusBadge tone="success">{world.authorityReason}</StatusBadge>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <StatusBadge tone="info">{world.status}</StatusBadge>
-        <StatusBadge tone="neutral">{world.agentCount} agents</StatusBadge>
+        <StatusBadge tone="neutral">{t('worldStudio.world.agentCount', { count: world.agentCount })}</StatusBadge>
         <StatusBadge tone="neutral">{world.creatorId}</StatusBadge>
       </div>
     </Surface>
@@ -150,6 +159,7 @@ function WorldCard({ world }: { world: CreatorWorldSummary }) {
 }
 
 export function CreatorWorldListPage() {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const worldsQuery = useQuery({
     queryKey: WORLD_LIST_QUERY_KEY,
@@ -169,10 +179,10 @@ export function CreatorWorldListPage() {
       <div className="ras-page">
         <header className="ras-page-header">
           <div className="min-w-0">
-            <p className="ras-page-header__eyebrow">REALM WORLD STUDIO</p>
-            <h1 className="ras-page-header__title">Creator worlds</h1>
+            <p className="ras-page-header__eyebrow">{t('worldStudio.eyebrow')}</p>
+            <h1 className="ras-page-header__title">{t('worldStudio.list.title')}</h1>
             <p className="ras-page-header__description">
-              Creator worlds maintainable by the current Runtime account.
+              {t('worldStudio.list.description')}
             </p>
           </div>
           <Button
@@ -181,15 +191,15 @@ export function CreatorWorldListPage() {
             leadingIcon={<RefreshCw size={15} strokeWidth={1.8} />}
             onClick={() => void worldsQuery.refetch()}
           >
-            Refresh
+            {t('common.refresh')}
           </Button>
         </header>
 
         <section className="ras-card">
           <SearchField
             value={query}
-            placeholder="Search worlds"
-            aria-label="Search creator worlds"
+            placeholder={t('worldStudio.list.searchPlaceholder')}
+            aria-label={t('worldStudio.list.searchAria')}
             onChange={(event) => setQuery(event.currentTarget.value)}
           />
         </section>
@@ -198,14 +208,17 @@ export function CreatorWorldListPage() {
           <PageLoadingState />
         ) : worldsQuery.isError ? (
           <FailureState
-            title="World authority unavailable"
-            detail="Realm did not return creator-world maintain authority for this Runtime account."
+            title={t('worldStudio.list.authorityUnavailableTitle')}
+            detail={t('worldStudio.list.authorityUnavailableDetail')}
             loading={worldsQuery.isFetching}
             onRetry={() => void worldsQuery.refetch()}
           />
         ) : worlds.length === 0 ? (
           <section className="ras-card">
-            <EmptyState title="No creator worlds" description="Realm returned no maintainable creator worlds for this account." />
+            <EmptyState
+              title={t('worldStudio.list.emptyTitle')}
+              description={t('worldStudio.list.emptyDescription')}
+            />
           </section>
         ) : (
           <div className="ras-agent-grid">
@@ -218,6 +231,8 @@ export function CreatorWorldListPage() {
 }
 
 function WorldAgentCard({ worldId, agent }: { worldId: string; agent: CreatorWorldAgentSummary }) {
+  const { t } = useTranslation();
+
   return (
     <Surface
       as={Link}
@@ -237,7 +252,7 @@ function WorldAgentCard({ worldId, agent }: { worldId: string; agent: CreatorWor
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <StatusBadge tone="info">WORLD_OWNED</StatusBadge>
-          <StatusBadge tone="neutral">{agent.state || 'state unavailable'}</StatusBadge>
+          <StatusBadge tone="neutral">{agent.state || t('worldStudio.agent.stateUnavailable')}</StatusBadge>
         </div>
       </div>
     </Surface>
@@ -245,6 +260,7 @@ function WorldAgentCard({ worldId, agent }: { worldId: string; agent: CreatorWor
 }
 
 export function CreatorWorldDetailPage() {
+  const { t } = useTranslation();
   const { worldId = '' } = useParams();
   const navigate = useNavigate();
   const worldQuery = useQuery({
@@ -260,13 +276,15 @@ export function CreatorWorldDetailPage() {
         <header className="ras-page-header">
           <div className="min-w-0">
             <Button tone="ghost" leadingIcon={<ArrowLeft size={15} />} onClick={() => navigate('/worlds')}>
-              Worlds
+              {t('worldStudio.worldDetail.back')}
             </Button>
-            <h1 className="ras-page-header__title">{world?.name || 'World detail'}</h1>
-            <p className="ras-page-header__description">{world?.tagline || world?.description || 'Creator-world authority detail.'}</p>
+            <h1 className="ras-page-header__title">{world?.name || t('worldStudio.worldDetail.fallbackTitle')}</h1>
+            <p className="ras-page-header__description">
+              {world?.tagline || world?.description || t('worldStudio.worldDetail.fallbackDescription')}
+            </p>
           </div>
           <Button tone="secondary" loading={worldQuery.isFetching} leadingIcon={<RefreshCw size={15} />} onClick={() => void worldQuery.refetch()}>
-            Refresh
+            {t('common.refresh')}
           </Button>
         </header>
 
@@ -274,8 +292,8 @@ export function CreatorWorldDetailPage() {
           <PageLoadingState />
         ) : worldQuery.isError || !world ? (
           <FailureState
-            title="World detail unavailable"
-            detail="Realm did not return this creator world for the current Runtime account."
+            title={t('worldStudio.worldDetail.unavailableTitle')}
+            detail={t('worldStudio.worldDetail.unavailableDetail')}
             loading={worldQuery.isFetching}
             onRetry={() => void worldQuery.refetch()}
           />
@@ -288,27 +306,36 @@ export function CreatorWorldDetailPage() {
 }
 
 function WorldDetailContent({ world }: { world: CreatorWorldDetail }) {
+  const { t } = useTranslation();
+
   return (
     <div className="ras-stack">
       <section className="ras-card ras-stack">
         <div className="ras-fact-grid">
-          <div className="ras-fact"><div className="ras-fact__label">Type</div><div className="ras-fact__value">{world.type}</div></div>
-          <div className="ras-fact"><div className="ras-fact__label">Status</div><div className="ras-fact__value">{world.status}</div></div>
-          <div className="ras-fact"><div className="ras-fact__label">Creator</div><div className="ras-fact__value">{world.creatorId}</div></div>
-          <div className="ras-fact"><div className="ras-fact__label">Authority</div><div className="ras-fact__value">{world.authorityReason}</div></div>
+          <div className="ras-fact"><div className="ras-fact__label">{t('worldStudio.worldDetail.typeLabel')}</div><div className="ras-fact__value">{world.type}</div></div>
+          <div className="ras-fact"><div className="ras-fact__label">{t('worldStudio.worldDetail.statusLabel')}</div><div className="ras-fact__value">{world.status}</div></div>
+          <div className="ras-fact"><div className="ras-fact__label">{t('worldStudio.worldDetail.creatorLabel')}</div><div className="ras-fact__value">{world.creatorId}</div></div>
+          <div className="ras-fact"><div className="ras-fact__label">{t('worldStudio.worldDetail.authorityLabel')}</div><div className="ras-fact__value">{world.authorityReason}</div></div>
         </div>
-        <p className="ras-break-anywhere text-[var(--nimi-text-secondary)]">{world.overview || world.description || 'World overview unavailable.'}</p>
+        <p className="ras-break-anywhere text-[var(--nimi-text-secondary)]">
+          {world.overview || world.description || t('worldStudio.worldDetail.overviewUnavailable')}
+        </p>
       </section>
       <section className="ras-card ras-stack">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="ras-section-title">World agents</h2>
-            <p className="ras-section-copy">{world.agents.length} world-owned agents</p>
+            <h2 className="ras-section-title">{t('worldStudio.worldDetail.agentsTitle')}</h2>
+            <p className="ras-section-copy">
+              {t('worldStudio.worldDetail.worldOwnedAgentCount', { count: world.agents.length })}
+            </p>
           </div>
           <Bot size={20} strokeWidth={1.8} />
         </div>
         {world.agents.length === 0 ? (
-          <EmptyState title="No world agents" description="Realm returned no WORLD_OWNED agents for this creator world." />
+          <EmptyState
+            title={t('worldStudio.worldDetail.noAgentsTitle')}
+            description={t('worldStudio.worldDetail.noAgentsDescription')}
+          />
         ) : (
           <div className="ras-agent-grid">
             {world.agents.map((agent) => <WorldAgentCard key={agent.id} worldId={world.id} agent={agent} />)}
@@ -320,6 +347,7 @@ function WorldDetailContent({ world }: { world: CreatorWorldDetail }) {
 }
 
 export function CreatorWorldAgentDetailPage() {
+  const { t } = useTranslation();
   const { worldId = '', agentId = '' } = useParams();
   const navigate = useNavigate();
   const agentQuery = useQuery({
@@ -367,7 +395,7 @@ export function CreatorWorldAgentDetailPage() {
   const generateDraftMutation = useMutation({
     mutationFn: () => {
       if (!agentQuery.data) {
-        throw new Error('Creator-world agent authoring context is unavailable.');
+        throw new Error(t('worldStudio.agentDetail.contextUnavailable'));
       }
       return generateCreatorWorldAgentAuthoringDraftBatch(worldId, agentId, agentQuery.data.authoringContext);
     },
@@ -385,10 +413,12 @@ export function CreatorWorldAgentDetailPage() {
         <header className="ras-page-header">
           <div className="min-w-0">
             <Button tone="ghost" leadingIcon={<ArrowLeft size={15} />} onClick={() => navigate(`/worlds/${worldId}`)}>
-              World
+              {t('worldStudio.agentDetail.back')}
             </Button>
-            <h1 className="ras-page-header__title">{agentQuery.data?.displayName || 'World agent'}</h1>
-            <p className="ras-page-header__description">Creator-world RealmAgent maintenance.</p>
+            <h1 className="ras-page-header__title">
+              {agentQuery.data?.displayName || t('worldStudio.agentDetail.fallbackTitle')}
+            </h1>
+            <p className="ras-page-header__description">{t('worldStudio.agentDetail.description')}</p>
           </div>
           <Button
             tone="primary"
@@ -397,7 +427,7 @@ export function CreatorWorldAgentDetailPage() {
             leadingIcon={<Save size={15} />}
             onClick={() => void updateMutation.mutate()}
           >
-            Save
+            {t('common.save')}
           </Button>
         </header>
 
@@ -405,8 +435,8 @@ export function CreatorWorldAgentDetailPage() {
           <PageLoadingState />
         ) : agentQuery.isError || !agentQuery.data ? (
           <FailureState
-            title="World agent unavailable"
-            detail={creatorWorldAgentFailureDetail(agentQuery.error)}
+            title={t('worldStudio.agentDetail.unavailableTitle')}
+            detail={creatorWorldAgentFailureDetail(agentQuery.error, t)}
             loading={agentQuery.isFetching}
             onRetry={() => void agentQuery.refetch()}
           />
@@ -435,20 +465,22 @@ export function CreatorWorldAgentDetailPage() {
   );
 }
 
-function yearRange(skeleton: CreatorWorldAgentSourceSkeleton): string {
+function yearRange(skeleton: CreatorWorldAgentSourceSkeleton, t: TFunction): string {
   const birth = skeleton.sourceFacts.birthYear;
   const death = skeleton.sourceFacts.deathYear;
   if (birth != null && death != null) return `${birth} / ${death}`;
-  if (birth != null) return `${birth} / unknown`;
-  if (death != null) return `unknown / ${death}`;
-  return 'source unavailable';
+  if (birth != null) return `${birth} / ${t('worldStudio.yearRange.unknown')}`;
+  if (death != null) return `${t('worldStudio.yearRange.unknown')} / ${death}`;
+  return t('common.sourceUnavailable');
 }
 
 function FactCell({ label, value }: { label: string; value: string | number | null }) {
+  const { t } = useTranslation();
+
   return (
     <div className="ras-fact">
       <div className="ras-fact__label">{label}</div>
-      <div className="ras-fact__value ras-break-anywhere">{value ?? 'source unavailable'}</div>
+      <div className="ras-fact__value ras-break-anywhere">{value ?? t('common.sourceUnavailable')}</div>
     </div>
   );
 }
@@ -500,26 +532,29 @@ function SourceIdentitySection({
   agent: CreatorWorldAgentDetail;
   skeleton: CreatorWorldAgentSourceSkeleton;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="ras-card ras-stack">
       <SectionHeading
         icon={<FileText size={17} strokeWidth={1.8} />}
-        title="Source identity"
-        badge={<StatusBadge tone="info">CBDB historical</StatusBadge>}
+        title={t('worldStudio.sourceIdentity.title')}
+        badge={<StatusBadge tone="info">{t('worldStudio.sourceIdentity.badge')}</StatusBadge>}
       />
       <div className="ras-fact-grid">
-        <FactCell label="Canonical name" value={skeleton.canonicalName} />
-        <FactCell label="Aliases" value={skeleton.aliases.join(' / ') || null} />
-        <FactCell label="Birth / death" value={yearRange(skeleton)} />
-        <FactCell label="Source entity" value={skeleton.sourceEntityId} />
-        <FactCell label="Agent id" value={agent.id} />
-        <FactCell label="State" value={agent.state || 'source unavailable'} />
+        <FactCell label={t('worldStudio.sourceIdentity.canonicalName')} value={skeleton.canonicalName} />
+        <FactCell label={t('worldStudio.sourceIdentity.aliases')} value={skeleton.aliases.join(' / ') || null} />
+        <FactCell label={t('worldStudio.sourceIdentity.birthDeath')} value={yearRange(skeleton, t)} />
+        <FactCell label={t('worldStudio.sourceIdentity.sourceEntity')} value={skeleton.sourceEntityId} />
+        <FactCell label={t('worldStudio.sourceIdentity.agentId')} value={agent.id} />
+        <FactCell label={t('worldStudio.sourceIdentity.state')} value={agent.state || null} />
       </div>
     </section>
   );
 }
 
 function WorldFactsSection({ skeleton }: { skeleton: CreatorWorldAgentSourceSkeleton }) {
+  const { t } = useTranslation();
   const officeFacts = skeleton.sourceFacts.officeFacts.slice(0, 4).map((fact) =>
     fact.officeName ? `${fact.officeName}: ${fact.summary}` : fact.summary,
   );
@@ -532,27 +567,40 @@ function WorldFactsSection({ skeleton }: { skeleton: CreatorWorldAgentSourceSkel
     <section className="ras-card ras-stack">
       <SectionHeading
         icon={<BookOpen size={17} strokeWidth={1.8} />}
-        title="World facts"
-        badge={<StatusBadge tone="neutral">{skeleton.sourceFacts.timelineFactCount} timeline facts</StatusBadge>}
+        title={t('worldStudio.worldFacts.title')}
+        badge={
+          <StatusBadge tone="neutral">
+            {t('worldStudio.worldFacts.timelineFactBadge', { count: skeleton.sourceFacts.timelineFactCount })}
+          </StatusBadge>
+        }
       />
       <div className="ras-fact-grid">
-        <FactCell label="Timeline / office facts" value={skeleton.sourceFacts.timelineFactCount} />
-        <FactCell label="Office facts shown" value={skeleton.sourceFacts.officeFacts.length} />
-        <FactCell label="Relationships" value={skeleton.sourceFacts.relationships.length} />
-        <FactCell label="Package" value={skeleton.packageId || null} />
+        <FactCell label={t('worldStudio.worldFacts.timelineOfficeFacts')} value={skeleton.sourceFacts.timelineFactCount} />
+        <FactCell label={t('worldStudio.worldFacts.officeFactsShown')} value={skeleton.sourceFacts.officeFacts.length} />
+        <FactCell label={t('worldStudio.worldFacts.relationships')} value={skeleton.sourceFacts.relationships.length} />
+        <FactCell label={t('worldStudio.worldFacts.package')} value={skeleton.packageId || null} />
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="ras-stack-tight">
-          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Representative timeline</h3>
-          <TextList items={skeleton.sourceFacts.representativeFacts.slice(0, 5)} empty="No timeline facts returned." />
+          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+            {t('worldStudio.worldFacts.representativeTimeline')}
+          </h3>
+          <TextList
+            items={skeleton.sourceFacts.representativeFacts.slice(0, 5)}
+            empty={t('worldStudio.worldFacts.noTimelineFacts')}
+          />
         </div>
         <div className="ras-stack-tight">
-          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Representative offices</h3>
-          <TextList items={officeFacts} empty="No office facts returned." />
+          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+            {t('worldStudio.worldFacts.representativeOffices')}
+          </h3>
+          <TextList items={officeFacts} empty={t('worldStudio.worldFacts.noOfficeFacts')} />
         </div>
         <div className="ras-stack-tight">
-          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Relationships</h3>
-          <TextList items={relationshipFacts} empty="No relationships returned." />
+          <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+            {t('worldStudio.worldFacts.relationships')}
+          </h3>
+          <TextList items={relationshipFacts} empty={t('worldStudio.worldFacts.noRelationships')} />
         </div>
       </div>
     </section>
@@ -560,11 +608,13 @@ function WorldFactsSection({ skeleton }: { skeleton: CreatorWorldAgentSourceSkel
 }
 
 function CompletionGapsSection({ skeleton }: { skeleton: CreatorWorldAgentSourceSkeleton }) {
+  const { t } = useTranslation();
+
   return (
     <section className="ras-card ras-stack">
       <SectionHeading
         icon={<ShieldAlert size={17} strokeWidth={1.8} />}
-        title="Completion gaps"
+        title={t('worldStudio.completionGaps.title')}
         badge={<StatusBadge tone="warning">{skeleton.runtimeReadiness.roleplayRuntime}</StatusBadge>}
       />
       <InlineAlert tone="warning">{skeleton.runtimeReadiness.reason}</InlineAlert>
@@ -575,30 +625,31 @@ function CompletionGapsSection({ skeleton }: { skeleton: CreatorWorldAgentSource
       </div>
       <TextList
         items={skeleton.runtimeReadiness.requiredCreatorActions}
-        empty="No creator actions returned."
+        empty={t('worldStudio.completionGaps.noCreatorActions')}
       />
     </section>
   );
 }
 
 function AuthoringBriefSection({ skeleton }: { skeleton: CreatorWorldAgentSourceSkeleton }) {
+  const { t } = useTranslation();
   const brief = skeleton.completionBrief;
   return (
     <section className="ras-card ras-stack">
       <SectionHeading
         icon={<ClipboardList size={17} strokeWidth={1.8} />}
-        title="Authoring brief"
-        badge={<StatusBadge tone="neutral">Forge-derived brief</StatusBadge>}
+        title={t('worldStudio.authoringBrief.title')}
+        badge={<StatusBadge tone="neutral">{t('worldStudio.authoringBrief.badge')}</StatusBadge>}
       />
       <div className="ras-fact-grid">
-        <FactCell label="Description" value={brief.description} />
-        <FactCell label="Content style" value={brief.contentStyle} />
-        <FactCell label="Positioning" value={brief.positioning} />
-        <FactCell label="Avatar brief" value={brief.avatarBrief} />
-        <FactCell label="Voice brief" value={brief.voiceBrief} />
-        <FactCell label="Greeting brief" value={brief.greetingBrief} />
+        <FactCell label={t('worldStudio.authoringBrief.description')} value={brief.description} />
+        <FactCell label={t('worldStudio.authoringBrief.contentStyle')} value={brief.contentStyle} />
+        <FactCell label={t('worldStudio.authoringBrief.positioning')} value={brief.positioning} />
+        <FactCell label={t('worldStudio.authoringBrief.avatarBrief')} value={brief.avatarBrief} />
+        <FactCell label={t('worldStudio.authoringBrief.voiceBrief')} value={brief.voiceBrief} />
+        <FactCell label={t('worldStudio.authoringBrief.greetingBrief')} value={brief.greetingBrief} />
       </div>
-      <FieldShell label="DNA brief">
+      <FieldShell label={t('worldStudio.authoringBrief.dnaBrief')}>
         <TextareaField value={brief.dnaBrief} readOnly />
       </FieldShell>
     </section>
@@ -642,56 +693,58 @@ function effectiveCandidateValue(candidate: CreatorWorldAgentAuthoringDraftCandi
   return candidate.value;
 }
 
-function compactTimestamp(value: string | null | undefined): string {
-  return value?.trim() || 'not set';
+function compactTimestamp(value: string | null | undefined, t: TFunction): string {
+  return value?.trim() || t('common.notSet');
 }
 
-function recordPreview(record: unknown): string {
+function recordPreview(record: unknown, t: TFunction): string {
   if (!record || typeof record !== 'object' || Array.isArray(record)) {
-    return 'not set';
+    return t('common.notSet');
   }
   const entries = Object.entries(record)
     .filter(([, value]) => value != null && value !== '')
     .slice(0, 4)
     .map(([key, value]) => `${key}: ${String(value)}`);
-  return entries.length > 0 ? entries.join(' / ') : 'not set';
+  return entries.length > 0 ? entries.join(' / ') : t('common.notSet');
 }
 
-function candidateValuePreview(candidate: CreatorWorldAgentAuthoringDraftCandidate): string {
+function candidateValuePreview(candidate: CreatorWorldAgentAuthoringDraftCandidate, t: TFunction): string {
   const value = effectiveCandidateValue(candidate);
-  if (value.kind === 'text') return value.text?.trim() || 'text value missing';
+  if (value.kind === 'text') return value.text?.trim() || t('worldStudio.candidate.textMissing');
   if (value.kind === 'media') {
     const media = value.media;
-    if (!media) return 'media value missing';
+    if (!media) return t('worldStudio.candidate.mediaMissing');
     return [
-      `resource: ${media.resourceId}`,
-      `url: ${media.url}`,
-      `model: ${media.model}`,
-      `size: ${media.width}x${media.height}`,
-      `mime: ${media.mime}`,
-      `moderation: ${media.moderation.status}${media.moderation.reason ? ` / ${media.moderation.reason}` : ''}`,
-      `prompt: ${media.prompt}`,
+      t('worldStudio.candidate.media.resource', { value: media.resourceId }),
+      t('worldStudio.candidate.media.url', { value: media.url }),
+      t('worldStudio.candidate.media.model', { value: media.model }),
+      t('worldStudio.candidate.media.size', { width: media.width, height: media.height }),
+      t('worldStudio.candidate.media.mime', { value: media.mime }),
+      t('worldStudio.candidate.media.moderation', {
+        value: `${media.moderation.status}${media.moderation.reason ? ` / ${media.moderation.reason}` : ''}`,
+      }),
+      t('worldStudio.candidate.media.prompt', { value: media.prompt }),
     ].join('\n');
   }
   if (value.kind === 'voice') {
     const voice = value.voice;
-    if (!voice) return 'voice value missing';
+    if (!voice) return t('worldStudio.candidate.voiceMissing');
     return [
-      `historical claim: ${voice.historicalClaim}`,
-      `narration direction: ${voice.narrationDirection}`,
-      `provider voice: ${voice.providerVoiceRef || 'not set'}`,
-      `voice asset: ${voice.voiceAssetResourceId || 'not set'}`,
-      `speech model: ${voice.speechModelId || 'not set'}`,
-      `route policy: ${voice.speechRoutePolicy || 'not set'}`,
+      t('worldStudio.candidate.voice.historicalClaim', { value: voice.historicalClaim }),
+      t('worldStudio.candidate.voice.narrationDirection', { value: voice.narrationDirection }),
+      t('worldStudio.candidate.voice.providerVoice', { value: voice.providerVoiceRef || t('common.notSet') }),
+      t('worldStudio.candidate.voice.voiceAsset', { value: voice.voiceAssetResourceId || t('common.notSet') }),
+      t('worldStudio.candidate.voice.speechModel', { value: voice.speechModelId || t('common.notSet') }),
+      t('worldStudio.candidate.voice.routePolicy', { value: voice.speechRoutePolicy || t('common.notSet') }),
     ].join('\n');
   }
   if (value.kind === 'dialogue') {
-    return value.dialogue?.exemplars.join('\n') || 'dialogue exemplars missing';
+    return value.dialogue?.exemplars.join('\n') || t('worldStudio.candidate.dialogueMissing');
   }
   if (value.kind === 'behavior') {
-    return value.behavior?.directives.join('\n') || 'behavior directives missing';
+    return value.behavior?.directives.join('\n') || t('worldStudio.candidate.behaviorMissing');
   }
-  return 'candidate value missing';
+  return t('worldStudio.candidate.valueMissing');
 }
 
 function sourceRefLabel(ref: CreatorWorldAgentAuthoringDraftCandidate['sourceRefs'][number]): string {
@@ -728,13 +781,18 @@ function GenerationTargetsSection({
 }: {
   context: CreatorWorldAgentAuthoringGenerationContext;
 }) {
+  const { t } = useTranslation();
   const statusByTarget = new Map(context.targetStatuses.map((status) => [status.targetKey, status]));
   return (
     <section className="ras-card ras-stack">
       <SectionHeading
         icon={<Bot size={17} strokeWidth={1.8} />}
-        title="Generation targets"
-        badge={<StatusBadge tone="neutral">{context.requiredTargets.length} required</StatusBadge>}
+        title={t('worldStudio.generationTargets.title')}
+        badge={
+          <StatusBadge tone="neutral">
+            {t('worldStudio.generationTargets.requiredBadge', { count: context.requiredTargets.length })}
+          </StatusBadge>
+        }
       />
       <div className="flex flex-wrap gap-2">
         {context.requiredTargets.map((target) => {
@@ -742,21 +800,23 @@ function GenerationTargetsSection({
           const reviewStatus = status?.latestReviewStatus || 'missing';
           return (
             <StatusBadge key={target} tone={targetStatusTone(reviewStatus)}>
-              {target}: {reviewStatus}
+              {t('worldStudio.generationTargets.targetStatus', { target, status: reviewStatus })}
             </StatusBadge>
           );
         })}
       </div>
       <div className="ras-fact-grid">
-        <FactCell label="Avatar resource" value={context.currentFinalState.media.avatarResourceId || null} />
-        <FactCell label="Profile cover resource" value={context.currentFinalState.media.profileCoverResourceId || null} />
-        <FactCell label="Avatar cache" value={context.currentFinalState.media.avatarUrl || null} />
-        <FactCell label="Profile cover cache" value={context.currentFinalState.media.profileCoverUrl || null} />
-        <FactCell label="Voice state" value={recordPreview(context.currentFinalState.voice.voice)} />
+        <FactCell label={t('worldStudio.generationTargets.avatarResource')} value={context.currentFinalState.media.avatarResourceId || null} />
+        <FactCell label={t('worldStudio.generationTargets.profileCoverResource')} value={context.currentFinalState.media.profileCoverResourceId || null} />
+        <FactCell label={t('worldStudio.generationTargets.avatarCache')} value={context.currentFinalState.media.avatarUrl || null} />
+        <FactCell label={t('worldStudio.generationTargets.profileCoverCache')} value={context.currentFinalState.media.profileCoverUrl || null} />
+        <FactCell label={t('worldStudio.generationTargets.voiceState')} value={recordPreview(context.currentFinalState.voice.voice, t)} />
       </div>
       <div className="ras-stack-tight">
-        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Grounding refs</h3>
-        <SourceRefsList refs={context.groundingRefs} empty="No grounding refs returned." />
+        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+          {t('worldStudio.generationTargets.groundingRefs')}
+        </h3>
+        <SourceRefsList refs={context.groundingRefs} empty={t('worldStudio.generationTargets.noGroundingRefs')} />
       </div>
     </section>
   );
@@ -775,6 +835,7 @@ function CandidateCard({
   reviewingStatus: 'accepted' | 'rejected' | null;
   onReviewCandidate: (batchId: string, candidateId: string, status: 'accepted' | 'rejected') => void;
 }) {
+  const { t } = useTranslation();
   const value = effectiveCandidateValue(candidate);
   const media = value.kind === 'media' ? value.media : undefined;
   const reviewLocked = candidate.reviewStatus === 'applied';
@@ -797,25 +858,29 @@ function CandidateCard({
         </div>
       ) : null}
       <div className="ras-fact-grid">
-        <FactCell label="Prompt digest" value={candidate.promptDigestSha256} />
-        <FactCell label="Runtime trace" value={candidate.runtimeTraceId} />
-        <FactCell label="Generated" value={compactTimestamp(candidate.generatedAt)} />
-        <FactCell label="Reviewed" value={compactTimestamp(candidate.reviewedAt)} />
-        <FactCell label="Reviewer" value={candidate.reviewerId || null} />
-        <FactCell label="Applied" value={compactTimestamp(candidate.appliedAt)} />
+        <FactCell label={t('worldStudio.candidate.promptDigest')} value={candidate.promptDigestSha256} />
+        <FactCell label={t('worldStudio.candidate.runtimeTrace')} value={candidate.runtimeTraceId} />
+        <FactCell label={t('worldStudio.candidate.generated')} value={compactTimestamp(candidate.generatedAt, t)} />
+        <FactCell label={t('worldStudio.candidate.reviewed')} value={compactTimestamp(candidate.reviewedAt, t)} />
+        <FactCell label={t('worldStudio.candidate.reviewer')} value={candidate.reviewerId || null} />
+        <FactCell label={t('worldStudio.candidate.applied')} value={compactTimestamp(candidate.appliedAt, t)} />
       </div>
-      <FieldShell label="Candidate value">
-        <TextareaField value={candidateValuePreview(candidate)} readOnly />
+      <FieldShell label={t('worldStudio.candidate.valueLabel')}>
+        <TextareaField value={candidateValuePreview(candidate, t)} readOnly />
       </FieldShell>
       <div className="ras-stack-tight">
-        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Source refs</h3>
-        <SourceRefsList refs={candidate.sourceRefs} empty="No source refs returned." />
+        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+          {t('worldStudio.sourceRefs.title')}
+        </h3>
+        <SourceRefsList refs={candidate.sourceRefs} empty={t('worldStudio.sourceRefs.empty')} />
       </div>
       <div className="ras-stack-tight">
-        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">Value provenance</h3>
+        <h3 className="m-0 text-sm font-semibold text-[var(--nimi-text-primary)]">
+          {t('worldStudio.provenance.title')}
+        </h3>
         <TextList
           items={value.provenance.map((item) => `${item.category}: ${item.summary} (${item.refs.join(', ')})`)}
-          empty="No value provenance returned."
+          empty={t('worldStudio.provenance.empty')}
         />
       </div>
       <div className="flex flex-wrap justify-end gap-2">
@@ -826,7 +891,7 @@ function CandidateCard({
           leadingIcon={<Check size={15} />}
           onClick={() => onReviewCandidate(batchId, candidate.id, 'accepted')}
         >
-          Accept
+          {t('worldStudio.candidate.accept')}
         </Button>
         <Button
           tone="danger"
@@ -835,7 +900,7 @@ function CandidateCard({
           leadingIcon={<X size={15} />}
           onClick={() => onReviewCandidate(batchId, candidate.id, 'rejected')}
         >
-          Reject
+          {t('worldStudio.candidate.reject')}
         </Button>
       </div>
     </div>
@@ -865,14 +930,20 @@ function DraftBatchesSection({
   onReviewCandidate: (batchId: string, candidateId: string, status: 'accepted' | 'rejected') => void;
   onApplyBatch: (batchId: string) => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <section className="ras-card ras-stack">
-      {draftActionError ? <InlineAlert tone="danger">Authoring draft review/apply failed.</InlineAlert> : null}
-      {draftGenerationError ? <InlineAlert tone="danger">Runtime draft generation failed closed.</InlineAlert> : null}
+      {draftActionError ? <InlineAlert tone="danger">{t('worldStudio.draftBatches.actionFailed')}</InlineAlert> : null}
+      {draftGenerationError ? <InlineAlert tone="danger">{t('worldStudio.draftBatches.generationFailed')}</InlineAlert> : null}
       <SectionHeading
         icon={<ClipboardList size={17} strokeWidth={1.8} />}
-        title="Draft candidates"
-        badge={<StatusBadge tone="neutral">{batches.length} batches</StatusBadge>}
+        title={t('worldStudio.draftBatches.title')}
+        badge={
+          <StatusBadge tone="neutral">
+            {t('worldStudio.draftBatches.countBadge', { count: batches.length })}
+          </StatusBadge>
+        }
       />
       <div className="flex flex-wrap justify-end gap-2">
         <Button
@@ -881,13 +952,13 @@ function DraftBatchesSection({
           leadingIcon={<RefreshCw size={15} />}
           onClick={onGenerateDraft}
         >
-          Generate candidates
+          {t('worldStudio.draftBatches.generate')}
         </Button>
       </div>
       {batches.length === 0 ? (
         <EmptyState
-          title="No draft candidates"
-          description="Runtime has not persisted an authoring draft batch for this skeleton."
+          title={t('worldStudio.draftBatches.emptyTitle')}
+          description={t('worldStudio.draftBatches.emptyDescription')}
         />
       ) : (
         <div className="grid gap-4">
@@ -906,7 +977,10 @@ function DraftBatchesSection({
                   <div className="min-w-0">
                     <div className="ras-break-anywhere text-sm font-semibold text-[var(--nimi-text-primary)]">{batch.id}</div>
                     <div className="ras-break-anywhere mt-1 text-[length:var(--nimi-type-body-sm-size)] text-[var(--nimi-text-muted)]">
-                      skeleton {batch.skeletonId} / {batch.createdBy}
+                      {t('worldStudio.draftBatches.skeletonByCreator', {
+                        skeletonId: batch.skeletonId,
+                        createdBy: batch.createdBy,
+                      })}
                     </div>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
@@ -918,19 +992,19 @@ function DraftBatchesSection({
                       leadingIcon={<Upload size={15} />}
                       onClick={() => onApplyBatch(batch.id)}
                     >
-                      Apply accepted
+                      {t('worldStudio.draftBatches.applyAccepted')}
                     </Button>
                   </div>
                 </div>
                 <div className="ras-fact-grid">
-                  <FactCell label="Created" value={compactTimestamp(batch.createdAt)} />
-                  <FactCell label="Updated" value={compactTimestamp(batch.updatedAt)} />
-                  <FactCell label="Applied" value={compactTimestamp(batch.appliedAt)} />
-                  <FactCell label="Candidates" value={batch.candidates.length} />
-                  <FactCell label="Runtime app" value={String(batch.metadata?.runtimeAppId || 'not set')} />
-                  <FactCell label="Surface" value={String(batch.metadata?.surfaceId || 'not set')} />
+                  <FactCell label={t('worldStudio.draftBatches.created')} value={compactTimestamp(batch.createdAt, t)} />
+                  <FactCell label={t('worldStudio.draftBatches.updated')} value={compactTimestamp(batch.updatedAt, t)} />
+                  <FactCell label={t('worldStudio.draftBatches.applied')} value={compactTimestamp(batch.appliedAt, t)} />
+                  <FactCell label={t('worldStudio.draftBatches.candidates')} value={batch.candidates.length} />
+                  <FactCell label={t('worldStudio.draftBatches.runtimeApp')} value={String(batch.metadata?.runtimeAppId || t('common.notSet'))} />
+                  <FactCell label={t('worldStudio.draftBatches.surface')} value={String(batch.metadata?.surfaceId || t('common.notSet'))} />
                 </div>
-                {hasPending ? <InlineAlert tone="warning">Pending candidates block batch apply.</InlineAlert> : null}
+                {hasPending ? <InlineAlert tone="warning">{t('worldStudio.draftBatches.pendingBlocksApply')}</InlineAlert> : null}
                 <div className="grid gap-3 lg:grid-cols-2">
                   {batch.candidates.map((candidate) => (
                     <CandidateCard
@@ -965,60 +1039,68 @@ function SettingsEditorSection({
   saveError: boolean;
   saveSuccess: boolean;
 }) {
+  const { t } = useTranslation();
+  const readinessLabel = (ready: boolean) =>
+    ready ? t('worldStudio.settings.ready') : t('worldStudio.settings.missing');
+
   return (
     <section className="ras-card ras-stack">
-      {saveError ? <InlineAlert tone="danger">Creator-world agent update failed.</InlineAlert> : null}
-      {saveSuccess ? <InlineAlert tone="success">Creator-world agent saved.</InlineAlert> : null}
+      {saveError ? <InlineAlert tone="danger">{t('worldStudio.settings.saveFailed')}</InlineAlert> : null}
+      {saveSuccess ? <InlineAlert tone="success">{t('worldStudio.settings.saveSucceeded')}</InlineAlert> : null}
       <SectionHeading
         icon={<Bot size={17} strokeWidth={1.8} />}
-        title="Reviewed settings"
-        badge={<StatusBadge tone="neutral">{agent.chatReadiness.profile.defaultVoiceReference || 'voice not set'}</StatusBadge>}
+        title={t('worldStudio.settings.title')}
+        badge={
+          <StatusBadge tone="neutral">
+            {agent.chatReadiness.profile.defaultVoiceReference || t('worldStudio.settings.voiceNotSet')}
+          </StatusBadge>
+        }
       />
       <div className="ras-fact-grid">
-        <FactCell label="Handle" value={`@${agent.handle}`} />
-        <FactCell label="World" value={agent.ownerWorldId || agent.worldId} />
-        <FactCell label="Profile media ready" value={agent.chatReadiness.gates.profileMediaReady ? 'ready' : 'missing'} />
-        <FactCell label="Voice ready" value={agent.chatReadiness.gates.voiceReferenceReady ? 'ready' : 'missing'} />
+        <FactCell label={t('worldStudio.settings.handle')} value={`@${agent.handle}`} />
+        <FactCell label={t('worldStudio.settings.world')} value={agent.ownerWorldId || agent.worldId} />
+        <FactCell label={t('worldStudio.settings.profileMediaReady')} value={readinessLabel(agent.chatReadiness.gates.profileMediaReady)} />
+        <FactCell label={t('worldStudio.settings.voiceReady')} value={readinessLabel(agent.chatReadiness.gates.voiceReferenceReady)} />
       </div>
-      <FieldShell label="Display name">
+      <FieldShell label={t('worldStudio.settings.displayName')}>
         <TextField value={draft.displayName} onChange={(event) => setDraft((current) => ({ ...current, displayName: event.currentTarget.value }))} />
       </FieldShell>
-      <FieldShell label="Description">
+      <FieldShell label={t('worldStudio.settings.description')}>
         <TextareaField value={draft.description} onChange={(event) => setDraft((current) => ({ ...current, description: event.currentTarget.value }))} />
       </FieldShell>
-      <FieldShell label="Greeting">
+      <FieldShell label={t('worldStudio.settings.greeting')}>
         <TextareaField value={draft.greeting} onChange={(event) => setDraft((current) => ({ ...current, greeting: event.currentTarget.value }))} />
       </FieldShell>
       <div className="grid gap-4 lg:grid-cols-2">
-        <FieldShell label="Content style">
+        <FieldShell label={t('worldStudio.settings.contentStyle')}>
           <TextField value={draft.contentStyle} onChange={(event) => setDraft((current) => ({ ...current, contentStyle: event.currentTarget.value }))} />
         </FieldShell>
-        <FieldShell label="Target audience">
+        <FieldShell label={t('worldStudio.settings.targetAudience')}>
           <TextField value={draft.targetAudience} onChange={(event) => setDraft((current) => ({ ...current, targetAudience: event.currentTarget.value }))} />
         </FieldShell>
       </div>
-      <FieldShell label="Public positioning">
+      <FieldShell label={t('worldStudio.settings.publicPositioning')}>
         <TextareaField value={draft.positioning} onChange={(event) => setDraft((current) => ({ ...current, positioning: event.currentTarget.value }))} />
       </FieldShell>
       <div className="grid gap-4 lg:grid-cols-2">
-        <FieldShell label="Avatar URL">
+        <FieldShell label={t('worldStudio.settings.avatarUrl')}>
           <TextField value={draft.avatarUrl} onChange={(event) => setDraft((current) => ({ ...current, avatarUrl: event.currentTarget.value }))} />
         </FieldShell>
-        <FieldShell label="Profile cover URL">
+        <FieldShell label={t('worldStudio.settings.profileCoverUrl')}>
           <TextField value={draft.profileCoverUrl} onChange={(event) => setDraft((current) => ({ ...current, profileCoverUrl: event.currentTarget.value }))} />
         </FieldShell>
       </div>
       <div className="grid gap-4 lg:grid-cols-3">
-        <FieldShell label="Voice ID">
+        <FieldShell label={t('worldStudio.settings.voiceId')}>
           <TextField value={draft.voiceId} onChange={(event) => setDraft((current) => ({ ...current, voiceId: event.currentTarget.value }))} />
         </FieldShell>
-        <FieldShell label="Speech model ID">
+        <FieldShell label={t('worldStudio.settings.speechModelId')}>
           <TextField value={draft.speechModelId} onChange={(event) => setDraft((current) => ({ ...current, speechModelId: event.currentTarget.value }))} />
         </FieldShell>
-        <FieldShell label="Speech route policy">
+        <FieldShell label={t('worldStudio.settings.speechRoutePolicy')}>
           <TextField
             value={draft.speechRoutePolicy}
-            placeholder="local or cloud"
+            placeholder={t('worldStudio.settings.speechRoutePlaceholder')}
             onChange={(event) => {
               const value = event.currentTarget.value.trim();
               setDraft((current) => ({
@@ -1029,7 +1111,7 @@ function SettingsEditorSection({
           />
         </FieldShell>
       </div>
-      <FieldShell label="Voice description">
+      <FieldShell label={t('worldStudio.settings.voiceDescription')}>
         <TextareaField value={draft.voiceDescription} onChange={(event) => setDraft((current) => ({ ...current, voiceDescription: event.currentTarget.value }))} />
       </FieldShell>
     </section>

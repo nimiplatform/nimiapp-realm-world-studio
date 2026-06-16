@@ -1,5 +1,6 @@
 import { HashRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { TooltipProvider } from '@nimiplatform/kit/ui';
 import { ShellErrorBoundary } from '@nimiplatform/kit/telemetry/error-boundary';
 import { AppRoutes } from './app-shell/routes.js';
@@ -8,11 +9,13 @@ import { AuthProvider } from './app-shell/auth-provider.js';
 import { studioQueryClient } from './infra/query-client.js';
 
 export function App() {
+  const { t } = useTranslation();
+
   return (
     <ShellErrorBoundary
-      appName="Realm World Studio"
-      fallbackTitle="Realm World Studio renderer failed"
-      fallbackHint="Restart Realm World Studio after checking the renderer diagnostics."
+      appName={t('app.name')}
+      fallbackTitle={t('app.rendererFailedTitle')}
+      fallbackHint={t('app.rendererFailedHint')}
     >
       <QueryClientProvider client={studioQueryClient}>
         <TooltipProvider>

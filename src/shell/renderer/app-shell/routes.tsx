@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Surface } from '@nimiplatform/kit/ui';
 
 const CreatorWorldListPage = lazy(() =>
@@ -16,9 +17,11 @@ const StudioAIConfigPage = lazy(() =>
 );
 
 function PageFallback() {
+  const { t } = useTranslation();
+
   return (
     <Surface tone="canvas" padding="none" className="flex h-full items-center justify-center border-0 ras-text-muted">
-      Loading…
+      {t('common.loading')}
     </Surface>
   );
 }

@@ -5,6 +5,9 @@ import { describe, expect, it } from 'vitest';
 const shellLayoutSource = () =>
   readFileSync(join(process.cwd(), 'src/shell/renderer/app-shell/shell-layout.tsx'), 'utf8');
 
+const languageSwitcherSource = () =>
+  readFileSync(join(process.cwd(), 'src/shell/renderer/app-shell/language-switcher.tsx'), 'utf8');
+
 const rendererStylesSource = () =>
   readFileSync(join(process.cwd(), 'src/shell/renderer/styles.css'), 'utf8');
 
@@ -21,6 +24,15 @@ describe('Studio shell kit boundary', () => {
     expect(source).toContain('PopoverTrigger');
     expect(source).toContain('PopoverContent');
     expect(source).toContain('Button');
+    expect(source).toContain('LanguageSwitcher');
+  });
+
+  it('uses kit SegmentedControl for the bilingual language switcher', () => {
+    const source = languageSwitcherSource();
+
+    expect(source).toContain('SegmentedControl');
+    expect(source).toContain("value: 'en'");
+    expect(source).toContain("value: 'zh-CN'");
   });
 
   it('does not keep an app-local account menu state machine', () => {

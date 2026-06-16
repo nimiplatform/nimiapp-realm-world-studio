@@ -1,5 +1,6 @@
 import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useTranslation } from 'react-i18next';
 import {
   AmbientBackground,
   LoadingSkeleton,
@@ -12,6 +13,7 @@ import {
   createRendererEntryModuleLoader,
 } from '@nimiplatform/kit/shell/renderer/bootstrap';
 import { installStudioGlobalErrorLogging } from './infra/telemetry/renderer-log.js';
+import './i18n/index.js';
 import './styles.css';
 
 installStudioGlobalErrorLogging();
@@ -27,11 +29,13 @@ const App = lazy(async () => {
 });
 
 function EntryFallback() {
+  const { t } = useTranslation();
+
   return (
     <AmbientBackground variant="mesh" className="ras-entry-fallback">
       <Surface tone="panel" padding="lg" className="ras-entry-fallback__panel">
-        <div className="ras-entry-fallback__title">Realm World Studio</div>
-        <LoadingSkeleton lines={2} aria-label="Loading Realm World Studio" />
+        <div className="ras-entry-fallback__title">{t('app.name')}</div>
+        <LoadingSkeleton lines={2} aria-label={t('entry.loadingAria')} />
       </Surface>
     </AmbientBackground>
   );

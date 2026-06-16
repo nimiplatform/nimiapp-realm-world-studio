@@ -1,0 +1,29 @@
+{
+  "supportedLocales": ["en", "zh-CN"],
+  "audit": {
+    "scopeDirs": ["src/shell/renderer"],
+    "extensions": [".ts", ".tsx", ".html"],
+    "excludePathPatterns": [
+      "/i18n/",
+      "/test/",
+      ".test.",
+      ".spec."
+    ],
+    "allowTextPatterns": [
+      "^RWS$",
+      "^EN$",
+      "^中$",
+      "^WORLD_OWNED$",
+      "^CBDB$",
+      "^MetaMask$",
+      "^Binance Wallet$",
+      "^OKX Wallet$",
+      "^Google$",
+      "^Twitter$",
+      "^TikTok$",
+      "^[A-Z0-9_]+$",
+      "^-$",
+      "^--$"
+    ]
+  }
+}
