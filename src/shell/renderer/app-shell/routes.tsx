@@ -9,8 +9,8 @@ const CreatorWorldListPage = lazy(() =>
 const CreatorWorldDetailPage = lazy(() =>
   import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldDetailPage })),
 );
-const CreatorWorldAgentDetailPage = lazy(() =>
-  import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldAgentDetailPage })),
+const CreatorWorldCharacterDetailPage = lazy(() =>
+  import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldCharacterDetailPage })),
 );
 const StudioAIConfigPage = lazy(() =>
   import('../features/ai-config/studio-ai-config-page.js').then((m) => ({ default: m.StudioAIConfigPage })),
@@ -32,7 +32,7 @@ export function AppRoutes() {
       <Routes>
         <Route path="/worlds" element={<CreatorWorldListPage />} />
         <Route path="/worlds/:worldId" element={<CreatorWorldDetailPage />} />
-        <Route path="/worlds/:worldId/agents/:agentId" element={<CreatorWorldAgentDetailPage />} />
+        <Route path="/worlds/:worldId/characters/:characterId" element={<CreatorWorldCharacterDetailPage />} />
         <Route path="/ai-config" element={<StudioAIConfigPage />} />
         <Route path="*" element={<Navigate to="/worlds" replace />} />
       </Routes>

@@ -28,8 +28,8 @@ const REQUIRED_KERNEL_FILES = [
   'index.md',
   'core-rules.md',
   'product-scope.md',
-  'realm-agent-object.md',
-  'agent-setting-field-map.md',
+  'world-character-object.md',
+  'character-setting-field-map.md',
   'asset-and-binding.md',
   'post-publishing.md',
   'runtime-ai-consumption.md',
@@ -45,38 +45,38 @@ const REQUIRED_KERNEL_TABLES = [
 
 const FORBIDDEN_PHRASES: Array<{ phrase: string; rationale: string }> = [
   {
-    phrase: '/api/me/agents',
-    rationale: 'Owner portfolio authority belongs to the adjacent owner-agent app, not Realm World Studio.',
+    phrase: '/api/me/characters',
+    rationale: 'Owner portfolio authority belongs to the adjacent owner-persona app, not Realm World Studio.',
   },
   {
-    phrase: 'listMyRealmAgents',
-    rationale: 'Owner portfolio list authority belongs to the adjacent owner-agent app, not Realm World Studio.',
+    phrase: 'listMyRealmPersonas',
+    rationale: 'Owner portfolio list authority belongs to the adjacent owner-persona app, not Realm World Studio.',
   },
   {
-    phrase: 'getMyRealmAgent',
-    rationale: 'Owner portfolio detail authority belongs to the adjacent owner-agent app, not Realm World Studio.',
+    phrase: 'getMyRealmPersona',
+    rationale: 'Owner portfolio detail authority belongs to the adjacent owner-persona app, not Realm World Studio.',
   },
   {
-    phrase: 'agentControllerCreate',
-    rationale: 'Owner agent creation belongs to the adjacent owner-agent app, not Realm World Studio.',
+    phrase: 'personaControllerCreate',
+    rationale: 'Owner persona creation belongs to the adjacent Realm Persona Studio app, not Realm World Studio.',
   },
   {
     phrase: 'WorldController_listWorlds',
     rationale: 'Public world catalog reads must not be used for creator-world success state.',
   },
   {
-    phrase: '/api/agent/dev/my-agents',
+    phrase: '/api/agent/dev/my-characters',
     rationale: 'Developer evidence surface; must not be promoted into World Studio canonical surfaces.',
   },
   {
-    phrase: 'agentFriendCount',
-    rationale: 'Use source-backed `friendCount`; do not invent `agentFriendCount`.',
+    phrase: 'personaFriendCount',
+    rationale: 'Use source-backed `friendCount`; do not invent `personaFriendCount`.',
   },
 ];
 
 const RULE_ID_RE = /R-RWS-[A-Z]+-\d+/g;
-const LEGACY_AGENT_STUDIO_RULE_PREFIX = 'R-' + 'RAS-';
-const LEGACY_AGENT_STUDIO_KERNEL_TITLE = ['Realm', 'Agent', 'Studio', 'Kernel Authority'].join(' ');
+const ADJACENT_PERSONA_STUDIO_RULE_PREFIX = 'R-RPS-';
+const ADJACENT_PERSONA_STUDIO_KERNEL_TITLE = 'Realm Persona Studio Kernel Authority';
 
 type Finding = { file: string; line: number; column: number; message: string };
 
@@ -187,7 +187,7 @@ async function checkRuleCatalogCoversInlineIds(): Promise<Finding[]> {
   return findings;
 }
 
-async function checkNoLegacyAgentStudioAuthority(): Promise<Finding[]> {
+async function checkNoAdjacentPersonaStudioAuthority(): Promise<Finding[]> {
   const findings: Finding[] = [];
   const files = [
     ...REQUIRED_TOP_LEVEL_FILES.map((relative) => path.join(REPO_ROOT, relative)),
@@ -200,22 +200,22 @@ async function checkNoLegacyAgentStudioAuthority(): Promise<Finding[]> {
     const lines = text.split('\n');
     for (let index = 0; index < lines.length; index += 1) {
       const line = lines[index] ?? '';
-      const legacyRuleColumn = line.indexOf(LEGACY_AGENT_STUDIO_RULE_PREFIX);
-      if (legacyRuleColumn >= 0) {
+      const adjacentRuleColumn = line.indexOf(ADJACENT_PERSONA_STUDIO_RULE_PREFIX);
+      if (adjacentRuleColumn >= 0) {
         findings.push({
           file: path.relative(REPO_ROOT, absolute),
           line: index + 1,
-          column: legacyRuleColumn + 1,
-          message: 'Legacy adjacent-app rule namespace must not appear in Realm World Studio spec authority.',
+          column: adjacentRuleColumn + 1,
+          message: 'Adjacent Realm Persona Studio rule namespace must not appear in Realm World Studio spec authority.',
         });
       }
-      const legacyTitleColumn = line.indexOf(LEGACY_AGENT_STUDIO_KERNEL_TITLE);
-      if (legacyTitleColumn >= 0) {
+      const adjacentTitleColumn = line.indexOf(ADJACENT_PERSONA_STUDIO_KERNEL_TITLE);
+      if (adjacentTitleColumn >= 0) {
         findings.push({
           file: path.relative(REPO_ROOT, absolute),
           line: index + 1,
-          column: legacyTitleColumn + 1,
-          message: 'Legacy adjacent-app kernel title must not appear in Realm World Studio spec authority.',
+          column: adjacentTitleColumn + 1,
+          message: 'Adjacent Realm Persona Studio kernel title must not appear in Realm World Studio spec authority.',
         });
       }
     }
@@ -281,7 +281,7 @@ async function main(): Promise<void> {
   const findings = [
     ...(await checkRequiredFiles()),
     ...(await checkRuleCatalogCoversInlineIds()),
-    ...(await checkNoLegacyAgentStudioAuthority()),
+    ...(await checkNoAdjacentPersonaStudioAuthority()),
     ...(await checkForbiddenPhrasesInImplementation()),
   ];
   if (findings.length === 0) {

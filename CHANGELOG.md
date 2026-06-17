@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Tauri 2 shell with Runtime-mediated account bootstrap, code-only desktop auth,
   and app-scoped Nimi client construction.
 - React Router routes for creator world list, creator world detail,
-  world-agent detail/editing, and AI model/profile configuration.
-- Creator-world Realm facade constrained to creator-world worlds, world-agent
+  world-character detail/editing, and AI model/profile configuration.
+- Creator-world Realm facade constrained to creator-world worlds, world-character
   settings, profile media, voice, chat-readiness, and resource upload surfaces.
 - `.nimi/spec/project/kernel/**` product authority with `R-RWS-*` rule catalog
   and local spec-consistency checks.

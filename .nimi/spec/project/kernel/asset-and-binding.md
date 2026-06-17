@@ -1,43 +1,16 @@
 ---
-id: SPEC-REALM-WORLD-STUDIO-ASSET-AND-BINDING-001
-title: Realm World Studio Asset And Binding
+id: SPEC-REALM-WORLD-STUDIO-ASSET-BINDING-001
+title: Character Asset And Binding Boundary
 status: active
 owner: "@team"
-updated: 2026-06-16
+updated: 2026-06-18
 ---
 
-# Asset And Binding
+# Character Asset And Binding Boundary
 
-## Candidate Lifecycle
-
-- **[R-RWS-ASSET-001]** Runtime-generated or uploaded media is candidate
-  material until creator review.
-- **[R-RWS-ASSET-002]** Local preview, local history, or selected candidate state
-  is not public Realm asset truth.
-- **[R-RWS-ASSET-003]** Direct upload and resource finalization may be used only
-  through SDK Realm surfaces admitted to the Studio facade.
-- **[R-RWS-ASSET-004]** A profile-media save succeeds only after the
-  creator-world profile-media endpoint accepts the reviewed media URL or
-  identifier shape.
-
-## Profile Media
-
-- **[R-RWS-ASSET-005]** Avatar URL and profile cover URL are admitted profile
-  media fields for current Studio editing.
-- **[R-RWS-ASSET-006]** Studio must not infer additional public binding points
-  for banners, scenes, portraits, or voice samples by analogy.
-- **[R-RWS-ASSET-007]** Resource, OwnableAsset, or Binding truth may be claimed
-  only after a creator-world endpoint or an explicitly admitted binding ingress
-  confirms it.
-
-## Voice And Audio
-
-- **[R-RWS-ASSET-008]** Voice-demo audio remains candidate material unless the
-  voice endpoint confirms the reviewed voice settings.
-- **[R-RWS-ASSET-009]** Runtime audio synthesis output must not be treated as
-  custom voice ownership or public profile state.
-
-## Failure
-
-- **[R-RWS-ASSET-010]** Upload, finalize, media-write, and voice-write failures
-  must preserve the creator draft and report the failed capability.
+- **[R-RWS-ASSET-001]** Avatar, profile cover, voice, and reference media outputs are local candidates until creator review.
+- **[R-RWS-ASSET-002]** A reviewed media URL may become source state only through replaceWorldCharacter.
+- **[R-RWS-ASSET-003]** Resource, OwnableAsset, or Binding publication is not admitted unless a future owner-scoped Realm ingress is added.
+- **[R-RWS-ASSET-004]** Studio must not write AGENT host bindings or AGENT_* binding points.
+- **[R-RWS-ASSET-005]** Local preview media must preserve source world id, character id, content hash, and review state.
+- **[R-RWS-ASSET-006]** Missing media source data renders as a source gap, not a placeholder public asset.

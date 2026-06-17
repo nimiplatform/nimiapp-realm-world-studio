@@ -1,7 +1,7 @@
 [package]
 name = "nimiapp-realm-world-studio"
 version = "0.1.0"
-description = "Realm World Studio — Creator-facing operation desktop app for Realm worlds and creator agents."
+description = "Realm World Studio — Creator-facing operation desktop app for Realm worlds and creator characters."
 authors = ["Nimi Team"]
 edition = "2021"
 

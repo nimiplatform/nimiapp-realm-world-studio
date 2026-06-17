@@ -11,8 +11,8 @@ describe('Studio route boundaries', () => {
 
     expect(source).toContain('path="/worlds"');
     expect(source).toContain('path="/worlds/:worldId"');
-    expect(source).toContain('path="/worlds/:worldId/agents/:agentId"');
-    expect(source).not.toContain('path="/creator-agents/:agentId"');
+    expect(source).toContain('path="/worlds/:worldId/characters/:characterId"');
+    expect(source).not.toContain('path="/creator-characters/:characterId"');
     expect(source).not.toContain('path="/curation/forge-imported-system"');
     expect(source).not.toContain('path="/portfolio"');
   });

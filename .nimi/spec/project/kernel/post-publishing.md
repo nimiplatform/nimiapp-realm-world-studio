@@ -1,25 +1,14 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-POST-PUBLISHING-001
-title: Realm World Studio Post Boundary
+title: Post Publishing Boundary
 status: active
 owner: "@team"
-updated: 2026-06-16
+updated: 2026-06-18
 ---
 
-# Post Boundary
+# Post Publishing Boundary
 
-Realm World Studio is not an owner-authored post scheduling product in the
-current kernel. This file exists to make that boundary explicit.
-
-- **[R-RWS-POST-001]** Studio must not expose owner-authored post creation or
-  scheduling as product success state.
-- **[R-RWS-POST-002]** Studio must not reuse owner post, feed, campaign, or
-  moderation surfaces for creator-world agent maintenance.
-- **[R-RWS-POST-003]** AI-generated copy may be used only as reviewed candidate
-  text for admitted world or world-agent fields unless a post rule is added.
-- **[R-RWS-POST-004]** Local reminders, drafts, or scheduled timers must not be
-  described as Realm post publication.
-- **[R-RWS-POST-005]** If future post publishing is admitted, success must be
-  defined by a Realm post authority response carrying canonical post identity.
-- **[R-RWS-POST-006]** Missing or deferred post authority must fail closed rather
-  than publishing stale drafts or silently dropping attachments.
+- **[R-RWS-POST-001]** Realm World Studio does not own public post publishing for world characters in the current kernel.
+- **[R-RWS-POST-002]** Runtime-generated copy for authoring is local candidate material only.
+- **[R-RWS-POST-003]** Studio must not create local schedule, campaign, queue, or moderation authority.
+- **[R-RWS-POST-004]** Any future post surface must define author sourceRef, Realm write owner, attachment envelope, review state, and failure semantics before implementation.

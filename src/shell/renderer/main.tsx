@@ -43,7 +43,7 @@ function EntryFallback() {
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error('REALM_AGENT_STUDIO_ROOT_MISSING');
+  throw new Error('REALM_WORLD_STUDIO_ROOT_MISSING');
 }
 
 createRoot(rootElement).render(

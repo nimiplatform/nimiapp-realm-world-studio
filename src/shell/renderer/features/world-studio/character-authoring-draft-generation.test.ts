@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FallbackPolicy, FinishReason, RoutePolicy } from '@nimiplatform/sdk/runtime/generated';
 import {
   WORLD_STUDIO_AUTHORING_SURFACE_ID,
-  generateCreatorWorldAgentAuthoringDraftBatch,
-} from './agent-authoring-draft-generation.js';
-import type { CreatorWorldAgentAuthoringGenerationContext } from './world-studio-client.js';
+  generateCreatorWorldCharacterAuthoringDraftBatch,
+} from './character-authoring-draft-generation.js';
+import type { CreatorWorldCharacterAuthoringGenerationContext } from './world-studio-client.js';
 
 const mocks = vi.hoisted(() => ({
   createRuntimeClient: vi.fn(),
@@ -39,16 +39,16 @@ vi.mock('@nimiplatform/sdk/runtime', async (importOriginal) => {
 });
 
 vi.mock('./world-studio-client.js', () => ({
-  createCreatorWorldAgentAuthoringDraftBatch: mocks.createBatch,
+  createCreatorWorldCharacterAuthoringDraftBatch: mocks.createBatch,
 }));
 
 const worldId = 'world-cbdb';
-const agentId = 'agent-su-shi';
+const characterId = 'character-su-shi';
 
-function authoringContext(): CreatorWorldAgentAuthoringGenerationContext {
+function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
   return {
     sourceSkeleton: {
-      agentId,
+      characterId,
       worldId,
       sourceKind: 'CBDB',
       skeletonId: 'skeleton-su-shi',
@@ -86,12 +86,12 @@ function authoringContext(): CreatorWorldAgentAuthoringGenerationContext {
     },
     currentFinalState: {
       settings: {
-        agentId,
+        characterId,
         worldId,
         displayName: '蘇軾',
         description: '',
         greeting: '',
-        agentRuleVersion: 1,
+        characterCoreRevision: 1,
         updatedAt: '2026-06-16T00:00:00.000Z',
         boundaries: {},
         communication: {},
@@ -160,7 +160,7 @@ function runtimeResponse(candidates: readonly unknown[]) {
   };
 }
 
-describe('agent authoring draft Runtime generation', () => {
+describe('character authoring draft Runtime generation', () => {
   beforeEach(() => {
     for (const mock of Object.values(mocks)) {
       mock.mockReset();
@@ -186,7 +186,7 @@ describe('agent authoring draft Runtime generation', () => {
   it('fails closed before route catalog lookup when AIConfig targetRef is missing', async () => {
     mocks.readTargetRef.mockReturnValue(null);
 
-    await expect(generateCreatorWorldAgentAuthoringDraftBatch(worldId, agentId, authoringContext()))
+    await expect(generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext()))
       .rejects.toThrow('NimiAIConfig targetRef missing for text.generate');
 
     expect(mocks.listRouteOptions).not.toHaveBeenCalled();
@@ -197,7 +197,7 @@ describe('agent authoring draft Runtime generation', () => {
     const executeScenario = vi.fn(async () => runtimeResponse([]));
     mocks.createRuntimeClient.mockResolvedValue({ ai: { executeScenario } });
 
-    await expect(generateCreatorWorldAgentAuthoringDraftBatch(worldId, agentId, authoringContext()))
+    await expect(generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext()))
       .rejects.toThrow('non-empty candidates');
 
     expect(executeScenario).toHaveBeenCalled();
@@ -233,7 +233,7 @@ describe('agent authoring draft Runtime generation', () => {
     }));
     mocks.createRuntimeClient.mockResolvedValue({ ai: { executeScenario } });
 
-    await expect(generateCreatorWorldAgentAuthoringDraftBatch(worldId, agentId, authoringContext()))
+    await expect(generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext()))
       .rejects.toThrow('did not finish cleanly');
 
     expect(executeScenario).toHaveBeenCalled();
@@ -267,7 +267,7 @@ describe('agent authoring draft Runtime generation', () => {
     ]));
     mocks.createRuntimeClient.mockResolvedValue({ ai: { executeScenario } });
 
-    await generateCreatorWorldAgentAuthoringDraftBatch(worldId, agentId, authoringContext());
+    await generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext());
 
     expect(executeScenario).toHaveBeenCalledWith(
       expect.objectContaining({

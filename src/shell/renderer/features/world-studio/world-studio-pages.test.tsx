@@ -3,14 +3,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { CreatorWorldAgentDetailPage } from './world-studio-pages.js';
-import { generateCreatorWorldAgentAuthoringDraftBatch } from './agent-authoring-draft-generation.js';
+import { CreatorWorldCharacterDetailPage } from './world-studio-pages.js';
+import { generateCreatorWorldCharacterAuthoringDraftBatch } from './character-authoring-draft-generation.js';
 import {
-  CreatorWorldAgentDetailLoadError,
-  applyCreatorWorldAgentAuthoringDraftBatch,
-  getCreatorWorldAgentDetail,
-  reviewCreatorWorldAgentAuthoringDraftCandidate,
-  type CreatorWorldAgentDetail,
+  CreatorWorldCharacterDetailLoadError,
+  applyCreatorWorldCharacterAuthoringDraftBatch,
+  getCreatorWorldCharacterDetail,
+  reviewCreatorWorldCharacterAuthoringDraftCandidate,
+  type CreatorWorldCharacterDetail,
 } from './world-studio-client.js';
 
 vi.mock('./world-studio-client.js', async () => {
@@ -19,15 +19,15 @@ vi.mock('./world-studio-client.js', async () => {
   );
   return {
     ...actual,
-    applyCreatorWorldAgentAuthoringDraftBatch: vi.fn(),
-    getCreatorWorldAgentDetail: vi.fn(),
-    reviewCreatorWorldAgentAuthoringDraftCandidate: vi.fn(),
-    updateCreatorWorldAgent: vi.fn(),
+    applyCreatorWorldCharacterAuthoringDraftBatch: vi.fn(),
+    getCreatorWorldCharacterDetail: vi.fn(),
+    reviewCreatorWorldCharacterAuthoringDraftCandidate: vi.fn(),
+    updateCreatorWorldCharacter: vi.fn(),
   };
 });
 
-vi.mock('./agent-authoring-draft-generation.js', () => ({
-  generateCreatorWorldAgentAuthoringDraftBatch: vi.fn(),
+vi.mock('./character-authoring-draft-generation.js', () => ({
+  generateCreatorWorldCharacterAuthoringDraftBatch: vi.fn(),
 }));
 
 vi.mock('@nimiplatform/kit/ui', async () => {
@@ -85,9 +85,9 @@ vi.mock('@nimiplatform/kit/ui', async () => {
 });
 
 const worldId = 'cbdb-song-slice-real-20260614-world';
-const agentId = 'cbdb-song-slice-real-20260614-agent-255e4506ce';
+const characterId = 'cbdb-song-slice-real-20260614-character-255e4506ce';
 
-function renderAgentPage() {
+function renderCharacterPage() {
   const client = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -96,23 +96,23 @@ function renderAgentPage() {
   });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[`/worlds/${worldId}/agents/${agentId}`]}>
+      <MemoryRouter initialEntries={[`/worlds/${worldId}/characters/${characterId}`]}>
         <Routes>
-          <Route path="/worlds/:worldId/agents/:agentId" element={<CreatorWorldAgentDetailPage />} />
+          <Route path="/worlds/:worldId/characters/:characterId" element={<CreatorWorldCharacterDetailPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
   );
 }
 
-function suShiAgentDetail(): CreatorWorldAgentDetail {
-  const settings: CreatorWorldAgentDetail['settings'] = {
-    agentId,
+function suShiCharacterDetail(): CreatorWorldCharacterDetail {
+  const settings: CreatorWorldCharacterDetail['settings'] = {
+    characterId,
     worldId,
     displayName: '蘇軾',
     description: '',
     greeting: '',
-    agentRuleVersion: 1,
+    characterCoreRevision: 1,
     updatedAt: '2026-06-16T00:00:00.000Z',
     boundaries: {},
     communication: {},
@@ -128,13 +128,13 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
       factPath: 'sourceFacts.representativeFacts[0]',
     },
   ];
-  const sourceSkeleton: CreatorWorldAgentDetail['sourceSkeleton'] = {
-    agentId,
+  const sourceSkeleton: CreatorWorldCharacterDetail['sourceSkeleton'] = {
+    characterId,
     worldId,
     sourceKind: 'CBDB',
-    skeletonId: 'cbdb-song-slice-real-20260614-agent-skeleton-255e4506ce',
+    skeletonId: 'cbdb-song-slice-real-20260614-character-skeleton-255e4506ce',
     sourceEntityId: 'cbdb:person:su-shi',
-    candidateId: 'cbdb-song-slice-real-20260614-agent-candidate-255e4506ce',
+    candidateId: 'cbdb-song-slice-real-20260614-character-candidate-255e4506ce',
     sourceProfile: 'cbdb-historical',
     sourceRefs: ['CBDB:255e4506ce'],
     canonicalName: '蘇軾',
@@ -193,9 +193,9 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
   };
   const runtimeTrace = {
     runtimeAppId: 'nimi.realm-world-studio',
-    surfaceId: 'realm-world-studio.agent-authoring.greeting',
+    surfaceId: 'realm-world-studio.character-authoring.greeting',
     skeletonId: sourceSkeleton.skeletonId,
-    scenarioId: 'realm-world-studio.agent-authoring.greeting.v1',
+    scenarioId: 'realm-world-studio.character-authoring.greeting.v1',
     promptTemplateId: 'cbdb-authoring-greeting-v1',
     sourceDigestSha256: '1111111111111111111111111111111111111111111111111111111111111111',
   };
@@ -211,7 +211,7 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
     ],
   };
   return {
-    id: agentId,
+    id: characterId,
     displayName: '蘇軾',
     handle: 'cbdb-su-shi',
     bio: '',
@@ -221,28 +221,31 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
     ownerWorldId: worldId,
     state: 'INCUBATING',
     friendCount: 0,
-    source: 'Realm AgentService.getCreatorWorldAgent',
+    contentHash: 'hash-character-su-shi',
+    contentRevision: 1,
+    origin: { kind: 'forge', sourceId: 'cbdb:person:su-shi', sourceVersion: '0.1.0' },
+    source: 'Realm WorldCoreController.getWorldCharacter',
     settings,
     chatReadiness: {
-      agentId,
+      characterId,
       worldId,
       ownerScope: 'creator-world',
-      authorityReason: 'CREATOR_OWNER',
-      consumerSurface: 'AGENT_CHAT_READINESS',
+      authorityReason: 'WORLD_CHARACTER_CORE',
+      consumerSurface: 'RUNTIME_SOURCE_SNAPSHOT',
       selectedInputCount: 0,
       suppressedInputCount: 0,
       selectedOwnerSettingFields: [],
       runtimeProjectionChecksum: 'checksum:sushi',
       appliedAuthoringTargets: [],
-      rawRuleContentExposed: false,
-      worldRuleCount: 0,
-      agentRuleCount: 0,
+      rawCoreTextExposed: false,
+      worldCoreSectionCount: 0,
+      characterCoreSectionCount: 0,
       gates: {
         authoringDraftReady: false,
         behaviorDnaReady: false,
         dialogueExemplarsReady: false,
         greetingReady: false,
-        localAgentIdentityReady: true,
+        runtimeSourceIdentityReady: true,
         ownerSettingsReady: false,
         profileContextReady: true,
         profileCoverReady: false,
@@ -293,7 +296,7 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
       {
         id: 'authoring-batch-su-shi-1',
         worldId,
-        agentId,
+        characterId,
         skeletonId: sourceSkeleton.skeletonId,
         sourceKind: 'CBDB',
         status: 'ready_for_review',
@@ -305,7 +308,7 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
         failureMessage: '',
         metadata: {
           runtimeAppId: 'nimi.realm-world-studio',
-          surfaceId: 'realm-world-studio.agent-authoring.greeting',
+          surfaceId: 'realm-world-studio.character-authoring.greeting',
         },
         candidates: [
           {
@@ -330,69 +333,80 @@ function suShiAgentDetail(): CreatorWorldAgentDetail {
   };
 }
 
-describe('CreatorWorldAgentDetailPage source skeleton acceptance', () => {
+describe('CreatorWorldCharacterDetailPage source skeleton acceptance', () => {
   beforeEach(() => {
-    const detail = suShiAgentDetail();
-    vi.mocked(applyCreatorWorldAgentAuthoringDraftBatch).mockReset();
-    vi.mocked(generateCreatorWorldAgentAuthoringDraftBatch).mockReset();
-    vi.mocked(getCreatorWorldAgentDetail).mockReset();
-    vi.mocked(reviewCreatorWorldAgentAuthoringDraftCandidate).mockReset();
-    vi.mocked(applyCreatorWorldAgentAuthoringDraftBatch).mockResolvedValue({
+    const detail = suShiCharacterDetail();
+    vi.mocked(applyCreatorWorldCharacterAuthoringDraftBatch).mockReset();
+    vi.mocked(generateCreatorWorldCharacterAuthoringDraftBatch).mockReset();
+    vi.mocked(getCreatorWorldCharacterDetail).mockReset();
+    vi.mocked(reviewCreatorWorldCharacterAuthoringDraftCandidate).mockReset();
+    vi.mocked(applyCreatorWorldCharacterAuthoringDraftBatch).mockResolvedValue({
       appliedTargetKeys: ['greeting'],
       batch: detail.authoringDraftBatches[0]!,
     });
-    vi.mocked(getCreatorWorldAgentDetail).mockResolvedValue(detail);
-    vi.mocked(reviewCreatorWorldAgentAuthoringDraftCandidate).mockResolvedValue(
+    vi.mocked(getCreatorWorldCharacterDetail).mockResolvedValue(detail);
+    vi.mocked(reviewCreatorWorldCharacterAuthoringDraftCandidate).mockResolvedValue(
       detail.authoringDraftBatches[0]!.candidates[0]!,
     );
-    vi.mocked(generateCreatorWorldAgentAuthoringDraftBatch).mockResolvedValue({
+    vi.mocked(generateCreatorWorldCharacterAuthoringDraftBatch).mockResolvedValue({
       batch: detail.authoringDraftBatches[0]!,
       runtimeTraceId: 'runtime-trace-su-shi-greeting-1',
       promptDigestSha256: '2222222222222222222222222222222222222222222222222222222222222222',
     });
   });
 
-  it('renders Su Shi CBDB source facts, gaps, brief, and blocked runtime readiness', async () => {
-    const { container } = renderAgentPage();
+  it('renders Su Shi source evidence, readiness blockers, directives, and draft review', async () => {
+    const { container } = renderCharacterPage();
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '蘇軾' })).toBeInTheDocument());
 
+    expect(screen.getByRole('heading', { name: 'Character authoring status' })).toBeInTheDocument();
+    expect(screen.getByText('Generate auditable candidates from the source skeleton, review each target, then apply accepted values into final runtime fields.')).toBeInTheDocument();
+    expect(screen.getByText('Applied targets')).toBeInTheDocument();
+    expect(screen.getByText('Remaining blockers')).toBeInTheDocument();
+
     expect(screen.getByRole('heading', { name: 'Source identity' })).toBeInTheDocument();
-    expect(screen.getByText('CBDB historical')).toBeInTheDocument();
+    expect(screen.getAllByText('CBDB historical').length).toBeGreaterThan(0);
     expect(screen.getAllByText('蘇軾').length).toBeGreaterThan(0);
     expect(screen.getByText('子瞻 / 文忠 / 東坡居士')).toBeInTheDocument();
     expect(screen.getByText('1036 / 1101')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'World facts' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Source evidence' })).toBeInTheDocument();
     expect(screen.getByText('28 timeline facts')).toBeInTheDocument();
+    expect(screen.getAllByText('Office records').length).toBeGreaterThan(0);
     expect(screen.getByText('蘇軾 held office 朝奉郎 during 1085-0 in CBDB structured records.')).toBeInTheDocument();
     expect(screen.getByText('蘇轍: 10 (ASSOC_DATA.10)')).toBeInTheDocument();
+    expect(screen.queryByText('Representative offices')).not.toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Completion gaps' })).toBeInTheDocument();
-    for (const field of ['avatar', 'profileCover', 'voice', 'greeting', 'dialogueExemplars', 'behaviorDna']) {
+    expect(screen.getByRole('heading', { name: 'Readiness blockers' })).toBeInTheDocument();
+    for (const field of ['Avatar', 'Profile cover', 'Voice direction', 'Greeting', 'Dialogue examples', 'Behavior DNA']) {
       expect(screen.getAllByText(field).length).toBeGreaterThan(0);
     }
+    expect(screen.getByText('Runtime roleplay stays blocked until every required authoring target is reviewed and applied.')).toBeInTheDocument();
+    expect(screen.getByText('Review source evidence')).toBeInTheDocument();
+    expect(screen.getByText('Provide dialogue examples and behavior DNA')).toBeInTheDocument();
     expect(screen.getByText(/roleplay is blocked until creator accepts or completes/)).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Authoring brief' })).toBeInTheDocument();
-    expect(screen.getByText('Forge-derived brief')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Generation directives' })).toBeInTheDocument();
+    expect(screen.getByText('Forge advisory, not final output')).toBeInTheDocument();
     for (const label of [
-      'Description',
-      'Content style',
-      'Positioning',
-      'Avatar brief',
-      'Voice brief',
-      'Greeting brief',
-      'DNA brief',
+      'Allowed source basis',
+      'Must not claim',
+      'Creator decision needed',
+      'Drafting direction',
     ]) {
       expect(screen.getAllByText(label).length).toBeGreaterThan(0);
     }
+    expect(screen.getByText('Never claim this is the authentic historical voice.')).toBeInTheDocument();
+    expect(screen.getByText('Do not treat AI-authored lines as historical quotations.')).toBeInTheDocument();
 
-    expect(screen.getByRole('heading', { name: 'Generation targets' })).toBeInTheDocument();
-    expect(screen.getByText('profileCover: missing')).toBeInTheDocument();
-    expect(screen.getByText('greeting: pending')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Authoring targets' })).toBeInTheDocument();
+    expect(screen.getByText('Latest candidate: authoring-candidate-su-shi-greeting-1')).toBeInTheDocument();
+    expect(screen.getAllByText('Missing').length).toBeGreaterThan(0);
+    expect(screen.getByText('Pending review')).toBeInTheDocument();
+    expect(screen.getAllByText('No candidate persisted yet').length).toBeGreaterThan(0);
 
-    expect(screen.getByRole('heading', { name: 'Draft candidates' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'AI draft review' })).toBeInTheDocument();
     expect(screen.getByText('authoring-batch-su-shi-1')).toBeInTheDocument();
     expect(screen.getByText('runtime-trace-su-shi-greeting-1')).toBeInTheDocument();
     expect(screen.getByDisplayValue(/吾乃蘇軾/)).toBeInTheDocument();
@@ -403,16 +417,16 @@ describe('CreatorWorldAgentDetailPage source skeleton acceptance', () => {
   });
 
   it('reviews pending authoring candidates through the draft API', async () => {
-    renderAgentPage();
+    renderCharacterPage();
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Draft candidates' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'AI draft review' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /Accept/ }));
 
     await waitFor(() =>
-      expect(reviewCreatorWorldAgentAuthoringDraftCandidate).toHaveBeenCalledWith(
+      expect(reviewCreatorWorldCharacterAuthoringDraftCandidate).toHaveBeenCalledWith(
         worldId,
-        agentId,
+        characterId,
         'authoring-batch-su-shi-1',
         'authoring-candidate-su-shi-greeting-1',
         'accepted',
@@ -421,33 +435,33 @@ describe('CreatorWorldAgentDetailPage source skeleton acceptance', () => {
   });
 
   it('runs Runtime draft generation from the authoring workflow', async () => {
-    const detail = suShiAgentDetail();
-    renderAgentPage();
+    const detail = suShiCharacterDetail();
+    renderCharacterPage();
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Draft candidates' })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'AI draft review' })).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /Generate candidates/ }));
 
     await waitFor(() =>
-      expect(generateCreatorWorldAgentAuthoringDraftBatch).toHaveBeenCalledWith(
+      expect(generateCreatorWorldCharacterAuthoringDraftBatch).toHaveBeenCalledWith(
         worldId,
-        agentId,
+        characterId,
         detail.authoringContext,
       ),
     );
   });
 
   it('shows the failing creator-world detail stage instead of a generic unavailable message', async () => {
-    vi.mocked(getCreatorWorldAgentDetail).mockRejectedValueOnce(
-      new CreatorWorldAgentDetailLoadError(
+    vi.mocked(getCreatorWorldCharacterDetail).mockRejectedValueOnce(
+      new CreatorWorldCharacterDetailLoadError(
         'authoring-context',
         new Error('realm method is not admitted for Runtime mediation'),
       ),
     );
 
-    renderAgentPage();
+    renderCharacterPage();
 
-    expect(await screen.findByText('World agent unavailable')).toBeInTheDocument();
+    expect(await screen.findByText('World character unavailable')).toBeInTheDocument();
     expect(
       screen.getByText(
         'Realm authoring-context request failed: realm method is not admitted for Runtime mediation',

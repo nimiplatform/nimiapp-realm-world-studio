@@ -3,44 +3,18 @@ id: SPEC-REALM-WORLD-STUDIO-CORE-RULES-001
 title: Realm World Studio Core Rules
 status: active
 owner: "@team"
-updated: 2026-06-16
+updated: 2026-06-18
 ---
 
 # Core Rules
 
-These rules are the cross-cutting invariants for every Realm World Studio
-domain rule.
-
-## Authority
-
-- **[R-RWS-CORE-006]** Every implementation, test, governance check, and review
-  comment that cites a Realm World Studio rule must use an `R-RWS-*` identifier.
-- **[R-RWS-CORE-007]** Kernel rule changes require the affected kernel document
-  and `tables/rule-catalog.yaml` to change together.
-- **[R-RWS-CORE-008]** No compatibility layer, shim, legacy branch, or staged
-  "MVP first" shortcut is allowed for this pre-launch standalone app.
-- **[R-RWS-CORE-009]** Renderer screenshots, generated packets, `.nimi/local/**`,
-  topic files, and chat summaries are evidence, not authority.
-
-## Platform Posture
-
-- **[R-RWS-CORE-010]** Runtime account state must flow through
-  `runtime.account.*` via the `nimi-shell-tauri` IPC bridge.
-- **[R-RWS-CORE-011]** Studio must not store access tokens, refresh tokens, or
-  raw Realm credentials in renderer state, browser storage, files, or app-local
-  stores.
-- **[R-RWS-CORE-012]** Realm calls must be mediated through the app-scoped
-  `@nimiplatform/sdk` client and Runtime Realm bridge; app-local REST bypasses
-  are forbidden.
-- **[R-RWS-CORE-013]** Runtime AI route or model choices must come from Runtime
-  route/model authority or user-reviewed AI config, not hardcoded provider
-  routing.
-
-## Product Truth
-
-- **[R-RWS-CORE-014]** Studio must not synthesize placeholders, fake returns,
-  zero-fill counts, or renderer-local success to hide source unavailability.
-- **[R-RWS-CORE-015]** AI output is candidate material until human review and
-  the relevant admitted Realm write success.
-- **[R-RWS-CORE-016]** Kit and shared shell patterns are the visible interaction
-  system; a parallel design system requires a recorded kit gap before use.
+- **[R-RWS-CORE-001]** .nimi/spec/project/kernel/** is the only current app authority for Realm World Studio.
+- **[R-RWS-CORE-002]** Current app authority is WorldCore / WorldCharacterCore / RuntimeSourceSnapshot.
+- **[R-RWS-CORE-003]** Product success state must come from typed Realm, Runtime, SDK, or Tauri results.
+- **[R-RWS-CORE-004]** App-local drafts, generated candidates, screenshots, tests, and local audit output are not source authority.
+- **[R-RWS-CORE-005]** Missing source, permission, capability, content hash, or typed response must fail closed.
+- **[R-RWS-CORE-006]** Realm-side Agent, AgentRule, CharacterCard, rule package, truth package, and projection package paths are non-current.
+- **[R-RWS-CORE-007]** The word Agent may appear in this app only as LocalAgent runtime terminology or in explicitly forbidden legacy surface names.
+- **[R-RWS-CORE-008]** Runtime output is candidate material until a creator-reviewed Realm core write succeeds.
+- **[R-RWS-CORE-009]** Source fields that are unavailable must render as unavailable, not zero-filled or invented.
+- **[R-RWS-CORE-010]** Spec changes and implementation changes for the same behavior must land together.

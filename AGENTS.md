@@ -1,13 +1,13 @@
 # Realm World Studio AGENTS.md
 
-> Authoritative module-level instructions for AI agents working on Realm World Studio.
+> Authoritative module-level instructions for AI assistants working on Realm World Studio.
 
 ## Identity
 
 - **App name (English)**: Realm World Studio
 - **Canonical Nimi app_id**: `nimi.realm-world-studio`
 - **Tauri identifier**: `nimi.realm-world-studio`
-- **One-line**: Creator-facing world and world-agent operation desktop app for creator-owned Realm worlds.
+- **One-line**: Creator-facing world and world-character operation desktop app for creator-owned Realm worlds.
 - **Status**: Pre-Alpha, not yet launched.
 
 ## Architecture
@@ -38,21 +38,23 @@ authority. Active authority documents are the kernel doc set declared by
 from `@nimiplatform/nimi-coding`; refresh with `pnpm exec nimicoding start
 --yes` after bumping the package.
 
-Studio canonical creator/world surfaces are `/api/me/creator/worlds` and
-`/api/me/creator/worlds/{worldId}/agents/**`. `/api/me/agents` belongs to
-Realm Agent Studio and must not be used as creator world-agent authority.
-`/api/agent/forge-imported-system/**`, `/api/creator/agents/**`, and public
-world catalog reads must not be used for product success state.
+Studio canonical world surfaces are `Realm WorldCoreController.listWorldCores`,
+`getWorldCore`, `listWorldCharacters`, `getWorldCharacter`,
+`replaceWorldCharacter`, and `createRuntimeSourceSnapshot`. RealmPersona
+portfolio surfaces belong to Realm Persona Studio and must not be used as
+world-character authority. `/api/agent/forge-imported-system/**`,
+`/api/creator/characters/**`, and public world catalog reads are explicitly
+non-current anti-targets.
 
 ## Hard Boundaries
 
 ### Scope boundary
-- **In scope:** creator worlds, world-owned agent detail, world-agent settings, profile media, voice, and chat-readiness maintenance through creator/world authority.
-- **Out of scope:** owner `/api/me/agents` portfolio, LocalAgent private runtime / memory / emotion state, owner-authored post scheduling, generic fallback from creator/world reads to owner reads, gift/economic settlement, team collaboration.
+- **In scope:** WorldCore records, WorldCharacterCore detail, world-character settings, profile media, voice, and RuntimeSourceSnapshot readiness through Realm core authority.
+- **Out of scope:** RealmPersona owner portfolio, LocalAgent private runtime / memory / emotion state, owner-authored post scheduling, fallback from world reads to owner-persona reads, gift/economic settlement, team collaboration.
 
 ### Failure mode
 - Fail-closed on every typed contract or source-availability gap. No pseudo-success, no synthesized placeholders, no zero-fill metrics, no parallel app-local shadow truth.
-- Creator/world writes only succeed after the corresponding Realm creator-world endpoint returns canonical data.
+- Creator/world writes only succeed after the corresponding Realm core endpoint returns canonical data.
 - AI generation output is candidate material until creator human review.
 
 ### Auth boundary
@@ -151,7 +153,7 @@ Skip: `node_modules/`, `dist/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles
 - ESM imports use `.js` extension even for `.ts` files.
 - Tauri host glue is consumed from `nimi-shell-tauri` (`crates.io` 0.1.0) and `@nimiplatform/kit/shell/renderer/bridge` (npm).
 
-<!-- nimicoding:managed:agents:start -->
+<!-- nimicoding:managed:characters:start -->
 # Nimi Coding Managed Block
 
 - Read .nimi/methodology, .nimi/spec, and .nimi/contracts before high-risk changes.
@@ -170,4 +172,4 @@ Skip: `node_modules/`, `dist/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles
 - Keep the methodology continuity-agnostic; do not assume daemon, heartbeat, or persistent manager ownership.
 - Treat cutover readiness as preflight evidence only; the authority flip must come from an admitted cutover batch, not from readiness green by itself.
 - Do not treat this managed block as a replacement for project-specific rules outside .nimi.
-<!-- nimicoding:managed:agents:end -->
+<!-- nimicoding:managed:characters:end -->

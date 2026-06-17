@@ -138,6 +138,104 @@ a {
   font-weight: 600;
 }
 
+.ras-authoring-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr) auto;
+  align-items: center;
+  gap: 18px;
+}
+
+.ras-authoring-overview__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.ras-character-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.ras-character-workbench__main,
+.ras-character-workbench__side {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ras-character-workbench__side {
+  position: sticky;
+  top: 18px;
+}
+
+.ras-evidence-facets,
+.ras-directive-grid,
+.ras-target-list {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ras-evidence-facet,
+.ras-directive,
+.ras-target-row {
+  min-width: 0;
+  border: 1px solid var(--nimi-border-subtle);
+  border-radius: var(--nimi-radius-md);
+  background: color-mix(in srgb, var(--nimi-surface-card) 70%, transparent);
+  padding: 12px;
+}
+
+.ras-directive-grid {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.ras-directive__body {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ras-target-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 0.65fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.ras-target-row__meta {
+  margin-top: 4px;
+  color: var(--nimi-text-muted);
+  font-size: var(--nimi-type-body-sm-size);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.ras-target-row__final {
+  min-width: 0;
+  color: var(--nimi-text-secondary);
+}
+
+@media (max-width: 1100px) {
+  .ras-authoring-overview,
+  .ras-character-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .ras-character-workbench__side {
+    position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .ras-authoring-overview__metrics,
+  .ras-target-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ─────────────────────────────────────────────────────────────
  * App shell
  * ───────────────────────────────────────────────────────────── */
@@ -528,10 +626,10 @@ a {
 }
 
 /* ─────────────────────────────────────────────────────────────
- * Agent grid
+ * Character grid
  * ───────────────────────────────────────────────────────────── */
 
-.ras-agent-grid {
+.ras-character-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
@@ -581,7 +679,7 @@ a {
 .ras-text-size-label { font-size: var(--nimi-type-label-size); }
 
 /* ─────────────────────────────────────────────────────────────
- * Page-wrapper helpers used by per-agent route pages
+ * Page-wrapper helpers used by per-character route pages
  * ───────────────────────────────────────────────────────────── */
 
 .ras-workspace-intro {
@@ -616,16 +714,16 @@ a {
   max-width: 64ch;
 }
 
-/* Agent header (compact bar at top of /portfolio/:agentId/*) */
+/* Character header (compact bar at top of /portfolio/:characterId/*) */
 
-.ras-agent-header {
+.ras-character-header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 14px;
 }
 
-.ras-agent-header__identity {
+.ras-character-header__identity {
   display: flex;
   align-items: center;
   min-width: 0;
@@ -633,7 +731,7 @@ a {
   gap: 12px;
 }
 
-.ras-agent-header__name {
+.ras-character-header__name {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
@@ -644,7 +742,7 @@ a {
   text-overflow: ellipsis;
 }
 
-.ras-agent-header__handle {
+.ras-character-header__handle {
   color: var(--nimi-text-muted);
   font-size: 13px;
   white-space: nowrap;
@@ -652,7 +750,7 @@ a {
   text-overflow: ellipsis;
 }
 
-.ras-agent-header__meta {
+.ras-character-header__meta {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -695,7 +793,7 @@ a {
 }
 
 /* ─────────────────────────────────────────────────────────────
- * AgentProfileOverview
+ * PersonaProfileOverview
  * ───────────────────────────────────────────────────────────── */
 
 .ras-profile-grid {

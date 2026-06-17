@@ -24,7 +24,7 @@ this file, before changing kernel rules.
 4. Topic files, `.nimi/local/**`, generated packets, screenshots, and chat
    summaries are evidence only; they do not become authority without a kernel
    rule update.
-5. Scope expansion into owner `/api/me/agents`, LocalAgent private runtime
+5. Scope expansion into owner `/api/me/characters`, LocalAgent private runtime
    state, generic public world catalog success, Forge-imported system curation,
    economic settlement, or team collaboration is rejected unless the kernel is
    explicitly changed first.

@@ -1,31 +1,16 @@
 ---
-id: SPEC-REALM-WORLD-STUDIO-METRICS-AND-GAPS-001
-title: Realm World Studio Metrics And Realm Gaps
+id: SPEC-REALM-WORLD-STUDIO-METRICS-GAPS-001
+title: Metrics And Realm Gaps
 status: active
 owner: "@team"
-updated: 2026-06-16
+updated: 2026-06-18
 ---
 
 # Metrics And Realm Gaps
 
-## Source-Backed Metrics
-
-- **[R-RWS-METRIC-001]** `agentCount` may be displayed only from the
-  creator-world list/detail source.
-- **[R-RWS-METRIC-002]** `friendCount` may be displayed only from the
-  world-agent source field when present.
-- **[R-RWS-METRIC-003]** Missing counts are source unavailable, not zero.
-- **[R-RWS-METRIC-004]** Studio must not infer counts from list length,
-  LocalAgent data, public profiles, adoption data, or historical cache.
-
-## Realm Gaps
-
-- **[R-RWS-METRIC-005]** If Realm lacks a source for a desired creator metric,
-  Studio must show an unavailable state or omit the metric.
-- **[R-RWS-METRIC-006]** Operation logs, recent failures, and local draft state
-  may be shown only when labeled as local operational evidence.
-- **[R-RWS-METRIC-007]** Public success, admission, permission grants, install
-  availability, and release descriptors are platform-owned and must not be
-  inferred from local checks.
-- **[R-RWS-METRIC-008]** Adding a metric requires identifying its Realm or
-  Runtime source and adding a kernel rule before implementation.
+- **[R-RWS-METRIC-001]** characterCount is displayed only from WorldCore.core.characterCount or the actual returned character list length.
+- **[R-RWS-METRIC-002]** Missing counts render as source unavailable unless a returned list gives an exact count.
+- **[R-RWS-METRIC-003]** Missing authoring targets are computed from WorldCharacterCore source fields and shown as source gaps.
+- **[R-RWS-METRIC-004]** Runtime readiness checksums come from RuntimeSourceSnapshot.payloadHash or the source content hash.
+- **[R-RWS-METRIC-005]** Source-fact counts, relationship counts, and timeline counts must come from source-backed core fields.
+- **[R-RWS-METRIC-006]** New metrics require source owner, unavailable state, and fail-closed behavior before use.
