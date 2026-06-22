@@ -22,3 +22,4 @@ src-tauri/gen/schemas/
 
 # Local-only Claude Code harness preview config (per-developer)
 .claude/
+docs/superpowers/
