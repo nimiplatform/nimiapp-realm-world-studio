@@ -29,7 +29,7 @@ describe('LanguageSwitcher', () => {
   it('switches visible React copy through the kit segmented control', async () => {
     render(<LocalizedProbe />);
 
-    expect(screen.getByText('Creator worlds')).toBeInTheDocument();
+    expect(screen.getByText('Creator Worlds')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: '中' }));
 

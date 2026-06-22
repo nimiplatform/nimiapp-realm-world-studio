@@ -20,19 +20,18 @@ import { createStudioRuntimeClient } from '@renderer/data/runtime-client.js';
 import { readStudioAIConfigSelectedParams, readStudioAIConfigTargetRef } from '@renderer/features/ai-config/studio-ai-config-store.js';
 import { ensureStudioRuntimeClientReady } from '@renderer/infra/studio-bootstrap.js';
 import {
-  createCreatorWorldCharacterAuthoringDraftBatch,
-  type CreateCreatorWorldCharacterAuthoringDraftBatchInput,
+  type CreatorWorldCharacterAuthoringDraftBatchInput,
   type CreatorWorldCharacterAuthoringDraftBatch,
   type CreatorWorldCharacterAuthoringGenerationContext,
 } from './world-studio-client.js';
 
-export const WORLD_STUDIO_AUTHORING_PROMPT_TEMPLATE_ID = 'realm-world-studio.cbdb-authoring-draft.v1';
-export const WORLD_STUDIO_AUTHORING_SCENARIO_ID = 'realm-world-studio.character-authoring.generate-draft-batch.v1';
-export const WORLD_STUDIO_AUTHORING_SURFACE_ID = 'realm-world-studio.character-authoring.draft-batch';
+export const WORLD_STUDIO_AUTHORING_PROMPT_TEMPLATE_ID = 'realm-world-studio.character-authoring-local-candidates.v1';
+export const WORLD_STUDIO_AUTHORING_SCENARIO_ID = 'realm-world-studio.character-authoring.generate-local-candidates.v1';
+export const WORLD_STUDIO_AUTHORING_SURFACE_ID = 'realm-world-studio.character-authoring.local-candidates';
 const TOOL_CHOICE_NONE = 2;
 const RESPONSE_FORMAT_JSON_OBJECT = 2;
 
-type DraftCandidateInput = CreateCreatorWorldCharacterAuthoringDraftBatchInput['candidates'][number];
+type DraftCandidateInput = CreatorWorldCharacterAuthoringDraftBatchInput['candidates'][number];
 type CandidateTargetKey = DraftCandidateInput['targetKey'];
 type CandidateValueInput = DraftCandidateInput['value'];
 type CandidateValueProvenanceInput = CandidateValueInput['provenance'][number];
@@ -313,7 +312,7 @@ function buildExecuteScenarioRequest(input: {
           responseFormat: {
             kind: RESPONSE_FORMAT_JSON_OBJECT,
             schemaName: 'CharacterAuthoringDraftCandidates',
-            schemaDescription: 'JSON object containing non-empty candidates array for Realm authoring draft persistence.',
+            schemaDescription: 'JSON object containing non-empty local review-gated character authoring candidates.',
             strict: true,
           },
           topK: readNumberParam(input.binding.selectedParams, 'topK') ?? 0,
@@ -347,8 +346,16 @@ function parseRuntimeJsonResponse(response: ExecuteScenarioResponse): Record<str
 function validateSourceRef(value: unknown): CandidateSourceRefInput {
   const record = jsonRecord(value);
   const sourceRef = requireString(record.sourceRef, 'sourceRefs[].sourceRef');
+  const kind = normalizeText(record.kind);
+  if (kind && kind !== 'worldCharacter' && kind !== 'worldEntity' && kind !== 'sourceRecord') {
+    throw new Error(`Runtime authoring draft candidate has unsupported sourceRef kind ${kind}.`);
+  }
   return {
     sourceRef,
+    ...(kind ? { kind: kind as 'worldCharacter' | 'worldEntity' | 'sourceRecord' } : {}),
+    ...(normalizeText(record.worldId) ? { worldId: normalizeText(record.worldId) } : {}),
+    ...(normalizeText(record.sourceId) ? { sourceId: normalizeText(record.sourceId) } : {}),
+    ...(normalizeText(record.sourceContentHash) ? { sourceContentHash: normalizeText(record.sourceContentHash) } : {}),
     ...(normalizeText(record.sourceKind) ? { sourceKind: normalizeText(record.sourceKind) } : {}),
     ...(normalizeText(record.label) ? { label: normalizeText(record.label) } : {}),
     ...(normalizeText(record.factPath) ? { factPath: normalizeText(record.factPath) } : {}),
@@ -472,6 +479,42 @@ function validateRuntimeCandidate(value: unknown): Pick<DraftCandidateInput, 'ta
   };
 }
 
+function createLocalAuthoringDraftBatch(input: {
+  readonly worldId: string;
+  readonly characterId: string;
+  readonly body: CreatorWorldCharacterAuthoringDraftBatchInput;
+  readonly generatedAt: string;
+}): CreatorWorldCharacterAuthoringDraftBatch {
+  return {
+    id: `local-authoring-batch:${input.characterId}:${input.generatedAt}`,
+    worldId: input.worldId,
+    characterId: input.characterId,
+    sourceKind: 'worldCharacter',
+    skeletonId: input.body.skeletonId,
+    createdBy: STUDIO_RUNTIME_APP_ID,
+    status: 'ready_for_review',
+    createdAt: input.generatedAt,
+    updatedAt: input.generatedAt,
+    metadata: input.body.metadata,
+    candidates: input.body.candidates.map((candidate, index) => ({
+      id: `local-candidate:${input.characterId}:${input.generatedAt}:${index + 1}`,
+      targetKey: candidate.targetKey,
+      reviewStatus: 'pending',
+      value: candidate.value,
+      modelId: candidate.modelId,
+      routePolicy: candidate.routePolicy,
+      promptDigestSha256: candidate.promptDigestSha256,
+      runtimeTraceId: candidate.runtimeTraceId,
+      provenance: candidate.provenance,
+      generatedAt: candidate.generatedAt,
+      reviewedAt: null,
+      reviewerId: null,
+      appliedAt: null,
+      sourceRefs: candidate.sourceRefs,
+    })),
+  };
+}
+
 function buildCreateBatchBody(input: {
   readonly context: CreatorWorldCharacterAuthoringGenerationContext;
   readonly response: ExecuteScenarioResponse;
@@ -480,7 +523,7 @@ function buildCreateBatchBody(input: {
   readonly promptDigestSha256: string;
   readonly sourceDigestSha256: string;
   readonly generatedAt: string;
-}): CreateCreatorWorldCharacterAuthoringDraftBatchInput {
+}): CreatorWorldCharacterAuthoringDraftBatchInput {
   if (!input.response.traceId) {
     throw new Error('Runtime authoring draft response is missing traceId.');
   }
@@ -555,7 +598,12 @@ export async function generateCreatorWorldCharacterAuthoringDraftBatch(
     sourceDigestSha256,
     generatedAt: new Date().toISOString(),
   });
-  const batch = await createCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, body);
+  const batch = createLocalAuthoringDraftBatch({
+    worldId,
+    characterId,
+    body,
+    generatedAt: body.candidates[0]?.generatedAt || new Date().toISOString(),
+  });
   return {
     batch,
     runtimeTraceId: response.traceId,

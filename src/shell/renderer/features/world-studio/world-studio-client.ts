@@ -5,14 +5,22 @@ import type {
   RuntimeSourceSnapshotDto,
   WorldCharacterCoreDto,
   WorldCoreDto,
+  WorldEntityCoreDto,
 } from '@nimiplatform/sdk/realm/generated';
 import { createStudioRealmClient, type StudioRealmSurface } from '@renderer/data/realm-client.js';
 
 type StudioRealmClient = StudioRealmSurface;
 type JsonRecord = Record<string, unknown>;
+export const NIMI_WORLD_STUDIO_MAINTAINER_EMAIL = 'halliday@nimi.ai';
+export const NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID = '01J00000000000000000000000';
+export const NIMI_WORLD_STUDIO_MAINTAINER_ID = NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID;
 
 export type CreatorWorldSourceRef = {
   sourceRef: string;
+  kind?: 'worldCharacter' | 'worldEntity' | 'sourceRecord';
+  worldId?: string;
+  sourceId?: string;
+  sourceContentHash?: string;
   sourceKind?: string;
   factPath?: string;
   label?: string;
@@ -51,8 +59,8 @@ export type CreatorWorldCharacterSourceSkeleton = {
   skeletonId: string;
   sourceEntityId: string;
   candidateId: string;
-  sourceProfile: string;
-  sourceRefs: string[];
+  sourceIdentityId: string;
+  sourceRefs: CreatorWorldSourceRef[];
   canonicalName: string;
   aliases: string[];
   sourceFacts: {
@@ -103,6 +111,7 @@ export type CreatorWorldCharacterChatReadiness = {
   suppressedInputCount: number;
   selectedOwnerSettingFields: string[];
   runtimeProjectionChecksum: string;
+  runtimeSourceSnapshotError?: string;
   appliedAuthoringTargets: string[];
   rawCoreTextExposed: false;
   worldCoreSectionCount: 0;
@@ -256,17 +265,10 @@ export type CreatorWorldCharacterAuthoringDraftBatch = {
   candidates: CreatorWorldCharacterAuthoringDraftCandidate[];
 };
 
-export type CreateCreatorWorldCharacterAuthoringDraftBatchInput = {
+export type CreatorWorldCharacterAuthoringDraftBatchInput = {
   skeletonId: string;
   candidates: CreatorWorldCharacterAuthoringDraftCandidateInput[];
   metadata?: JsonRecord;
-};
-
-export type ReviewCreatorWorldCharacterAuthoringDraftCandidateResult = CreatorWorldCharacterAuthoringDraftCandidate;
-
-export type ApplyCreatorWorldCharacterAuthoringDraftBatchResult = {
-  appliedTargetKeys: string[];
-  batch: CreatorWorldCharacterAuthoringDraftBatch;
 };
 
 export type CreatorWorldSummary = {
@@ -275,7 +277,7 @@ export type CreatorWorldSummary = {
   type: 'CREATOR';
   status: string;
   creatorId: string;
-  authorityReason: 'CREATOR_OWNER' | 'MAINTAIN_ACCESS';
+  authorityReason: 'NIMI_MAINTAINER';
   tagline: string;
   description: string;
   overview: string;
@@ -294,7 +296,6 @@ export type CreatorWorldCharacterSummary = {
   avatarUrl: string | null;
   profileCoverUrl: string | null;
   worldId: string;
-  ownerWorldId: string | null;
   state: string | null;
   friendCount: number | null;
   contentHash: string;
@@ -359,6 +360,10 @@ function readRecord(value: unknown): JsonRecord {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as JsonRecord : {};
 }
 
+function readCoreSection(core: JsonRecord, key: string): JsonRecord {
+  return readRecord(core[key]);
+}
+
 function readString(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
@@ -373,6 +378,17 @@ function readStringArray(value: unknown): string[] {
     : [];
 }
 
+function stringifyFactValue(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
 function describeUnknownError(error: unknown): string {
   if (error instanceof Error && error.message.trim()) return error.message.trim();
   if (typeof error === 'string' && error.trim()) return error.trim();
@@ -383,21 +399,101 @@ function nonEmpty(value: string | null | undefined, fallback: string): string {
   return value && value.trim() ? value.trim() : fallback;
 }
 
-function normalizeWorld(world: WorldCoreDto): CreatorWorldSummary {
+function externalAssetUrl(core: JsonRecord, kind: string): string | null {
+  const externalRefs = readRecord(core.assets).externalRefs;
+  if (!Array.isArray(externalRefs)) return null;
+  for (const ref of externalRefs) {
+    const record = readRecord(ref);
+    if (readString(record.kind) === kind) {
+      return readString(record.uri);
+    }
+  }
+  return null;
+}
+
+function upsertExternalAssetUrl(assets: JsonRecord, kind: string, uri: string): JsonRecord {
+  const externalRefs = Array.isArray(assets.externalRefs) ? assets.externalRefs.map(readRecord) : [];
+  const nextRef = {
+    refId: `${kind}-external-1`,
+    kind,
+    uri,
+    purpose: `${kind}-display`,
+  };
+  const replaced = externalRefs.some((ref) => readString(ref.kind) === kind);
+  return {
+    ...assets,
+    resourceRefs: Array.isArray(assets.resourceRefs) ? assets.resourceRefs : [],
+    intents: Array.isArray(assets.intents) ? assets.intents : [],
+    externalRefs: replaced
+      ? externalRefs.map((ref) => readString(ref.kind) === kind ? { ...ref, ...nextRef } : ref)
+      : [...externalRefs, nextRef],
+  };
+}
+
+function readAuthoringExtensions(core: JsonRecord): JsonRecord {
+  return readRecord(readCoreSection(core, 'authoring').extensions);
+}
+
+function readWorldStudioSettings(core: JsonRecord): JsonRecord {
+  return readRecord(readAuthoringExtensions(core).worldStudioSettings);
+}
+
+function readWorldStudioVoice(core: JsonRecord): JsonRecord {
+  return readRecord(readWorldStudioSettings(core).voice);
+}
+
+function writeAuthoringExtension(core: JsonRecord, key: string, value: JsonRecord): JsonRecord {
+  const authoring = readCoreSection(core, 'authoring');
+  const extensions = readRecord(authoring.extensions);
+  return {
+    ...core,
+    authoring: {
+      ...authoring,
+      extensions: {
+        ...extensions,
+        [key]: value,
+      },
+    },
+  };
+}
+
+function requireUpdateText(value: string, fallback: string | null, field: string): string {
+  const trimmed = nullableString(value) ?? fallback;
+  if (!trimmed) {
+    throw new Error(`WorldCharacterCore update requires ${field}.`);
+  }
+  return trimmed;
+}
+
+function requireNimiMaintainedWorld(world: WorldCoreDto): void {
+  if (readString(world.creatorId) !== NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID) {
+    throw new Error(
+      `WorldCore ${world.id} is not maintained by ${NIMI_WORLD_STUDIO_MAINTAINER_EMAIL} (${NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID}).`,
+    );
+  }
+}
+
+function normalizeWorld(world: WorldCoreDto, characterCount: number): CreatorWorldSummary {
+  requireNimiMaintainedWorld(world);
   const core = readRecord(world.core);
+  const identity = readCoreSection(core, 'identity');
+  const presentation = readCoreSection(core, 'presentation');
   return {
     id: world.id,
-    name: nonEmpty(readString(core.name) || readString(core.displayName), world.id),
+    name: nonEmpty(
+      readString(identity.name) || readString(presentation.displayName) || readString(presentation.title),
+      world.id,
+    ),
     type: 'CREATOR',
-    status: readString(core.status) || world.visibility,
-    creatorId: readString(world.creatorId) || 'system',
-    authorityReason: world.creatorId ? 'CREATOR_OWNER' : 'MAINTAIN_ACCESS',
-    tagline: readString(core.tagline) || readString(core.motto) || '',
-    description: readString(core.description) || '',
-    overview: readString(core.overview) || '',
-    iconUrl: readString(core.iconUrl),
-    bannerUrl: readString(core.bannerUrl),
-    characterCount: readNumber(core.characterCount) || 0,
+    status: world.visibility,
+    creatorId: NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID,
+    authorityReason: 'NIMI_MAINTAINER',
+    tagline: readString(presentation.tagline) || readString(identity.tagline) || '',
+    description: readString(identity.summary) || '',
+    overview: readString(identity.summary) || '',
+    iconUrl: readString(presentation.iconResourceRef) || externalAssetUrl(core, 'icon'),
+    bannerUrl: readString(presentation.bannerResourceRef) || externalAssetUrl(core, 'banner'),
+    characterCount,
     updatedAt: world.updatedAt,
     source: 'Realm WorldCoreController.listWorldCores',
   };
@@ -409,19 +505,20 @@ function characterCore(character: WorldCharacterCoreDto): JsonRecord {
 
 function normalizeWorldCharacter(character: WorldCharacterCoreDto): CreatorWorldCharacterSummary {
   const core = characterCore(character);
+  const identity = readCoreSection(core, 'identity');
+  const presentation = readCoreSection(core, 'presentation');
   return {
     id: character.id,
     displayName: nonEmpty(
-      readString(core.displayName) || readString(core.name) || readString(core.canonicalName),
+      readString(presentation.displayName) || readString(identity.name),
       character.id,
     ),
-    handle: nonEmpty(readString(core.handle) || readString(core.slug), character.id),
-    bio: readString(core.description) || readString(core.concept) || '',
-    avatarUrl: readString(core.avatarUrl) || readString(core.referenceImageUrl),
-    profileCoverUrl: readString(core.profileCoverUrl),
+    handle: character.id,
+    bio: readString(identity.summary) || readString(presentation.shortBio) || '',
+    avatarUrl: readString(presentation.avatarResourceRef) || externalAssetUrl(core, 'avatar'),
+    profileCoverUrl: readString(presentation.profileCoverResourceRef) || externalAssetUrl(core, 'profileCover'),
     worldId: character.worldId,
-    ownerWorldId: character.worldId,
-    state: readString(core.state) || readString(core.status),
+    state: null,
     friendCount: null,
     contentHash: character.contentHash,
     contentRevision: character.contentRevision,
@@ -432,87 +529,191 @@ function normalizeWorldCharacter(character: WorldCharacterCoreDto): CreatorWorld
 
 function settingsFromCharacter(character: WorldCharacterCoreDto): CreatorWorldCharacterSettingsDto {
   const core = characterCore(character);
-  const communication = readRecord(core.communication) as CreatorWorldCharacterSettingsDto['communication'];
-  const positioning = readRecord(core.positioning) as CreatorWorldCharacterSettingsDto['positioning'];
+  const identity = readCoreSection(core, 'identity');
+  const presentation = readCoreSection(core, 'presentation');
+  const interactionProfile = readCoreSection(core, 'interactionProfile');
+  const psychology = readCoreSection(core, 'psychology');
+  const settings = readWorldStudioSettings(core);
+  const communication = readRecord(settings.communication) as CreatorWorldCharacterSettingsDto['communication'];
+  const positioning = readRecord(settings.positioning) as CreatorWorldCharacterSettingsDto['positioning'];
   return {
     characterId: character.id,
     worldId: character.worldId,
-    displayName: readString(core.displayName) || readString(core.name) || '',
-    description: readString(core.description) || readString(core.concept) || '',
-    greeting: readString(core.greeting) || '',
+    displayName: readString(presentation.displayName) || readString(identity.name) || '',
+    description: readString(identity.summary) || readString(presentation.shortBio) || '',
+    greeting: readString(interactionProfile.greeting) || '',
     characterCoreRevision: character.contentRevision,
     updatedAt: character.updatedAt,
-    boundaries: readRecord(core.boundaries),
+    boundaries: readRecord(settings.boundaries).items
+      ? readRecord(settings.boundaries)
+      : { items: readStringArray(psychology.boundaries) },
     communication,
-    identity: readRecord(core.identity),
-    personality: readRecord(core.personality),
+    identity,
+    personality: psychology,
     positioning,
   };
 }
 
 function missingTargets(character: WorldCharacterCoreDto): string[] {
   const core = characterCore(character);
+  const presentation = readCoreSection(core, 'presentation');
+  const interactionProfile = readCoreSection(core, 'interactionProfile');
   const settings = settingsFromCharacter(character);
+  const voice = readWorldStudioVoice(core);
   const missing: string[] = [];
-  if (!readString(core.avatarUrl)) missing.push('avatar');
-  if (!readString(core.profileCoverUrl)) missing.push('profileCover');
-  if (!readString(core.voiceId) && !readString(readRecord(core.voice).voiceId)) missing.push('voice');
+  if (!readString(presentation.avatarResourceRef) && !externalAssetUrl(core, 'avatar')) missing.push('avatar');
+  if (!readString(presentation.profileCoverResourceRef) && !externalAssetUrl(core, 'profileCover')) missing.push('profileCover');
+  if (!readString(voice.voiceId)) missing.push('voice');
   if (!settings.greeting) missing.push('greeting');
-  if (!readString(core.dialogueExemplars)) missing.push('dialogueExemplars');
-  if (!readString(core.behaviorDna)) missing.push('behaviorDna');
+  if (readStringArray(interactionProfile.dialogueExemplars).length === 0) missing.push('dialogueExemplars');
+  if (readStringArray(readCoreSection(core, 'psychology').drives).length === 0) missing.push('behaviorDna');
   if (!settings.description) missing.push('description');
   if (!readString(settings.communication.contentStyle)) missing.push('contentStyle');
   if (!readString(settings.positioning.positioning)) missing.push('publicPositioning');
   return missing;
 }
 
-function sourceRefsFromCharacter(character: WorldCharacterCoreDto): string[] {
-  const core = characterCore(character);
-  const explicit = readStringArray(core.sourceRefs);
-  if (explicit.length > 0) return explicit;
-  const sourceId = readString(character.origin.sourceId);
-  return sourceId ? [sourceId] : [`world-character:${character.id}`];
+function requireCharacterEntityId(character: WorldCharacterCoreDto): string {
+  const entityId = readString(character.entityId);
+  if (!entityId) {
+    throw new Error(`WorldCharacterCore ${character.id} is missing required entityId.`);
+  }
+  const placementEntityId = readString(readCoreSection(characterCore(character), 'placement').entityId);
+  if (placementEntityId && placementEntityId !== entityId) {
+    throw new Error(`WorldCharacterCore ${character.id} entityId ${entityId} does not match placement.entityId ${placementEntityId}.`);
+  }
+  return entityId;
 }
 
-function sourceSkeletonFromCharacter(character: WorldCharacterCoreDto): CreatorWorldCharacterSourceSkeleton {
+function sourceRefsFromEntity(entity: WorldEntityCoreDto): CreatorWorldSourceRef[] {
+  const core = readRecord(entity.core);
+  const evidence = readRecord(core.evidence);
+  const facts = Array.isArray(core.facts) ? core.facts.map(readRecord) : [];
+  const refs = new Map<string, CreatorWorldSourceRef>();
+  const addRef = (sourceRef: string, factPath?: string) => {
+    const trimmed = readString(sourceRef);
+    if (!trimmed) return;
+    refs.set(`${trimmed}:${factPath || ''}`, {
+      sourceRef: trimmed,
+      kind: 'sourceRecord',
+      worldId: entity.worldId,
+      sourceId: entity.id,
+      sourceContentHash: entity.contentHash,
+      sourceKind: entity.origin.kind,
+      label: entity.id,
+      ...(factPath ? { factPath } : {}),
+    });
+  };
+  for (const sourceRef of readStringArray(evidence.sourceRefs)) addRef(sourceRef);
+  facts.forEach((fact, index) => {
+    for (const sourceRef of readStringArray(fact.sourceRefs)) addRef(sourceRef, `core.facts[${index}]`);
+  });
+  refs.set(`worldEntity:${entity.worldId}:${entity.id}:${entity.contentHash}`, {
+    sourceRef: `worldEntity:${entity.worldId}:${entity.id}:${entity.contentHash}`,
+    kind: 'worldEntity',
+    worldId: entity.worldId,
+    sourceId: entity.id,
+    sourceContentHash: entity.contentHash,
+    sourceKind: entity.kind,
+    label: entity.id,
+  });
+  return [...refs.values()];
+}
+
+function relationshipFactsFromCharacter(character: WorldCharacterCoreDto): CreatorWorldCharacterSourceSkeleton['sourceFacts']['relationships'] {
+  const relationships = characterCore(character).relationships;
+  if (!Array.isArray(relationships)) return [];
+  return relationships.map((relationship) => {
+    const record = readRecord(relationship);
+    return {
+      targetEntityId: readString(record.targetRef) || undefined,
+      targetName: readString(record.targetRef) || 'unresolved-target',
+      relationType: readString(record.relationType) || 'relationship',
+      context: readString(record.summary) || undefined,
+    };
+  });
+}
+
+function factsFromEntity(entity: WorldEntityCoreDto) {
+  const facts = readRecord(entity.core).facts;
+  return Array.isArray(facts) ? facts.map(readRecord) : [];
+}
+
+function factText(fact: JsonRecord): string {
+  const label = readString(fact.label) || readString(fact.type) || readString(fact.factId) || 'fact';
+  const value = stringifyFactValue(fact.value);
+  return value ? `${label}: ${value}` : label;
+}
+
+function factYear(facts: readonly JsonRecord[], tokens: readonly string[]): number | null {
+  for (const fact of facts) {
+    const haystack = [
+      readString(fact.type),
+      readString(fact.label),
+      readString(fact.factId),
+    ].filter(Boolean).join(' ').toLowerCase();
+    if (!tokens.some((token) => haystack.includes(token))) continue;
+    const direct = readNumber(fact.value);
+    if (direct != null) return direct;
+    const parsed = Number.parseInt(stringifyFactValue(fact.value), 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
+}
+
+function sourceSkeletonFromCharacter(
+  character: WorldCharacterCoreDto,
+  entity: WorldEntityCoreDto,
+): CreatorWorldCharacterSourceSkeleton {
   const core = characterCore(character);
+  const entityCore = readRecord(entity.core);
+  const identity = readCoreSection(core, 'identity');
+  const entityIdentity = readCoreSection(entityCore, 'identity');
+  const entityFacts = factsFromEntity(entity);
   const displayName = nonEmpty(
-    readString(core.canonicalName) || readString(core.displayName) || readString(core.name),
-    character.id,
+    readString(entityIdentity.name) || readString(identity.name),
+    entity.id,
   );
-  const birthYear = readNumber(core.birthYear);
-  const deathYear = readNumber(core.deathYear);
-  const representativeFacts = readStringArray(core.representativeFacts);
-  const sourceRefs = sourceRefsFromCharacter(character);
+  const birthYear = factYear(entityFacts, ['birth', 'born', '生']);
+  const deathYear = factYear(entityFacts, ['death', 'died', '卒', '死']);
+  const representativeFacts = entityFacts.map(factText).filter(Boolean);
+  const sourceRefs = sourceRefsFromEntity(entity);
   const missingFields = missingTargets(character);
   return {
     characterId: character.id,
     worldId: character.worldId,
-    sourceKind: readString(core.sourceKind) || character.origin.kind,
+    sourceKind: character.origin.kind,
     skeletonId: `world-character:${character.id}:${character.contentHash}`,
-    sourceEntityId: readString(character.entityId) || readString(character.origin.sourceId) || character.id,
-    candidateId: readString(core.candidateId) || '',
-    sourceProfile: readString(core.sourceProfile) || 'world-character-core',
+    sourceEntityId: entity.id,
+    candidateId: readString(readAuthoringExtensions(core).candidateId) || '',
+    sourceIdentityId: readString(readCoreSection(entityCore, 'authoring').source) || entity.kind,
     sourceRefs,
     canonicalName: displayName,
-    aliases: readStringArray(core.aliases),
+    aliases: readStringArray(entityIdentity.aliases).length > 0 ? readStringArray(entityIdentity.aliases) : readStringArray(identity.aliases),
     sourceFacts: {
       birthYear,
       deathYear,
-      timelineFactCount: readNumber(core.timelineFactCount) || representativeFacts.length,
+      timelineFactCount: representativeFacts.length,
       representativeFacts,
-      officeFacts: [],
-      relationships: [],
+      officeFacts: entityFacts
+        .filter((fact) => {
+          const type = [readString(fact.type), readString(fact.label)].filter(Boolean).join(' ').toLowerCase();
+          return type.includes('office') || type.includes('官') || type.includes('post');
+        })
+        .map((fact) => ({ summary: factText(fact), officeName: readString(fact.label) || undefined })),
+      relationships: relationshipFactsFromCharacter(character),
     },
     missingFields,
     completionBrief: {
-      description: readString(core.description) || 'WorldCharacterCore description is empty.',
-      contentStyle: readString(readRecord(core.communication).contentStyle) || 'Define content style in WorldCharacterCore.communication.',
-      positioning: readString(readRecord(core.positioning).positioning) || 'Define public positioning in WorldCharacterCore.positioning.',
-      avatarBrief: readString(core.avatarBrief) || 'Avatar must be creator-reviewed before publication.',
-      voiceBrief: readString(core.voiceBrief) || 'Voice must be creator-reviewed before runtime use.',
-      greetingBrief: readString(core.greetingBrief) || 'Greeting must be creator-reviewed before runtime use.',
-      dnaBrief: readString(core.dnaBrief) || `canonicalName=${displayName}`,
+      description: settingsFromCharacter(character).description || 'WorldCharacterCore description is empty.',
+      contentStyle: readString(settingsFromCharacter(character).communication.contentStyle)
+        || 'Define content style in WorldCharacterCore authoring.extensions.worldStudioSettings.communication.',
+      positioning: readString(settingsFromCharacter(character).positioning.positioning)
+        || 'Define public positioning in WorldCharacterCore authoring.extensions.worldStudioSettings.positioning.',
+      avatarBrief: readString(readWorldStudioSettings(core).avatarBrief) || 'Avatar must be creator-reviewed before publication.',
+      voiceBrief: readString(readWorldStudioSettings(core).voiceBrief) || 'Voice must be creator-reviewed before runtime use.',
+      greetingBrief: readString(readWorldStudioSettings(core).greetingBrief) || 'Greeting must be creator-reviewed before runtime use.',
+      dnaBrief: readString(readWorldStudioSettings(core).behaviorBrief) || `canonicalName=${displayName}`,
     },
     runtimeReadiness: {
       roleplayRuntime: missingFields.length === 0 ? 'ready' : 'blocked',
@@ -521,8 +722,8 @@ function sourceSkeletonFromCharacter(character: WorldCharacterCoreDto): CreatorW
         : 'WorldCharacterCore is missing required creator-reviewed fields.',
       requiredCreatorActions: missingFields.map((field) => `provide-${field}`),
     },
-    packageId: readString(core.packageId) || '',
-    packageVersion: readString(core.packageVersion) || '',
+    packageId: readString(entity.origin.sourceId) || '',
+    packageVersion: readString(entity.origin.sourceVersion) || '',
   };
 }
 
@@ -532,22 +733,24 @@ function contextFromCharacter(
 ): CreatorWorldCharacterAuthoringGenerationContext {
   const core = characterCore(character);
   const settings = settingsFromCharacter(character);
+  const presentation = readCoreSection(core, 'presentation');
+  const worldStudioSettings = readWorldStudioSettings(core);
   return {
     sourceSkeleton,
     currentFinalState: {
       settings,
       media: {
-        avatarResourceId: readString(core.avatarResourceId) || '',
-        avatarUrl: readString(core.avatarUrl) || '',
-        profileCoverResourceId: readString(core.profileCoverResourceId) || '',
-        profileCoverUrl: readString(core.profileCoverUrl) || '',
+        avatarResourceId: readString(presentation.avatarResourceRef) || '',
+        avatarUrl: externalAssetUrl(core, 'avatar') || '',
+        profileCoverResourceId: readString(presentation.profileCoverResourceRef) || '',
+        profileCoverUrl: externalAssetUrl(core, 'profileCover') || '',
       },
       voice: {
-        voice: Object.keys(readRecord(core.voice)).length > 0 ? readRecord(core.voice) : null,
+        voice: Object.keys(readRecord(worldStudioSettings.voice)).length > 0 ? readRecord(worldStudioSettings.voice) : null,
       },
     },
     groundingRefs: sourceSkeleton.sourceRefs.map((sourceRef): CreatorWorldSourceRef => ({
-      sourceRef,
+      ...sourceRef,
       label: sourceSkeleton.canonicalName,
     })),
     requiredTargets: sourceSkeleton.missingFields,
@@ -559,12 +762,16 @@ function chatReadinessFromCharacter(
   character: WorldCharacterCoreDto,
   skeleton: CreatorWorldCharacterSourceSkeleton,
   snapshot?: RuntimeSourceSnapshotDto | null,
+  snapshotError?: string,
 ): CreatorWorldCharacterChatReadiness {
   const core = characterCore(character);
+  const presentation = readCoreSection(core, 'presentation');
   const settings = settingsFromCharacter(character);
-  const voice = readRecord(core.voice);
-  const hasVoice = Boolean(readString(core.voiceId) || readString(voice.voiceId));
-  const hasProfileMedia = Boolean(readString(core.avatarUrl) || readString(core.profileCoverUrl));
+  const voice = readWorldStudioVoice(core);
+  const avatarUrl = externalAssetUrl(core, 'avatar');
+  const profileCoverUrl = externalAssetUrl(core, 'profileCover');
+  const hasVoice = Boolean(readString(voice.voiceId));
+  const hasProfileMedia = Boolean(readString(presentation.avatarResourceRef) || avatarUrl || readString(presentation.profileCoverResourceRef) || profileCoverUrl);
   return {
     characterId: character.id,
     worldId: character.worldId,
@@ -575,6 +782,7 @@ function chatReadinessFromCharacter(
     suppressedInputCount: 0,
     selectedOwnerSettingFields: [],
     runtimeProjectionChecksum: snapshot?.payloadHash || character.contentHash,
+    ...(snapshotError ? { runtimeSourceSnapshotError: snapshotError } : {}),
     appliedAuthoringTargets: [],
     rawCoreTextExposed: false,
     worldCoreSectionCount: 0,
@@ -584,26 +792,26 @@ function chatReadinessFromCharacter(
       behaviorDnaReady: !skeleton.missingFields.includes('behaviorDna'),
       dialogueExemplarsReady: !skeleton.missingFields.includes('dialogueExemplars'),
       greetingReady: Boolean(settings.greeting),
-      runtimeSourceIdentityReady: true,
+      runtimeSourceIdentityReady: Boolean(snapshot),
       ownerSettingsReady: Boolean(settings.displayName && settings.description),
       profileContextReady: true,
-      profileCoverReady: Boolean(readString(core.profileCoverUrl)),
+      profileCoverReady: Boolean(readString(presentation.profileCoverResourceRef) || profileCoverUrl),
       profileMediaReady: hasProfileMedia,
       speechRouteReady: Boolean(readString(voice.speechRoutePolicy)),
       voiceReferenceReady: hasVoice,
     },
     profile: {
       displayName: settings.displayName,
-      handle: nonEmpty(readString(core.handle) || readString(core.slug), character.id),
-      avatarResourceId: readString(core.avatarResourceId) || '',
-      avatarUrl: readString(core.avatarUrl) || '',
-      profileCoverResourceId: readString(core.profileCoverResourceId) || '',
-      profileCoverUrl: readString(core.profileCoverUrl) || '',
-      defaultVoiceReference: readString(core.voiceId) || readString(voice.voiceId) || '',
-      speechModelId: readString(core.speechModelId) || readString(voice.speechModelId) || '',
-      speechRoutePolicy: readString(core.speechRoutePolicy) === 'cloud' || readString(voice.speechRoutePolicy) === 'cloud'
+      handle: character.id,
+      avatarResourceId: readString(presentation.avatarResourceRef) || '',
+      avatarUrl: avatarUrl || '',
+      profileCoverResourceId: readString(presentation.profileCoverResourceRef) || '',
+      profileCoverUrl: profileCoverUrl || '',
+      defaultVoiceReference: readString(voice.voiceId) || '',
+      speechModelId: readString(voice.speechModelId) || '',
+      speechRoutePolicy: readString(voice.speechRoutePolicy) === 'cloud'
         ? 'cloud'
-        : readString(core.speechRoutePolicy) === 'local' || readString(voice.speechRoutePolicy) === 'local'
+        : readString(voice.speechRoutePolicy) === 'local'
           ? 'local'
           : '',
     },
@@ -612,16 +820,18 @@ function chatReadinessFromCharacter(
 
 function normalizeWorldCharacterDetail(
   character: WorldCharacterCoreDto,
+  entity: WorldEntityCoreDto,
   snapshot?: RuntimeSourceSnapshotDto | null,
+  snapshotError?: string,
 ): CreatorWorldCharacterDetail {
-  const skeleton = sourceSkeletonFromCharacter(character);
+  const skeleton = sourceSkeletonFromCharacter(character, entity);
   return {
     ...normalizeWorldCharacter(character),
     settings: settingsFromCharacter(character),
     sourceSkeleton: skeleton,
     authoringContext: contextFromCharacter(character, skeleton),
     authoringDraftBatches: [],
-    chatReadiness: chatReadinessFromCharacter(character, skeleton, snapshot),
+    chatReadiness: chatReadinessFromCharacter(character, skeleton, snapshot, snapshotError),
     source: 'Realm WorldCoreController.getWorldCharacter',
   };
 }
@@ -656,9 +866,11 @@ export async function listCreatorWorlds(
   realm: StudioRealmClient = createStudioRealmClient(),
 ): Promise<CreatorWorldSummary[]> {
   const worlds = await realm.worldCoreControllerListWorldCores({ path: {}, query: { take: 100 } });
-  return worlds
-    .map(normalizeWorld)
-    .filter((world) => world.type === 'CREATOR' || world.creatorId !== 'system');
+  const maintainedWorlds = worlds.filter((world) => readString(world.creatorId) === NIMI_WORLD_STUDIO_MAINTAINER_ACCOUNT_ID);
+  return Promise.all(maintainedWorlds.map(async (world) => {
+    const characters = await realm.worldCoreControllerListWorldCharacters({ path: { worldId: world.id } });
+    return normalizeWorld(world, characters.length);
+  }));
 }
 
 export async function listCreatorWorldCharacters(
@@ -674,13 +886,16 @@ export async function getCreatorWorldDetail(
   realm: StudioRealmClient = createStudioRealmClient(),
 ): Promise<CreatorWorldDetail> {
   const [world, characters] = await Promise.all([
-    realm.worldCoreControllerGetWorldCore({ path: { worldId } }).then(normalizeWorld),
+    realm.worldCoreControllerGetWorldCore({ path: { worldId } }),
     listCreatorWorldCharacters(worldId, realm),
   ]);
-  return { ...world, characters };
+  return { ...normalizeWorld(world, characters.length), characters };
 }
 
 function runtimeSourceSnapshotInput(character: WorldCharacterCoreDto): CreateRuntimeSourceSnapshotDto {
+  if (!character.id.trim() || !character.worldId.trim() || !character.contentHash.trim()) {
+    throw new Error('WorldCharacterCore RuntimeSourceSnapshot requires id, worldId, and contentHash.');
+  }
   return {
     sourceRef: {
       kind: 'worldCharacter',
@@ -701,48 +916,31 @@ export async function getCreatorWorldCharacterDetail(
     if (character.worldId !== worldId) {
       throw new Error(`WorldCharacterCore ${characterId} belongs to ${character.worldId}, not ${worldId}.`);
     }
-    let snapshot: RuntimeSourceSnapshotDto | null = null;
+    let entity: WorldEntityCoreDto;
     try {
-      snapshot = await realm.worldCoreControllerCreateRuntimeSourceSnapshot({
+      const entityId = requireCharacterEntityId(character);
+      entity = await realm.worldCoreControllerGetWorldEntity({ path: { entityId } });
+      if (entity.worldId !== worldId) {
+        throw new Error(`WorldEntityCore ${entityId} belongs to ${entity.worldId}, not ${worldId}.`);
+      }
+    } catch (error) {
+      throw new CreatorWorldCharacterDetailLoadError('source-skeleton', error);
+    }
+    try {
+      const snapshot = await realm.worldCoreControllerCreateRuntimeSourceSnapshot({
         path: {},
         body: runtimeSourceSnapshotInput(character),
       });
-    } catch {
-      snapshot = null;
+      return normalizeWorldCharacterDetail(character, entity, snapshot);
+    } catch (error) {
+      return normalizeWorldCharacterDetail(character, entity, null, describeUnknownError(error));
     }
-    return normalizeWorldCharacterDetail(character, snapshot);
   } catch (error) {
+    if (error instanceof CreatorWorldCharacterDetailLoadError) {
+      throw error;
+    }
     throw new CreatorWorldCharacterDetailLoadError('character-detail', error);
   }
-}
-
-export async function reviewCreatorWorldCharacterAuthoringDraftCandidate(
-  _worldId: string,
-  _characterId: string,
-  _batchId: string,
-  _candidateId: string,
-  _status: CreatorWorldCharacterAuthoringReviewStatus,
-  _realm: StudioRealmClient = createStudioRealmClient(),
-): Promise<ReviewCreatorWorldCharacterAuthoringDraftCandidateResult> {
-  throw new Error('WorldCharacterCore does not admit Realm authoring draft candidate review mutations.');
-}
-
-export async function createCreatorWorldCharacterAuthoringDraftBatch(
-  _worldId: string,
-  _characterId: string,
-  _body: CreateCreatorWorldCharacterAuthoringDraftBatchInput,
-  _realm: StudioRealmClient = createStudioRealmClient(),
-): Promise<CreatorWorldCharacterAuthoringDraftBatch> {
-  throw new Error('WorldCharacterCore does not admit Realm authoring draft batch creation mutations.');
-}
-
-export async function applyCreatorWorldCharacterAuthoringDraftBatch(
-  _worldId: string,
-  _characterId: string,
-  _batchId: string,
-  _realm: StudioRealmClient = createStudioRealmClient(),
-): Promise<ApplyCreatorWorldCharacterAuthoringDraftBatchResult> {
-  throw new Error('WorldCharacterCore does not admit Realm authoring draft batch apply mutations.');
 }
 
 export async function updateCreatorWorldCharacter(
@@ -755,43 +953,94 @@ export async function updateCreatorWorldCharacter(
   if (current.worldId !== worldId) {
     throw new Error(`WorldCharacterCore ${characterId} belongs to ${current.worldId}, not ${worldId}.`);
   }
+  const entityId = requireCharacterEntityId(current);
+  const entity = await realm.worldCoreControllerGetWorldEntity({ path: { entityId } });
+  if (entity.worldId !== worldId) {
+    throw new Error(`WorldEntityCore ${entityId} belongs to ${entity.worldId}, not ${worldId}.`);
+  }
 
   const currentCore = characterCore(current);
+  const identity = readCoreSection(currentCore, 'identity');
+  const presentation = readCoreSection(currentCore, 'presentation');
+  const interactionProfile = readCoreSection(currentCore, 'interactionProfile');
+  const assets = readCoreSection(currentCore, 'assets');
+  const worldStudioSettings = readWorldStudioSettings(currentCore);
+  const nextDisplayName = requireUpdateText(
+    draft.displayName,
+    readString(presentation.displayName) || readString(identity.name),
+    'displayName',
+  );
+  const nextDescription = requireUpdateText(
+    draft.description,
+    readString(identity.summary) || readString(presentation.shortBio),
+    'description',
+  );
+  const nextVoiceId = nullableString(draft.voiceId);
+  const nextVoiceDescription = nullableString(draft.voiceDescription);
+  const nextSpeechModelId = nullableString(draft.speechModelId);
+  const nextAvatarUrl = nullableString(draft.avatarUrl);
+  const nextProfileCoverUrl = nullableString(draft.profileCoverUrl);
   const voice = {
-    ...readRecord(currentCore.voice),
-    ...(nullableString(draft.voiceId) ? { voiceId: nullableString(draft.voiceId) } : {}),
-    ...(nullableString(draft.voiceDescription) ? { description: nullableString(draft.voiceDescription) } : {}),
-    ...(nullableString(draft.speechModelId) ? { speechModelId: nullableString(draft.speechModelId) } : {}),
+    ...readRecord(worldStudioSettings.voice),
+    ...(nextVoiceId ? { voiceId: nextVoiceId } : {}),
+    ...(nextVoiceDescription ? { description: nextVoiceDescription } : {}),
+    ...(nextSpeechModelId ? { speechModelId: nextSpeechModelId } : {}),
     ...(draft.speechRoutePolicy ? { speechRoutePolicy: draft.speechRoutePolicy } : {}),
   };
+  const assetsWithAvatar = nextAvatarUrl
+    ? upsertExternalAssetUrl(assets, 'avatar', nextAvatarUrl)
+    : assets;
+  const nextAssets = nextProfileCoverUrl
+    ? upsertExternalAssetUrl(
+      assetsWithAvatar,
+      'profileCover',
+      nextProfileCoverUrl,
+    )
+    : assetsWithAvatar;
+  const nextCore = writeAuthoringExtension({
+    ...currentCore,
+    identity: {
+      ...identity,
+      name: nextDisplayName,
+      summary: nextDescription,
+    },
+    presentation: {
+      ...presentation,
+      displayName: nextDisplayName,
+      shortBio: nextDescription,
+    },
+    interactionProfile: {
+      ...interactionProfile,
+      ...(nullableString(draft.greeting) ? { greeting: nullableString(draft.greeting) } : {}),
+    },
+    assets: nextAssets,
+  }, 'worldStudioSettings', {
+    ...worldStudioSettings,
+    communication: {
+      ...readRecord(worldStudioSettings.communication),
+      contentStyle: draft.contentStyle.trim(),
+    },
+    positioning: {
+      ...readRecord(worldStudioSettings.positioning),
+      targetAudience: draft.targetAudience.trim(),
+      positioning: draft.positioning.trim(),
+    },
+    ...(Object.keys(voice).length > 0 ? { voice } : {}),
+  });
   const body: ReplaceWorldCharacterCoreDto = {
     baseContentHash: current.contentHash,
     origin: current.origin,
-    ...(current.entityId ? { entityId: current.entityId } : {}),
-    core: {
-      ...currentCore,
-      displayName: draft.displayName.trim(),
-      description: draft.description.trim(),
-      greeting: draft.greeting.trim(),
-      ...(nullableString(draft.avatarUrl) ? { avatarUrl: nullableString(draft.avatarUrl) } : {}),
-      ...(nullableString(draft.profileCoverUrl) ? { profileCoverUrl: nullableString(draft.profileCoverUrl) } : {}),
-      communication: {
-        ...readRecord(currentCore.communication),
-        contentStyle: draft.contentStyle.trim(),
-      },
-      positioning: {
-        ...readRecord(currentCore.positioning),
-        targetAudience: draft.targetAudience.trim(),
-        positioning: draft.positioning.trim(),
-      },
-      ...(Object.keys(voice).length > 0 ? { voice } : {}),
-    },
+    entityId,
+    core: nextCore,
   };
 
-  await realm.worldCoreControllerReplaceWorldCharacter({
+  const replaced = await realm.worldCoreControllerReplaceWorldCharacter({
     path: { characterId: characterId },
     body,
   });
+  if (!replaced || replaced.id !== characterId || replaced.worldId !== worldId || replaced.entityId !== entityId || !replaced.contentHash) {
+    throw new Error('WorldCharacterCore replace returned an invalid canonical response.');
+  }
 
   return {
     ok: true,

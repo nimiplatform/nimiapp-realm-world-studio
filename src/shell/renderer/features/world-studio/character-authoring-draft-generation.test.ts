@@ -13,7 +13,6 @@ const mocks = vi.hoisted(() => ({
   readTargetRef: vi.fn(),
   createRouteDeps: vi.fn(() => ({ host: 'deps' })),
   listRouteOptions: vi.fn(),
-  createBatch: vi.fn(),
 }));
 
 vi.mock('@renderer/data/runtime-client.js', () => ({
@@ -38,12 +37,9 @@ vi.mock('@nimiplatform/sdk/runtime', async (importOriginal) => {
   };
 });
 
-vi.mock('./world-studio-client.js', () => ({
-  createCreatorWorldCharacterAuthoringDraftBatch: mocks.createBatch,
-}));
-
 const worldId = 'world-cbdb';
 const characterId = 'character-su-shi';
+const entitySourceRef = 'worldEntity:world-cbdb:cbdb:person:su-shi:hash-entity-su-shi';
 
 function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
   return {
@@ -54,8 +50,18 @@ function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
       skeletonId: 'skeleton-su-shi',
       sourceEntityId: 'cbdb:person:su-shi',
       candidateId: 'candidate-su-shi',
-      sourceProfile: 'cbdb-historical',
-      sourceRefs: ['CBDB:255e4506ce'],
+      sourceIdentityId: 'cbdb-historical',
+      sourceRefs: [
+        {
+          sourceRef: entitySourceRef,
+          kind: 'worldEntity',
+          worldId,
+          sourceId: 'cbdb:person:su-shi',
+          sourceContentHash: 'hash-entity-su-shi',
+          sourceKind: 'CBDB',
+          label: 'CBDB Su Shi',
+        },
+      ],
       canonicalName: '蘇軾',
       aliases: ['子瞻'],
       sourceFacts: {
@@ -111,7 +117,11 @@ function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
     },
     groundingRefs: [
       {
-        sourceRef: 'CBDB:255e4506ce',
+        sourceRef: entitySourceRef,
+        kind: 'worldEntity',
+        worldId,
+        sourceId: 'cbdb:person:su-shi',
+        sourceContentHash: 'hash-entity-su-shi',
         sourceKind: 'CBDB',
         label: 'CBDB Su Shi',
         factPath: 'sourceFacts.representativeFacts[0]',
@@ -177,10 +187,6 @@ describe('character authoring draft Runtime generation', () => {
       profileId: 'runtime-text-model',
     });
     mocks.listRouteOptions.mockResolvedValue(routeSnapshot());
-    mocks.createBatch.mockResolvedValue({
-      id: 'batch-1',
-      candidates: [],
-    });
   });
 
   it('fails closed before route catalog lookup when AIConfig targetRef is missing', async () => {
@@ -190,7 +196,6 @@ describe('character authoring draft Runtime generation', () => {
       .rejects.toThrow('NimiAIConfig targetRef missing for text.generate');
 
     expect(mocks.listRouteOptions).not.toHaveBeenCalled();
-    expect(mocks.createBatch).not.toHaveBeenCalled();
   });
 
   it('rejects Runtime text output with no candidates', async () => {
@@ -201,7 +206,6 @@ describe('character authoring draft Runtime generation', () => {
       .rejects.toThrow('non-empty candidates');
 
     expect(executeScenario).toHaveBeenCalled();
-    expect(mocks.createBatch).not.toHaveBeenCalled();
   });
 
   it('rejects Runtime output that did not stop cleanly', async () => {
@@ -215,14 +219,18 @@ describe('character authoring draft Runtime generation', () => {
             provenance: [
               {
                 category: 'ai_authored_texture',
-                refs: ['CBDB:255e4506ce'],
+                refs: [entitySourceRef],
                 summary: 'Greeting texture grounded by CBDB identity facts.',
               },
             ],
           },
           sourceRefs: [
             {
-              sourceRef: 'CBDB:255e4506ce',
+              sourceRef: entitySourceRef,
+              kind: 'worldEntity',
+              worldId,
+              sourceId: 'cbdb:person:su-shi',
+              sourceContentHash: 'hash-entity-su-shi',
               sourceKind: 'CBDB',
               label: 'CBDB Su Shi',
             },
@@ -237,10 +245,9 @@ describe('character authoring draft Runtime generation', () => {
       .rejects.toThrow('did not finish cleanly');
 
     expect(executeScenario).toHaveBeenCalled();
-    expect(mocks.createBatch).not.toHaveBeenCalled();
   });
 
-  it('persists only validated Runtime candidates with real trace metadata', async () => {
+  it('returns local review-gated candidates with real trace metadata', async () => {
     const executeScenario = vi.fn(async () => runtimeResponse([
       {
         targetKey: 'greeting',
@@ -251,14 +258,18 @@ describe('character authoring draft Runtime generation', () => {
           provenance: [
             {
               category: 'ai_authored_texture',
-              refs: ['CBDB:255e4506ce'],
+              refs: [entitySourceRef],
               summary: 'Greeting texture grounded by CBDB identity facts.',
             },
           ],
         },
         sourceRefs: [
           {
-            sourceRef: 'CBDB:255e4506ce',
+            sourceRef: entitySourceRef,
+            kind: 'worldEntity',
+            worldId,
+            sourceId: 'cbdb:person:su-shi',
+            sourceContentHash: 'hash-entity-su-shi',
             sourceKind: 'CBDB',
             label: 'CBDB Su Shi',
           },
@@ -267,7 +278,7 @@ describe('character authoring draft Runtime generation', () => {
     ]));
     mocks.createRuntimeClient.mockResolvedValue({ ai: { executeScenario } });
 
-    await generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext());
+    const result = await generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, authoringContext());
 
     expect(executeScenario).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -284,12 +295,12 @@ describe('character authoring draft Runtime generation', () => {
         }),
       }),
     );
-    expect(mocks.createBatch).toHaveBeenCalledTimes(1);
-    const body = mocks.createBatch.mock.calls[0]?.[2];
-    expect(body).toMatchObject({
+    expect(result.batch).toMatchObject({
       skeletonId: 'skeleton-su-shi',
+      status: 'ready_for_review',
       candidates: [
         {
+          reviewStatus: 'pending',
           targetKey: 'greeting',
           modelId: 'runtime-text-model',
           routePolicy: 'local',
@@ -302,7 +313,7 @@ describe('character authoring draft Runtime generation', () => {
         },
       ],
     });
-    expect(body?.candidates[0]?.value).not.toHaveProperty('unexpectedModelField');
-    expect(body?.candidates[0]?.promptDigestSha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(result.batch.candidates[0]?.value).not.toHaveProperty('unexpectedModelField');
+    expect(result.batch.candidates[0]?.promptDigestSha256).toMatch(/^[a-f0-9]{64}$/);
   });
 });

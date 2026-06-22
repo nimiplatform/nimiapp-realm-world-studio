@@ -4,15 +4,13 @@ import { getCurrentStudioNimiClient } from '@renderer/app-shell/studio-platform.
 export const STUDIO_REALM_SURFACE_METHODS = [
   'worldCoreControllerListWorldCores',
   'worldCoreControllerGetWorldCore',
+  'worldCoreControllerListWorldEntities',
+  'worldCoreControllerGetWorldEntity',
+  'worldCoreControllerListWorldRelationships',
   'worldCoreControllerListWorldCharacters',
   'worldCoreControllerGetWorldCharacter',
   'worldCoreControllerReplaceWorldCharacter',
   'worldCoreControllerCreateRuntimeSourceSnapshot',
-  'createImageDirectUpload',
-  'createVideoDirectUpload',
-  'createAudioDirectUpload',
-  'finalizeResource',
-  'createTextResource',
 ] as const;
 
 export type StudioRealmSurfaceMethod = typeof STUDIO_REALM_SURFACE_METHODS[number];
@@ -23,15 +21,13 @@ export function createStudioRealmSurface(realm: Pick<Realm, 'generated'>): Studi
   return {
     worldCoreControllerListWorldCores: generated.worldCoreControllerListWorldCores.bind(generated),
     worldCoreControllerGetWorldCore: generated.worldCoreControllerGetWorldCore.bind(generated),
+    worldCoreControllerListWorldEntities: generated.worldCoreControllerListWorldEntities.bind(generated),
+    worldCoreControllerGetWorldEntity: generated.worldCoreControllerGetWorldEntity.bind(generated),
+    worldCoreControllerListWorldRelationships: generated.worldCoreControllerListWorldRelationships.bind(generated),
     worldCoreControllerListWorldCharacters: generated.worldCoreControllerListWorldCharacters.bind(generated),
     worldCoreControllerGetWorldCharacter: generated.worldCoreControllerGetWorldCharacter.bind(generated),
     worldCoreControllerReplaceWorldCharacter: generated.worldCoreControllerReplaceWorldCharacter.bind(generated),
     worldCoreControllerCreateRuntimeSourceSnapshot: generated.worldCoreControllerCreateRuntimeSourceSnapshot.bind(generated),
-    createImageDirectUpload: generated.createImageDirectUpload.bind(generated),
-    createVideoDirectUpload: generated.createVideoDirectUpload.bind(generated),
-    createAudioDirectUpload: generated.createAudioDirectUpload.bind(generated),
-    finalizeResource: generated.finalizeResource.bind(generated),
-    createTextResource: generated.createTextResource.bind(generated),
   };
 }
 

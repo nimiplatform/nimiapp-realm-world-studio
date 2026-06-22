@@ -6,15 +6,13 @@ describe('studio Realm facade boundary', () => {
     expect([...STUDIO_REALM_SURFACE_METHODS]).toEqual([
       'worldCoreControllerListWorldCores',
       'worldCoreControllerGetWorldCore',
+      'worldCoreControllerListWorldEntities',
+      'worldCoreControllerGetWorldEntity',
+      'worldCoreControllerListWorldRelationships',
       'worldCoreControllerListWorldCharacters',
       'worldCoreControllerGetWorldCharacter',
       'worldCoreControllerReplaceWorldCharacter',
       'worldCoreControllerCreateRuntimeSourceSnapshot',
-      'createImageDirectUpload',
-      'createVideoDirectUpload',
-      'createAudioDirectUpload',
-      'finalizeResource',
-      'createTextResource',
     ]);
   });
 });

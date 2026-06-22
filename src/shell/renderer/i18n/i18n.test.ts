@@ -26,7 +26,7 @@ describe('studio i18n', () => {
 
     await setStudioLocale('en');
 
-    expect(studioI18n.t('worldStudio.list.title')).toBe('Creator worlds');
+    expect(studioI18n.t('worldStudio.list.title')).toBe('Creator Worlds');
     expect(document.documentElement.lang).toBe('en');
   });
 });

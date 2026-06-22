@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   AlertTriangle,
@@ -32,11 +32,8 @@ import {
 import {
   draftFromCharacter,
   CreatorWorldCharacterDetailLoadError,
-  applyCreatorWorldCharacterAuthoringDraftBatch,
   getCreatorWorldCharacterDetail,
   getCreatorWorldDetail,
-  listCreatorWorlds,
-  reviewCreatorWorldCharacterAuthoringDraftCandidate,
   updateCreatorWorldCharacter,
   type CreatorWorldCharacterAuthoringDraftBatch,
   type CreatorWorldCharacterAuthoringDraftCandidate,
@@ -46,13 +43,19 @@ import {
   type CreatorWorldCharacterSummary,
   type CreatorWorldCharacterSourceSkeleton,
   type CreatorWorldDetail,
-  type CreatorWorldSummary,
 } from './world-studio-client.js';
-import { studioQueryClient } from '@renderer/infra/query-client.js';
+import {
+  listRealmCoreCockpitWorlds,
+  searchRealmCoreCockpitWorlds,
+  type CoreHealthIssue,
+  type RealmCoreCockpitResult,
+  type RealmCoreCockpitWorld,
+  type SourceBackedCount,
+} from './world-core-cockpit.js';
 import { generateCreatorWorldCharacterAuthoringDraftBatch } from './character-authoring-draft-generation.js';
 import type { TFunction } from 'i18next';
 
-const WORLD_LIST_QUERY_KEY = ['realm-world-studio', 'creator-worlds'] as const;
+const WORLD_LIST_QUERY_KEY = ['realm-world-studio', 'realm-core-cockpit-worlds'] as const;
 
 function worldDetailQueryKey(worldId: string) {
   return ['realm-world-studio', 'creator-world-detail', worldId] as const;
@@ -65,11 +68,13 @@ function worldCharacterDetailQueryKey(worldId: string, characterId: string) {
 function FailureState({
   title,
   detail,
+  diagnostic,
   loading,
   onRetry,
 }: {
   title: string;
   detail: string;
+  diagnostic?: string | null;
   loading: boolean;
   onRetry: () => void;
 }) {
@@ -86,6 +91,14 @@ function FailureState({
           <p className="m-0 mt-1 text-[length:var(--nimi-type-body-sm-size)] leading-6 text-[var(--nimi-text-muted)]">
             {detail}
           </p>
+          {diagnostic ? (
+            <details className="mt-3 text-[length:var(--nimi-type-caption-size)] leading-5 text-[var(--nimi-text-muted)]">
+              <summary className="cursor-pointer font-semibold text-[var(--nimi-text-secondary)]">
+                {t('worldStudio.list.failureDiagnosticSummary')}
+              </summary>
+              <p className="m-0 mt-1 break-words font-mono">{diagnostic}</p>
+            </details>
+          ) : null}
         </div>
         <Button tone="primary" loading={loading} onClick={onRetry}>
           {t('common.retry')}
@@ -93,6 +106,16 @@ function FailureState({
       </div>
     </section>
   );
+}
+
+function describeWorldListError(error: unknown): string {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+  if (typeof error === 'string' && error.trim()) {
+    return error.trim();
+  }
+  return 'Realm WorldCore list request failed without a typed message.';
 }
 
 function PageLoadingState() {
@@ -105,12 +128,6 @@ function PageLoadingState() {
       ))}
     </div>
   );
-}
-
-function matchesQuery(values: readonly (string | null | undefined)[], query: string): boolean {
-  const normalized = query.trim().toLocaleLowerCase();
-  if (!normalized) return true;
-  return values.some((value) => String(value || '').toLocaleLowerCase().includes(normalized));
 }
 
 function creatorWorldCharacterFailureDetail(error: unknown, t: TFunction): string {
@@ -126,53 +143,35 @@ function creatorWorldCharacterFailureDetail(error: unknown, t: TFunction): strin
   return t('worldStudio.characterDetail.defaultUnavailableDetail');
 }
 
-function WorldCard({ world }: { world: CreatorWorldSummary }) {
-  const { t } = useTranslation();
-
-  return (
-    <Surface
-      as={Link}
-      to={`/worlds/${world.id}`}
-      padding="md"
-      tone="card"
-      interactive
-      className="block min-w-0"
-    >
-      <div className="flex min-w-0 items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="ras-break-anywhere text-[length:var(--nimi-type-label-size)] font-[var(--nimi-type-label-weight)]">
-            {world.name}
-          </div>
-          <div className="ras-break-anywhere mt-1 text-[length:var(--nimi-type-body-sm-size)] text-[var(--nimi-text-muted)]">
-            {world.tagline || world.description || t('worldStudio.world.summaryUnavailable')}
-          </div>
-        </div>
-        <StatusBadge tone="success">{world.authorityReason}</StatusBadge>
-      </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <StatusBadge tone="info">{world.status}</StatusBadge>
-        <StatusBadge tone="neutral">{t('worldStudio.world.characterCount', { count: world.characterCount })}</StatusBadge>
-        <StatusBadge tone="neutral">{world.creatorId}</StatusBadge>
-      </div>
-    </Surface>
+function updateCachedCharacter(
+  queryClient: QueryClient,
+  worldId: string,
+  characterId: string,
+  updater: (current: CreatorWorldCharacterDetail) => CreatorWorldCharacterDetail,
+) {
+  queryClient.setQueryData<CreatorWorldCharacterDetail>(
+    worldCharacterDetailQueryKey(worldId, characterId),
+    (current) => current ? updater(current) : current,
   );
 }
 
 export function CreatorWorldListPage() {
   const { t } = useTranslation();
   const [query, setQuery] = useState('');
-  const worldsQuery = useQuery({
+  const [selectedWorldId, setSelectedWorldId] = useState<string | null>(null);
+  const cockpitQuery = useQuery({
     queryKey: WORLD_LIST_QUERY_KEY,
-    queryFn: () => listCreatorWorlds(),
+    queryFn: () => listRealmCoreCockpitWorlds(),
   });
 
   const worlds = useMemo(
-    () =>
-      (worldsQuery.data || []).filter((world) =>
-        matchesQuery([world.id, world.name, world.creatorId, world.status, world.authorityReason], query),
-      ),
-    [query, worldsQuery.data],
+    () => searchRealmCoreCockpitWorlds(cockpitQuery.data?.worlds || [], query),
+    [query, cockpitQuery.data],
   );
+  const selectedWorld = worlds.find((world) => world.id === selectedWorldId)
+    || worlds[0]
+    || cockpitQuery.data?.worlds.find((world) => world.id === selectedWorldId)
+    || null;
 
   return (
     <ScrollArea className="flex-1" viewportClassName="bg-transparent">
@@ -187,9 +186,9 @@ export function CreatorWorldListPage() {
           </div>
           <Button
             tone="secondary"
-            loading={worldsQuery.isFetching}
+            loading={cockpitQuery.isFetching}
             leadingIcon={<RefreshCw size={15} strokeWidth={1.8} />}
-            onClick={() => void worldsQuery.refetch()}
+            onClick={() => void cockpitQuery.refetch()}
           >
             {t('common.refresh')}
           </Button>
@@ -204,14 +203,17 @@ export function CreatorWorldListPage() {
           />
         </section>
 
-        {worldsQuery.isLoading ? (
+        {cockpitQuery.isLoading ? (
           <PageLoadingState />
-        ) : worldsQuery.isError ? (
+        ) : cockpitQuery.isError ? (
           <FailureState
-            title={t('worldStudio.list.authorityUnavailableTitle')}
-            detail={t('worldStudio.list.authorityUnavailableDetail')}
-            loading={worldsQuery.isFetching}
-            onRetry={() => void worldsQuery.refetch()}
+            title={t('worldStudio.list.dataUnavailableTitle')}
+            detail={t('worldStudio.list.dataUnavailableDetail')}
+            diagnostic={t('worldStudio.list.failureDiagnostic', {
+              reason: describeWorldListError(cockpitQuery.error),
+            })}
+            loading={cockpitQuery.isFetching}
+            onRetry={() => void cockpitQuery.refetch()}
           />
         ) : worlds.length === 0 ? (
           <section className="ras-card">
@@ -221,12 +223,540 @@ export function CreatorWorldListPage() {
             />
           </section>
         ) : (
-          <div className="ras-character-grid">
-            {worlds.map((world) => <WorldCard key={world.id} world={world} />)}
-          </div>
+          <CreatorWorldWorkbench
+            result={cockpitQuery.data}
+            worlds={worlds}
+            selectedWorld={selectedWorld}
+            onSelectWorld={setSelectedWorldId}
+          />
         )}
       </div>
     </ScrollArea>
+  );
+}
+
+type WorkbenchCountKind = 'world' | 'character' | 'event' | 'assetRef' | 'entityType' | 'system' | 'scene' | 'entity' | 'relationship';
+type InventoryStatus = 'readyToInspect' | 'needsCreatorReview' | 'platformLimited';
+
+function formatWorkbenchCount(t: TFunction, count: number, kind: WorkbenchCountKind): string {
+  const suffix = count === 1 ? 'One' : 'Other';
+  return t(`worldStudio.workbench.count.${kind}${suffix}`, { count });
+}
+
+function countLabel(t: TFunction, count: SourceBackedCount, kind: WorkbenchCountKind): string {
+  return count.state === 'available'
+    ? formatWorkbenchCount(t, count.value, kind)
+    : t(`worldStudio.workbench.sourcePending.${kind}`);
+}
+
+function joinOrUnavailable(t: TFunction, values: readonly string[]): string {
+  return values.length > 0 ? values.join(' / ') : t('worldStudio.workbench.sourceUnavailable');
+}
+
+function timeModeLabel(t: TFunction, mode: string | null): string | null {
+  switch (mode) {
+    case 'static':
+      return t('worldStudio.workbench.timeMode.static');
+    case 'wallClockAnchored':
+      return t('worldStudio.workbench.timeMode.wallClockAnchored');
+    case 'flowing':
+      return t('worldStudio.workbench.timeMode.flowing');
+    case null:
+    case '':
+      return null;
+    default:
+      return t('worldStudio.workbench.timeMode.custom');
+  }
+}
+
+function authoringReviewLabel(t: TFunction, status: string | null): string | null {
+  switch (status) {
+    case 'needs-review':
+      return t('worldStudio.workbench.authoringReview.needsReview');
+    case 'approved':
+    case 'reviewed':
+      return t('worldStudio.workbench.authoringReview.reviewed');
+    case null:
+    case '':
+      return null;
+    default:
+      return t('worldStudio.workbench.authoringReview.pending');
+  }
+}
+
+function isPlatformIssue(issue: CoreHealthIssue): boolean {
+  return issue.family === 'ExternalContract' || issue.ruleId.startsWith('graph.');
+}
+
+function creatorActionIssues(world: RealmCoreCockpitWorld): CoreHealthIssue[] {
+  return world.healthIssues.filter((issueItem) => !isPlatformIssue(issueItem));
+}
+
+function platformIssues(world: RealmCoreCockpitWorld): CoreHealthIssue[] {
+  return world.healthIssues.filter(isPlatformIssue);
+}
+
+function graphPlatformIssues(world: RealmCoreCockpitWorld): CoreHealthIssue[] {
+  return world.healthIssues.filter((issueItem) =>
+    issueItem.ruleId === 'graph.entities.unavailable' || issueItem.ruleId === 'graph.relationships.unavailable');
+}
+
+function nonGraphActionIssues(world: RealmCoreCockpitWorld): CoreHealthIssue[] {
+  return world.healthIssues.filter((issueItem) =>
+    issueItem.ruleId !== 'graph.entities.unavailable' && issueItem.ruleId !== 'graph.relationships.unavailable');
+}
+
+function inspectableWorldCount(worlds: readonly RealmCoreCockpitWorld[]): number {
+  return worlds.filter((world) => Boolean(world.summary) && world.counts.characters.state === 'available').length;
+}
+
+function visibleEditableCharacterCount(worlds: readonly RealmCoreCockpitWorld[]): number | null {
+  let count = 0;
+  let hasAvailableSource = false;
+  for (const world of worlds) {
+    if (world.counts.characters.state === 'available') {
+      hasAvailableSource = true;
+      count += world.counts.characters.value;
+    }
+  }
+  return hasAvailableSource ? count : null;
+}
+
+function worldInventoryStatus(world: RealmCoreCockpitWorld): InventoryStatus {
+  if (creatorActionIssues(world).length > 0) return 'needsCreatorReview';
+  if (platformIssues(world).length > 0) return 'platformLimited';
+  return 'readyToInspect';
+}
+
+function statusTone(status: InventoryStatus): 'success' | 'warning' | 'info' {
+  if (status === 'readyToInspect') return 'success';
+  if (status === 'needsCreatorReview') return 'warning';
+  return 'info';
+}
+
+function worldInventoryStatusLabel(t: TFunction, status: InventoryStatus): string {
+  return t(`worldStudio.workbench.status.${status}`);
+}
+
+function actionStatus(t: TFunction, issueItem: CoreHealthIssue): string {
+  if (isPlatformIssue(issueItem)) return t('worldStudio.workbench.actionStatus.platformLimit');
+  if (issueItem.severity === 'info') return t('worldStudio.workbench.actionStatus.characterDetail');
+  return t('worldStudio.workbench.actionStatus.creatorAction');
+}
+
+function actionTone(issueItem: CoreHealthIssue): 'danger' | 'warning' | 'info' {
+  if (isPlatformIssue(issueItem)) return issueItem.severity === 'error' ? 'warning' : 'info';
+  if (issueItem.severity === 'error') return 'danger';
+  if (issueItem.severity === 'warning') return 'warning';
+  return 'info';
+}
+
+function actionTitle(t: TFunction, issueItem: CoreHealthIssue): string {
+  switch (issueItem.ruleId) {
+    case 'graph.entities.unavailable':
+      return t('worldStudio.workbench.action.graphEntitiesTitle');
+    case 'graph.relationships.unavailable':
+      return t('worldStudio.workbench.action.graphRelationshipsTitle');
+    case 'assets.resolver.unavailable':
+      return t('worldStudio.workbench.action.assetsResolverTitle');
+    case 'runtime.summary.unavailable':
+      return t('worldStudio.workbench.action.runtimeSummaryTitle');
+    case 'ontology.relationshipTypes.empty':
+      return t('worldStudio.workbench.action.relationshipTypesTitle');
+    case 'ontology.entityKinds.empty':
+      return t('worldStudio.workbench.action.entityKindsTitle');
+    case 'identity.summary.missing':
+      return t('worldStudio.workbench.action.summaryMissingTitle');
+    case 'contentHash.missing':
+      return t('worldStudio.workbench.action.contentHashTitle');
+    case 'characters.empty':
+      return t('worldStudio.workbench.action.charactersEmptyTitle');
+    default:
+      return t('worldStudio.workbench.action.defaultTitle');
+  }
+}
+
+function actionDetail(t: TFunction, issueItem: CoreHealthIssue): string {
+  switch (issueItem.ruleId) {
+    case 'graph.entities.unavailable':
+      return t('worldStudio.workbench.action.graphEntitiesDetail');
+    case 'graph.relationships.unavailable':
+      return t('worldStudio.workbench.action.graphRelationshipsDetail');
+    case 'assets.resolver.unavailable':
+      return t('worldStudio.workbench.action.assetsResolverDetail');
+    case 'runtime.summary.unavailable':
+      return t('worldStudio.workbench.action.runtimeSummaryDetail');
+    case 'ontology.relationshipTypes.empty':
+      return t('worldStudio.workbench.action.relationshipTypesDetail');
+    case 'ontology.entityKinds.empty':
+      return t('worldStudio.workbench.action.entityKindsDetail');
+    case 'identity.summary.missing':
+      return t('worldStudio.workbench.action.summaryMissingDetail');
+    case 'contentHash.missing':
+      return t('worldStudio.workbench.action.contentHashDetail');
+    case 'characters.empty':
+      return t('worldStudio.workbench.action.charactersEmptyDetail');
+    default:
+      return t('worldStudio.workbench.action.defaultDetail');
+  }
+}
+
+function CommandScopeBar({
+  worldCount,
+  editableCharacters,
+  reviewableWorlds,
+}: {
+  worldCount: number | null;
+  editableCharacters: number | null;
+  reviewableWorlds: number;
+}) {
+  const { t } = useTranslation();
+  const worldLabelKey = worldCount === 1 ? 'worldOne' : 'worldOther';
+  const characterLabelKey = editableCharacters === 1 ? 'characterOne' : 'characterOther';
+  const reviewableLabelKey = reviewableWorlds === 1 ? 'reviewableOne' : 'reviewableOther';
+  return (
+    <section className="ras-command-scope" aria-label={t('worldStudio.command.scope.aria')}>
+      <span className="ras-command-scope__item">
+        {worldCount === null ? t('worldStudio.workbench.syncNeeded') : t(`worldStudio.command.scope.${worldLabelKey}`, { count: worldCount })}
+      </span>
+      <span className="ras-command-scope__item">
+        {editableCharacters === null ? t('worldStudio.workbench.syncNeeded') : t(`worldStudio.command.scope.${characterLabelKey}`, { count: editableCharacters })}
+      </span>
+      <span className="ras-command-scope__item">
+        {t(`worldStudio.command.scope.${reviewableLabelKey}`, { count: reviewableWorlds })}
+      </span>
+    </section>
+  );
+}
+
+function CreatorWorldWorkbench({
+  result,
+  worlds,
+  selectedWorld,
+  onSelectWorld,
+}: {
+  result: RealmCoreCockpitResult | undefined;
+  worlds: RealmCoreCockpitWorld[];
+  selectedWorld: RealmCoreCockpitWorld | null;
+  onSelectWorld: (worldId: string) => void;
+}) {
+  if (!result || !selectedWorld) return null;
+  return (
+    <div className="ras-command-center">
+      <CommandScopeBar
+        worldCount={worlds.length}
+        editableCharacters={visibleEditableCharacterCount(worlds)}
+        reviewableWorlds={inspectableWorldCount(worlds)}
+      />
+
+      <div className="ras-command-grid">
+        <WorldInventory worlds={worlds} selectedWorldId={selectedWorld.id} onSelectWorld={onSelectWorld} />
+        <WorldCommandMain world={selectedWorld} />
+        <ActionQueue world={selectedWorld} />
+      </div>
+    </div>
+  );
+}
+
+function WorldInventory({
+  worlds,
+  selectedWorldId,
+  onSelectWorld,
+}: {
+  worlds: RealmCoreCockpitWorld[];
+  selectedWorldId: string;
+  onSelectWorld: (worldId: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <section className="ras-card ras-command-panel ras-command-worlds">
+      <div className="ras-command-panel__header">
+        <div>
+          <h2 className="ras-section-title">{t('worldStudio.command.worlds.title')}</h2>
+          <p className="ras-command-panel__copy">{t('worldStudio.command.worlds.description')}</p>
+        </div>
+        <StatusBadge tone="info">{t('worldStudio.command.worlds.total', { count: worlds.length })}</StatusBadge>
+      </div>
+      <div className="ras-command-worlds__rows">
+        {worlds.map((world) => {
+          const status = worldInventoryStatus(world);
+          return (
+            <button
+              key={world.id}
+              type="button"
+              aria-pressed={world.id === selectedWorldId}
+              className={`ras-command-world-row${world.id === selectedWorldId ? ' ras-command-world-row--selected' : ''}`}
+              onClick={() => onSelectWorld(world.id)}
+            >
+              <span className="ras-command-world-row__title">{world.title}</span>
+              <span className="ras-command-world-row__summary">{world.worldType || t('worldStudio.workbench.worldTypePending')}</span>
+              <span className="ras-command-world-row__meta">
+                <StatusBadge tone="neutral">{world.visibility}</StatusBadge>
+                <StatusBadge tone={world.counts.characters.state === 'available' ? 'info' : 'warning'}>
+                  {countLabel(t, world.counts.characters, 'character')}
+                </StatusBadge>
+                <StatusBadge tone={statusTone(status)}>{worldInventoryStatusLabel(t, status)}</StatusBadge>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function FactLine({ label, value }: { label: string; value: string | number | null }) {
+  const { t } = useTranslation();
+  return (
+    <div className="ras-command-fact">
+      <span className="ras-command-fact__label">{label}</span>
+      <span className="ras-command-fact__value ras-break-anywhere">{value ?? t('worldStudio.workbench.sourceUnavailable')}</span>
+    </div>
+  );
+}
+
+function CountFactLine({
+  label,
+  count,
+  kind,
+  unavailableLabel,
+}: {
+  label: string;
+  count: SourceBackedCount;
+  kind: WorkbenchCountKind;
+  unavailableLabel?: string;
+}) {
+  const { t } = useTranslation();
+  return <FactLine label={label} value={count.state === 'available' ? formatWorkbenchCount(t, count.value, kind) : unavailableLabel ?? t('worldStudio.workbench.platformAccessPending')} />;
+}
+
+function worldTokenLabel(world: RealmCoreCockpitWorld): string {
+  return [...world.title].slice(0, 2).join('') || 'W';
+}
+
+function WorkSurface({ world }: { world: RealmCoreCockpitWorld }) {
+  const { t } = useTranslation();
+  return (
+    <section className="ras-command-surface">
+      <h2 className="ras-section-title">{t('worldStudio.command.workSurface.title')}</h2>
+      <div className="ras-command-surface-grid">
+        <section className="ras-command-surface-block">
+          <h3>{t('worldStudio.command.surface.identity')}</h3>
+          <div className="ras-command-facts">
+            <FactLine label={t('worldStudio.workbench.field.genre')} value={world.genre || null} />
+            <FactLine label={t('worldStudio.workbench.field.worldType')} value={world.worldType || null} />
+            <FactLine label={t('worldStudio.workbench.field.themes')} value={joinOrUnavailable(t, world.themes)} />
+            <FactLine label={t('worldStudio.workbench.field.visibility')} value={world.visibility} />
+          </div>
+        </section>
+        <section className="ras-command-surface-block">
+          <h3>{t('worldStudio.command.surface.structure')}</h3>
+          <p className="ras-command-surface-block__copy ras-break-anywhere">{joinOrUnavailable(t, world.ontology.entityKinds)}</p>
+          <p className="ras-command-surface-block__muted ras-break-anywhere">
+            {t('worldStudio.workbench.relationshipTypes', { value: joinOrUnavailable(t, world.ontology.relationshipTypes) })}
+          </p>
+        </section>
+        <section className="ras-command-surface-block">
+          <h3>{t('worldStudio.command.surface.timeline')}</h3>
+          <div className="ras-command-facts">
+            <CountFactLine label={t('worldStudio.workbench.field.timelineEvents')} count={world.structure.timelineEventCount} kind="event" unavailableLabel={t('worldStudio.workbench.timelineSourcePending')} />
+            <FactLine label={t('worldStudio.workbench.field.worldStart')} value={world.timeModel.worldStartedAtDisplay} />
+            <FactLine label={t('worldStudio.workbench.field.mode')} value={timeModeLabel(t, world.timeModel.mode)} />
+            <FactLine label={t('worldStudio.workbench.field.calendar')} value={world.timeModel.calendar} />
+          </div>
+        </section>
+        <section className="ras-command-surface-block">
+          <h3>{t('worldStudio.command.surface.assets')}</h3>
+          <div className="ras-command-facts">
+            <CountFactLine label={t('worldStudio.workbench.field.systems')} count={world.structure.systemCount} kind="system" />
+            <CountFactLine label={t('worldStudio.workbench.field.scenes')} count={world.structure.sceneCount} kind="scene" />
+            <CountFactLine label={t('worldStudio.workbench.field.declaredAssetRefs')} count={world.structure.declaredAssetRefCount} kind="assetRef" unavailableLabel={t('worldStudio.workbench.assetSourcePending')} />
+            <FactLine label={t('worldStudio.workbench.field.authoringReview')} value={authoringReviewLabel(t, world.structure.authoringReviewStatus)} />
+          </div>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function WorldCommandMain({ world }: { world: RealmCoreCockpitWorld }) {
+  const { t } = useTranslation();
+  return (
+    <section className="ras-card ras-command-main">
+      <section className="ras-command-brief">
+        <div className="ras-command-token" aria-hidden="true">{worldTokenLabel(world)}</div>
+        <div className="min-w-0">
+          <h2 className="ras-section-title">{t('worldStudio.command.brief.title')}</h2>
+          <p className="ras-command-brief__title ras-break-anywhere">{world.title}</p>
+          <p className="ras-command-brief__summary ras-break-anywhere">
+            {world.summary || t('worldStudio.workbench.summaryUnavailable')}
+          </p>
+        </div>
+        <Link className="ras-command-open-link" to={`/worlds/${world.id}`}>
+          <BookOpen size={15} aria-hidden="true" />
+          <span>{t('worldStudio.workbench.openCharacters')}</span>
+        </Link>
+      </section>
+
+      <section className="ras-command-counters" aria-label={t('worldStudio.command.countersAria')}>
+        <div><span>{t('worldStudio.workbench.section.cast')}</span><strong>{countLabel(t, world.counts.characters, 'character')}</strong></div>
+        <div><span>{t('worldStudio.command.counter.structure')}</span><strong>{formatWorkbenchCount(t, world.ontology.entityKinds.length, 'entityType')}</strong></div>
+        <div><span>{t('worldStudio.workbench.section.timeline')}</span><strong>{countLabel(t, world.structure.timelineEventCount, 'event')}</strong></div>
+        <div><span>{t('worldStudio.workbench.section.assets')}</span><strong>{countLabel(t, world.structure.declaredAssetRefCount, 'assetRef')}</strong></div>
+      </section>
+
+      <WorkSurface world={world} />
+      <DiagnosticsDetails world={world} />
+    </section>
+  );
+}
+
+function DiagnosticsDetails({ world }: { world: RealmCoreCockpitWorld }) {
+  const { t } = useTranslation();
+  return (
+    <details className="ras-command-diagnostics">
+      <summary>{t('worldStudio.command.sourceDiagnostics')}</summary>
+      <div className="ras-command-facts">
+        <CountFactLine label={t('worldStudio.workbench.field.entityNetwork')} count={world.counts.entities} kind="entity" />
+        <CountFactLine label={t('worldStudio.workbench.field.relationshipNetwork')} count={world.counts.relationships} kind="relationship" />
+        <FactLine label={t('worldStudio.workbench.field.schema')} value={world.schemaVersion} />
+        <FactLine label={t('worldStudio.workbench.field.revision')} value={world.contentRevision} />
+        <FactLine label={t('worldStudio.workbench.field.contentHash')} value={world.contentHash} />
+        <FactLine label={t('worldStudio.workbench.field.origin')} value={world.origin.sourceId || world.origin.kind} />
+        <FactLine label={t('worldStudio.workbench.field.creator')} value={`${world.creatorEmail} / ${world.creatorId}`} />
+        <FactLine label={t('worldStudio.workbench.field.updated')} value={world.updatedAt} />
+        <FactLine label={t('worldStudio.workbench.field.displayFormat')} value={world.timeModel.displayFormat} />
+      </div>
+      {world.healthIssues.length > 0 ? (
+        <div className="ras-command-diagnostics__issues">
+          <div className="ras-command-diagnostics__issues-title">{t('worldStudio.workbench.diagnostics.sourceChecks')}</div>
+          {world.healthIssues.map((issueItem) => (
+            <div key={`${issueItem.ruleId}:${issueItem.jsonPath}`} className="ras-command-diagnostics__issue ras-break-anywhere">
+              <strong>{issueItem.ruleId}</strong>
+              <span>{issueItem.message}</span>
+              <span>{issueItem.source}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </details>
+  );
+}
+
+type NextActionItem = {
+  id: string;
+  status: string;
+  tone: 'danger' | 'warning' | 'info';
+  title: string;
+  detail: string;
+  meta: string;
+};
+
+function commandActionTitle(t: TFunction, issueItem: CoreHealthIssue): string {
+  switch (issueItem.ruleId) {
+    case 'ontology.relationshipTypes.empty':
+      return t('worldStudio.command.action.relationshipTypesTitle');
+    case 'ontology.entityKinds.empty':
+      return t('worldStudio.command.action.entityKindsTitle');
+    default:
+      return actionTitle(t, issueItem);
+  }
+}
+
+function creatorNextActionItems(t: TFunction, world: RealmCoreCockpitWorld): NextActionItem[] {
+  return nonGraphActionIssues(world)
+    .filter((issueItem) => !isPlatformIssue(issueItem))
+    .map((issueItem) => ({
+      id: issueItem.ruleId,
+      status: actionStatus(t, issueItem),
+      tone: actionTone(issueItem),
+      title: commandActionTitle(t, issueItem),
+      detail: actionDetail(t, issueItem),
+      meta: issueItem.severity,
+    }));
+}
+
+function platformWatchItems(t: TFunction, world: RealmCoreCockpitWorld): NextActionItem[] {
+  const graphIssues = graphPlatformIssues(world);
+  const actions: NextActionItem[] = [];
+  if (graphIssues.length > 0) {
+    actions.push({
+      id: 'graph-platform-pending',
+      status: t('worldStudio.workbench.actionStatus.platformLimit'),
+      tone: 'info',
+      title: t('worldStudio.command.platformWatch.graphTitle'),
+      detail: t('worldStudio.command.platformWatch.graphDetail'),
+      meta: t('worldStudio.workbench.action.graphLimits', { count: graphIssues.length }),
+    });
+  }
+  for (const issueItem of nonGraphActionIssues(world)) {
+    if (isPlatformIssue(issueItem)) {
+      const isRuntime = issueItem.ruleId === 'runtime.summary.unavailable';
+      actions.push({
+        id: issueItem.ruleId,
+        status: actionStatus(t, issueItem),
+        tone: actionTone(issueItem),
+        title: t(isRuntime ? 'worldStudio.command.platformWatch.runtimeTitle' : 'worldStudio.command.platformWatch.assetTitle'),
+        detail: t(isRuntime ? 'worldStudio.command.platformWatch.runtimeDetail' : 'worldStudio.command.platformWatch.assetDetail'),
+        meta: issueItem.severity,
+      });
+    }
+  }
+  return actions;
+}
+
+function ActionQueue({ world }: { world: RealmCoreCockpitWorld }) {
+  const { t } = useTranslation();
+  const creatorActions = creatorNextActionItems(t, world);
+  const watchItems = platformWatchItems(t, world);
+  return (
+    <aside className="ras-card ras-command-actions" aria-label={t('worldStudio.command.actionQueue.aria')}>
+      <div className="ras-command-panel__header">
+        <div>
+          <h2 className="ras-section-title">{t('worldStudio.command.actionQueue.title')}</h2>
+          <p className="ras-command-panel__copy">{t('worldStudio.command.actionQueue.description')}</p>
+        </div>
+      </div>
+      {creatorActions.length === 0 ? (
+        <div className="ras-command-empty">
+          <EmptyState title={t('worldStudio.command.actionQueue.emptyTitle')} description={t('worldStudio.command.actionQueue.emptyDescription')} />
+        </div>
+      ) : (
+        <div className="ras-command-actions__items">
+          {creatorActions.map((action) => (
+            <article key={action.id} className="ras-command-action-item">
+              <div className="flex items-start justify-between gap-2">
+                <StatusBadge tone={action.tone}>{action.status}</StatusBadge>
+                <span className="ras-command-actions__scope">{action.meta}</span>
+              </div>
+              <div className="ras-break-anywhere mt-2 text-sm font-semibold text-[var(--nimi-text-primary)]">{action.title}</div>
+              <div className="ras-break-anywhere mt-1 text-[length:var(--nimi-type-body-sm-size)] text-[var(--nimi-text-muted)]">
+                {action.detail}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {watchItems.length > 0 ? (
+        <section className="ras-command-platform-watch">
+          <h3>{t('worldStudio.command.platformWatch.title')}</h3>
+          <div className="ras-command-actions__items">
+            {watchItems.map((action) => (
+              <article key={action.id} className="ras-command-action-item ras-command-action-item--watch">
+                <div className="flex items-start justify-between gap-2">
+                  <StatusBadge tone={action.tone}>{action.status}</StatusBadge>
+                  <span className="ras-command-actions__scope">{action.meta}</span>
+                </div>
+                <div className="ras-break-anywhere mt-2 text-sm font-semibold text-[var(--nimi-text-primary)]">{action.title}</div>
+                <div className="ras-break-anywhere mt-1 text-[length:var(--nimi-type-body-sm-size)] text-[var(--nimi-text-muted)]">
+                  {action.detail}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+    </aside>
   );
 }
 
@@ -352,6 +882,7 @@ export function CreatorWorldCharacterDetailPage() {
   const { t } = useTranslation();
   const { worldId = '', characterId = '' } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const characterQuery = useQuery({
     queryKey: worldCharacterDetailQueryKey(worldId, characterId),
     queryFn: () => getCreatorWorldCharacterDetail(worldId, characterId),
@@ -366,8 +897,8 @@ export function CreatorWorldCharacterDetailPage() {
   const updateMutation = useMutation({
     mutationFn: () => updateCreatorWorldCharacter(worldId, characterId, draft),
     onSuccess: (result) => {
-      studioQueryClient.setQueryData(worldCharacterDetailQueryKey(worldId, characterId), result.character);
-      void studioQueryClient.invalidateQueries({ queryKey: worldDetailQueryKey(worldId) });
+      queryClient.setQueryData(worldCharacterDetailQueryKey(worldId, characterId), result.character);
+      void queryClient.invalidateQueries({ queryKey: worldDetailQueryKey(worldId) });
     },
   });
   const reviewCandidateMutation = useMutation({
@@ -375,23 +906,15 @@ export function CreatorWorldCharacterDetailPage() {
       batchId: string;
       candidateId: string;
       status: 'accepted' | 'rejected';
-    }) =>
-      reviewCreatorWorldCharacterAuthoringDraftCandidate(
-        worldId,
-        characterId,
-        input.batchId,
-        input.candidateId,
-        input.status,
-      ),
-    onSuccess: () => {
-      void studioQueryClient.invalidateQueries({ queryKey: worldCharacterDetailQueryKey(worldId, characterId) });
+    }) => {
+      void input;
+      throw new Error(t('worldStudio.draftBatches.actionFailed'));
     },
   });
   const applyBatchMutation = useMutation({
-    mutationFn: (batchId: string) => applyCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, batchId),
-    onSuccess: () => {
-      void studioQueryClient.invalidateQueries({ queryKey: worldCharacterDetailQueryKey(worldId, characterId) });
-      void studioQueryClient.invalidateQueries({ queryKey: worldDetailQueryKey(worldId) });
+    mutationFn: (batchId: string) => {
+      void batchId;
+      throw new Error(t('worldStudio.draftBatches.actionFailed'));
     },
   });
   const generateDraftMutation = useMutation({
@@ -401,8 +924,11 @@ export function CreatorWorldCharacterDetailPage() {
       }
       return generateCreatorWorldCharacterAuthoringDraftBatch(worldId, characterId, characterQuery.data.authoringContext);
     },
-    onSuccess: () => {
-      void studioQueryClient.invalidateQueries({ queryKey: worldCharacterDetailQueryKey(worldId, characterId) });
+    onSuccess: (result) => {
+      updateCachedCharacter(queryClient, worldId, characterId, (character) => ({
+        ...character,
+        authoringDraftBatches: [result.batch, ...character.authoringDraftBatches],
+      }));
     },
   });
 
@@ -565,9 +1091,9 @@ function creatorActionLabel(action: string, t: TFunction): string {
   return key ? t(key) : action;
 }
 
-function sourceProfileLabel(skeleton: CreatorWorldCharacterSourceSkeleton, t: TFunction): string {
-  if (skeleton.sourceProfile === 'cbdb-historical') return t('worldStudio.sourceIdentity.cbdbHistorical');
-  return skeleton.sourceProfile || skeleton.sourceKind;
+function sourceIdentityIdLabel(skeleton: CreatorWorldCharacterSourceSkeleton, t: TFunction): string {
+  if (skeleton.sourceIdentityId === 'cbdb-historical') return t('worldStudio.sourceIdentity.cbdbHistorical');
+  return skeleton.sourceIdentityId || skeleton.sourceKind;
 }
 
 function SourceIdentitySection({
@@ -584,7 +1110,7 @@ function SourceIdentitySection({
       <SectionHeading
         icon={<FileText size={17} strokeWidth={1.8} />}
         title={t('worldStudio.sourceIdentity.title')}
-        badge={<StatusBadge tone="info">{sourceProfileLabel(skeleton, t)}</StatusBadge>}
+        badge={<StatusBadge tone="info">{sourceIdentityIdLabel(skeleton, t)}</StatusBadge>}
       />
       <div className="ras-fact-grid">
         <FactCell label={t('worldStudio.sourceIdentity.canonicalName')} value={skeleton.canonicalName} />
@@ -650,7 +1176,7 @@ function buildEvidenceFacets(skeleton: CreatorWorldCharacterSourceSkeleton, t: T
       title: t('worldStudio.sourceEvidence.sourceRefsTitle'),
       description: t('worldStudio.sourceEvidence.sourceRefsDescription'),
       count: skeleton.sourceRefs.length,
-      items: skeleton.sourceRefs,
+      items: skeleton.sourceRefs.map((ref) => sourceRefLabel(ref)),
       empty: t('worldStudio.sourceEvidence.noSourceRefs'),
     });
   }
@@ -991,7 +1517,7 @@ function CharacterAuthoringOverview({
           <StatusBadge tone={character.sourceSkeleton.runtimeReadiness.roleplayRuntime === 'blocked' ? 'warning' : 'success'}>
             {character.sourceSkeleton.runtimeReadiness.roleplayRuntime}
           </StatusBadge>
-          <StatusBadge tone="neutral">{sourceProfileLabel(character.sourceSkeleton, t)}</StatusBadge>
+          <StatusBadge tone="neutral">{sourceIdentityIdLabel(character.sourceSkeleton, t)}</StatusBadge>
         </div>
         <h2 className="m-0 mt-3 text-xl font-bold text-[var(--nimi-text-primary)]">
           {t('worldStudio.authoringOverview.title')}
@@ -1324,7 +1850,7 @@ function SettingsEditorSection({
       />
       <div className="ras-fact-grid">
         <FactCell label={t('worldStudio.settings.handle')} value={`@${character.handle}`} />
-        <FactCell label={t('worldStudio.settings.world')} value={character.ownerWorldId || character.worldId} />
+        <FactCell label={t('worldStudio.settings.world')} value={character.worldId} />
         <FactCell label={t('worldStudio.settings.profileMediaReady')} value={readinessLabel(character.chatReadiness.gates.profileMediaReady)} />
         <FactCell label={t('worldStudio.settings.voiceReady')} value={readinessLabel(character.chatReadiness.gates.voiceReferenceReady)} />
       </div>
