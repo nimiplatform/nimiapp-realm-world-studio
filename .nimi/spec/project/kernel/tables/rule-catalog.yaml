@@ -43,6 +43,10 @@ rules:
     domain: CORE
     title: r-rws-core-010
     source: core-rules.md
+  - rule_id: R-RWS-CORE-011
+    domain: CORE
+    title: r-rws-core-011
+    source: core-rules.md
   - rule_id: R-RWS-SCOPE-001
     domain: SCOPE
     title: r-rws-scope-001
@@ -78,6 +82,14 @@ rules:
   - rule_id: R-RWS-SCOPE-009
     domain: SCOPE
     title: r-rws-scope-009
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-010
+    domain: SCOPE
+    title: r-rws-scope-010
+    source: product-scope.md
+  - rule_id: R-RWS-SCOPE-011
+    domain: SCOPE
+    title: r-rws-scope-011
     source: product-scope.md
   - rule_id: R-RWS-CHARACTER-001
     domain: CHARACTER
@@ -238,6 +250,22 @@ rules:
   - rule_id: R-RWS-METRIC-006
     domain: METRIC
     title: r-rws-metric-006
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-007
+    domain: METRIC
+    title: r-rws-metric-007
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-008
+    domain: METRIC
+    title: r-rws-metric-008
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-009
+    domain: METRIC
+    title: r-rws-metric-009
+    source: metrics-and-realm-gaps.md
+  - rule_id: R-RWS-METRIC-010
+    domain: METRIC
+    title: r-rws-metric-010
     source: metrics-and-realm-gaps.md
   - rule_id: R-RWS-FAIL-001
     domain: FAIL

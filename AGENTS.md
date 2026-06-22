@@ -40,11 +40,16 @@ from `@nimiplatform/nimi-coding`; refresh with `pnpm exec nimicoding start
 
 Studio canonical world surfaces are `Realm WorldCoreController.listWorldCores`,
 `getWorldCore`, `listWorldCharacters`, `getWorldCharacter`,
-`replaceWorldCharacter`, and `createRuntimeSourceSnapshot`. RealmPersona
-portfolio surfaces belong to Realm Persona Studio and must not be used as
-world-character authority. `/api/agent/forge-imported-system/**`,
-`/api/creator/characters/**`, and public world catalog reads are explicitly
+`listWorldEntities`, `getWorldEntity`, `replaceWorldCharacter`, and
+`createRuntimeSourceSnapshot`. RealmPersona portfolio surfaces belong to Realm
+Persona Studio and must not be used as world-character authority.
+`/api/agent/forge-imported-system/**`, `/api/creator/characters/**`, resource
+upload/direct-publication APIs, and public world catalog reads are explicitly
 non-current anti-targets.
+
+Nimi-generated Realm world data is maintained by `halliday@nimi.ai`. Studio
+must not synthesize maintenance authority for worlds owned by any other
+creatorId.
 
 ## Hard Boundaries
 

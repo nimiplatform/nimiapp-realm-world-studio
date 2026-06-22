@@ -40,6 +40,9 @@ R-RWS-<DOMAIN>-NNN
 - Realm WorldCoreController.getWorldCore is the world detail surface.
 - Realm WorldCoreController.listWorldCharacters is the world-character list surface.
 - Realm WorldCoreController.getWorldCharacter is the world-character detail surface.
+- Realm WorldCoreController.listWorldEntities is the world entity list surface when entity-backed facts are displayed.
+- Realm WorldCoreController.getWorldEntity is the canonical world entity detail surface for a WorldCharacterCore.entityId binding.
+- Realm WorldCoreController.listWorldRelationships is the relationship list surface for source-backed RelationshipCore counts and relationship ontology cockpit checks.
 - Realm WorldCoreController.replaceWorldCharacter is the creator-reviewed world-character replacement surface.
 - Realm WorldCoreController.createRuntimeSourceSnapshot materializes runtime input by value through sourceRef and never mutates WorldCore or WorldCharacterCore.
 
