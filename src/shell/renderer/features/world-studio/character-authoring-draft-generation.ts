@@ -1,9 +1,11 @@
 import type { NimiAIConfigTargetRef } from '@nimiplatform/sdk/ai';
 import {
   createNimiRuntimeRouteOptionsHostDeps,
+  findNimiRuntimeTargetInventoryItem,
   listNimiRuntimeRouteOptionsWithHost,
-  type NimiRuntimeRouteBinding,
   type NimiRuntimeRouteOptionsSnapshot,
+  type NimiRuntimeRouteTargetRef,
+  type NimiRuntimeTargetInventoryItem,
   type Runtime,
 } from '@nimiplatform/sdk/runtime';
 import {
@@ -129,88 +131,24 @@ function isValueProvenanceCategory(value: string): value is CandidateValueProven
   return (VALUE_PROVENANCE_CATEGORIES as readonly string[]).includes(value);
 }
 
-function bindingModel(binding: NimiRuntimeRouteBinding): string {
-  return normalizeText(binding.modelId || binding.model);
-}
-
-function routeCandidates(snapshot: NimiRuntimeRouteOptionsSnapshot): NimiRuntimeRouteBinding[] {
-  return [
-    ...snapshot.local.models.map((model): NimiRuntimeRouteBinding => ({
-      source: 'local',
-      connectorId: '',
-      model: normalizeText(model.modelId || model.model),
-      modelId: normalizeText(model.modelId || model.model) || undefined,
-      provider: normalizeText(model.provider || model.engine) || undefined,
-      localModelId: normalizeText(model.localModelId) || undefined,
-      engine: normalizeText(model.engine) || undefined,
-      endpoint: normalizeText(model.endpoint || snapshot.local.defaultEndpoint) || undefined,
-      goRuntimeLocalModelId: normalizeText(model.goRuntimeLocalModelId) || undefined,
-      goRuntimeStatus: normalizeText(model.goRuntimeStatus || model.status) || undefined,
-    })),
-    ...snapshot.connectors.flatMap((connector) =>
-      connector.models.map((model): NimiRuntimeRouteBinding => ({
-        source: 'cloud',
-        connectorId: connector.id,
-        model,
-        modelId: model,
-        provider: normalizeText(connector.provider) || undefined,
-      }))),
-  ].filter((binding) => bindingModel(binding));
-}
-
-function bindingToResolved(
-  binding: NimiRuntimeRouteBinding,
+function inventoryItemToResolved(
+  item: NimiRuntimeTargetInventoryItem,
   snapshot: NimiRuntimeRouteOptionsSnapshot,
   targetRef: NimiAIConfigTargetRef,
   selectedParams: Readonly<Record<string, unknown>>,
 ): ResolvedRuntimeRouteBinding | null {
-  const model = bindingModel(binding);
-  if (!model) return null;
-  if (binding.source === 'cloud') {
-    const connectorId = normalizeText(binding.connectorId);
+  if (item.evidence.source === 'cloud-connector') {
+    const connectorId = normalizeText(item.evidence.connectorId);
+    const model = normalizeText(item.evidence.providerModelId || item.display.model);
+    if (!model) return null;
     if (!connectorId) return null;
     return { model, route: 'cloud', connectorId, selectedParams, snapshot, targetRef };
   }
-  return { model, route: 'local', selectedParams, snapshot, targetRef };
-}
-
-function localTargetRefCandidates(targetRef: Extract<NimiAIConfigTargetRef, { readonly kind: 'local-runtime' }>): string[] {
-  const readinessParts = normalizeText(targetRef.readinessRef).split(':').map(normalizeText);
-  return [
-    normalizeText(targetRef.profileId),
-    readinessParts[0] === 'runtime-route' && readinessParts[1] === 'local' ? normalizeText(readinessParts[3]) : '',
-  ].filter(Boolean);
-}
-
-function findTargetRefRouteCandidate(
-  candidates: readonly NimiRuntimeRouteBinding[],
-  targetRef: NimiAIConfigTargetRef,
-): NimiRuntimeRouteBinding | null {
-  if (targetRef.kind === 'profile-slice') return null;
-  if (targetRef.kind === 'cloud-connector') {
-    const connectorId = normalizeText(targetRef.connectorId).toLowerCase();
-    const providerModelId = normalizeText(targetRef.providerModelId).toLowerCase();
-    const matches = candidates.filter((candidate) => {
-      if (candidate.source !== 'cloud') return false;
-      const candidateConnectorId = normalizeText(candidate.connectorId).toLowerCase();
-      const modelTokens = [candidate.model, candidate.modelId].map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
-      return candidateConnectorId === connectorId && modelTokens.includes(providerModelId);
-    });
-    return matches.length === 1 ? matches[0]! : null;
-  }
-  const targetTokens = new Set(localTargetRefCandidates(targetRef).map((value) => value.toLowerCase()));
-  if (targetTokens.size === 0) return null;
-  const matches = candidates.filter((candidate) => {
-    if (candidate.source !== 'local') return false;
-    const candidateTokens = [
-      candidate.model,
-      candidate.modelId,
-      candidate.localModelId,
-      candidate.goRuntimeLocalModelId,
-    ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean);
-    return candidateTokens.some((token) => targetTokens.has(token));
-  });
-  return matches.length === 1 ? matches[0]! : null;
+  const model = normalizeText(
+    item.evidence.resolvedModelId
+    || item.display.model
+  );
+  return model ? { model, route: 'local', selectedParams, snapshot, targetRef } : null;
 }
 
 async function resolveAuthoringTextRoute(runtime: Runtime): Promise<ResolvedRuntimeRouteBinding> {
@@ -226,8 +164,9 @@ async function resolveAuthoringTextRoute(runtime: Runtime): Promise<ResolvedRunt
     { capability: 'text.generate' },
     createNimiRuntimeRouteOptionsHostDeps(runtime),
   );
-  const candidate = findTargetRefRouteCandidate(routeCandidates(snapshot), targetRef);
-  const resolved = candidate ? bindingToResolved(candidate, snapshot, targetRef, selectedParams) : null;
+  const routeTargetRef = runtimeRouteTargetRefFromTargetRef(targetRef);
+  const item = routeTargetRef ? findNimiRuntimeTargetInventoryItem(snapshot.inventory, routeTargetRef) : null;
+  const resolved = item ? inventoryItemToResolved(item, snapshot, targetRef, selectedParams) : null;
   if (!resolved) {
     throw new Error('Runtime text.generate route binding is missing or ambiguous for configured NimiAIConfig target.');
   }
@@ -267,6 +206,80 @@ function routePolicyLabel(routePolicy: RoutePolicy, fallback: ResolvedRuntimeRou
   return fallback;
 }
 
+function runtimeDurableTargetRefFromTargetRef(targetRef: NimiAIConfigTargetRef) {
+  if (targetRef.kind === 'profile-slice') {
+    throw new Error('NimiAIConfig profile-slice targetRef cannot be serialized as a Runtime authoring target.');
+  }
+  if (targetRef.kind === 'local-runtime') {
+    const profileBindingId = normalizeText(targetRef.profileBindingId);
+    const readinessRef = normalizeText(targetRef.readinessRef);
+    return {
+      target: {
+        oneofKind: 'localRuntime' as const,
+        localRuntime: {
+          version: 'v2',
+          ref: profileBindingId
+            ? { oneofKind: 'profileBindingId' as const, profileBindingId }
+            : { oneofKind: 'readinessRef' as const, readinessRef },
+        },
+      },
+    };
+  }
+  return {
+    target: {
+      oneofKind: 'cloud' as const,
+      cloud: {
+        version: 'v2',
+        connectorId: targetRef.connectorId,
+        remoteModelCatalogId: targetRef.remoteModelCatalogId,
+        providerModelId: targetRef.providerModelId,
+        provider: targetRef.provider || '',
+      },
+    },
+  };
+}
+
+function runtimeRouteTargetRefFromTargetRef(
+  targetRef: NimiAIConfigTargetRef | null | undefined,
+): NimiRuntimeRouteTargetRef | null {
+  if (!targetRef || targetRef.kind === 'profile-slice') {
+    return null;
+  }
+  if (targetRef.kind === 'local-runtime') {
+    const profileBindingId = normalizeText(targetRef.profileBindingId);
+    const readinessRef = normalizeText(targetRef.readinessRef);
+    if (profileBindingId && !readinessRef) {
+      return {
+        kind: 'local-runtime',
+        version: 'v2',
+        profileBindingId,
+      };
+    }
+    if (readinessRef && !profileBindingId) {
+      return {
+        kind: 'local-runtime',
+        version: 'v2',
+        readinessRef,
+      };
+    }
+    return null;
+  }
+  const connectorId = normalizeText(targetRef.connectorId);
+  const remoteModelCatalogId = normalizeText(targetRef.remoteModelCatalogId);
+  const providerModelId = normalizeText(targetRef.providerModelId);
+  if (!connectorId || !remoteModelCatalogId || !providerModelId) {
+    return null;
+  }
+  return {
+    kind: 'cloud-connector',
+    version: 'v2',
+    connectorId,
+    remoteModelCatalogId,
+    providerModelId,
+    provider: normalizeText(targetRef.provider) || undefined,
+  };
+}
+
 function buildAuthoringPrompt(context: CreatorWorldCharacterAuthoringGenerationContext): string {
   return JSON.stringify({
     contract:
@@ -293,6 +306,7 @@ function buildExecuteScenarioRequest(input: {
       fallback: FallbackPolicy.DENY,
       timeoutMs: input.timeoutMs,
       connectorId: input.binding.connectorId || '',
+      targetRef: runtimeDurableTargetRefFromTargetRef(input.binding.targetRef),
     },
     scenarioType: ScenarioType.TEXT_GENERATE,
     executionMode: ExecutionMode.SYNC,

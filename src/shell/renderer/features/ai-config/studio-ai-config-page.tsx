@@ -53,7 +53,7 @@ function targetRefDetail(targetRef: NimiAIConfigTargetRef): string | null {
       .join(' / ');
   }
   if (targetRef.kind === 'local-runtime') {
-    return targetRef.profileId || targetRef.targetId || targetRef.readinessRef || null;
+    return targetRef.profileBindingId || targetRef.readinessRef || null;
   }
   return `${targetRef.sourceProfileId}:${targetRef.sliceId}`;
 }

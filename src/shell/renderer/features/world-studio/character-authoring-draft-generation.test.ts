@@ -40,6 +40,11 @@ vi.mock('@nimiplatform/sdk/runtime', async (importOriginal) => {
 const worldId = 'world-cbdb';
 const characterId = 'character-su-shi';
 const entitySourceRef = 'worldEntity:world-cbdb:cbdb:person:su-shi:hash-entity-su-shi';
+const localTextTargetRef = {
+  kind: 'local-runtime' as const,
+  version: 'v2' as const,
+  profileBindingId: 'local-runtime:runtime-text-model',
+};
 
 function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
   return {
@@ -134,20 +139,34 @@ function authoringContext(): CreatorWorldCharacterAuthoringGenerationContext {
 
 function routeSnapshot() {
   return {
-    local: {
-      defaultEndpoint: '',
-      models: [
+    capability: 'text.generate',
+    selectedTargetRef: null,
+    inventory: {
+      capability: 'text.generate',
+      targets: [
         {
-          model: 'runtime-text-model',
-          modelId: 'runtime-text-model',
-          provider: 'local',
-          engine: 'llama.cpp',
-          localModelId: 'runtime-text-model',
-          status: 'active',
+          targetRef: localTextTargetRef,
+          display: {
+            label: 'runtime-text-model',
+            model: 'runtime-text-model',
+            provider: 'local',
+            engine: 'llama.cpp',
+          },
+          readiness: {
+            status: 'ready',
+          },
+          compatibility: {
+            capabilities: ['text.generate'],
+          },
+          evidence: {
+            source: 'local-runtime',
+            localAssetId: 'runtime-text-model',
+            resolvedModelId: 'runtime-text-model',
+            engine: 'llama.cpp',
+          },
         },
       ],
     },
-    connectors: [],
   };
 }
 
@@ -182,10 +201,7 @@ describe('character authoring draft Runtime generation', () => {
       },
     });
     mocks.readSelectedParams.mockReturnValue({});
-    mocks.readTargetRef.mockReturnValue({
-      kind: 'local-runtime',
-      profileId: 'runtime-text-model',
-    });
+    mocks.readTargetRef.mockReturnValue(localTextTargetRef);
     mocks.listRouteOptions.mockResolvedValue(routeSnapshot());
   });
 
@@ -287,6 +303,18 @@ describe('character authoring draft Runtime generation', () => {
           fallback: FallbackPolicy.DENY,
           modelId: 'runtime-text-model',
           routePolicy: RoutePolicy.LOCAL,
+          targetRef: {
+            target: {
+              oneofKind: 'localRuntime',
+              localRuntime: {
+                version: 'v2',
+                ref: {
+                  oneofKind: 'profileBindingId',
+                  profileBindingId: 'local-runtime:runtime-text-model',
+                },
+              },
+            },
+          },
         }),
       }),
       expect.objectContaining({
