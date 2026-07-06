@@ -1,16 +1,16 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-ASSET-BINDING-001
-title: Character Asset And Binding Boundary
+title: Showcase Asset Boundary
 status: active
 owner: "@team"
-updated: 2026-06-18
+updated: 2026-06-27
 ---
 
-# Character Asset And Binding Boundary
+# Showcase Asset Boundary
 
-- **[R-RWS-ASSET-001]** Avatar, profile cover, voice, and reference media outputs are local candidates until creator review.
-- **[R-RWS-ASSET-002]** A reviewed media URL may become source state only through replaceWorldCharacter.
-- **[R-RWS-ASSET-003]** Resource, OwnableAsset, or Binding publication is not admitted unless a future owner-scoped Realm ingress is added.
-- **[R-RWS-ASSET-004]** Studio must not write AGENT host bindings or AGENT_* binding points.
-- **[R-RWS-ASSET-005]** Local preview media must preserve source world id, character id, content hash, and review state.
-- **[R-RWS-ASSET-006]** Missing media source data renders as a source gap, not a placeholder public asset.
+- **[R-RWS-ASSET-001]** Hero, icon, highlight, avatar, profile cover, and scene imagery are display assets only on the World Atlas detail page.
+- **[R-RWS-ASSET-002]** Public media URLs may be displayed but never promoted into source state by this page.
+- **[R-RWS-ASSET-003]** Resource, OwnableAsset, Binding publication, upload, and direct-publication APIs are not admitted for this page.
+- **[R-RWS-ASSET-004]** World Atlas must not write AGENT host bindings, AGENT_* binding points, or Runtime materialization bindings.
+- **[R-RWS-ASSET-005]** Theme fallback media is visual presentation only and must not be treated as platform publication evidence.
+- **[R-RWS-ASSET-006]** Missing media renders through theme fallback or user-facing unavailable states, not placeholder public asset claims.

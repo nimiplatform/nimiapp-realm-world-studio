@@ -44,10 +44,17 @@ describe('Studio shell kit boundary', () => {
     expect(source).not.toContain('onTransitionEnd');
   });
 
-  it('exposes creator world navigation without system curation', () => {
+  it('exposes World Atlas user navigation without creator tooling', () => {
     const source = shellLayoutSource();
 
     expect(source).toContain("to: '/worlds'");
+    expect(source).toContain("to: '/discover'");
+    expect(source).toContain("to: '/favorites'");
+    expect(source).toContain("to: '/messages'");
+    expect(source).toContain("to: '/friends'");
+    expect(source).toContain("to: '/settings'");
+    expect(source).toContain("to: '/profile'");
+    expect(source).not.toContain("to: '/ai-config'");
     expect(source).not.toContain("to: '/curation/forge-imported-system'");
     expect(source).not.toContain("label: 'System curation'");
     expect(source).not.toContain('ShieldCheck');

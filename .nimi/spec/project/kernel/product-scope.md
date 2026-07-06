@@ -1,21 +1,21 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-PRODUCT-SCOPE-001
-title: Realm World Studio Product Scope
+title: World Atlas Product Scope
 status: active
 owner: "@team"
-updated: 2026-06-22
+updated: 2026-06-27
 ---
 
 # Product Scope
 
-- **[R-RWS-SCOPE-001]** Studio lists WorldCore records admitted by Realm for Studio maintenance; Nimi-generated WorldCore records are maintainable only when their Realm creatorId is the stable Realm account id for halliday@nimi.ai (`01J00000000000000000000000`).
-- **[R-RWS-SCOPE-002]** Studio inspects WorldCore detail before showing world-character workspaces.
-- **[R-RWS-SCOPE-003]** Studio lists and inspects WorldCharacterCore objects under their parent world, and may read WorldEntityCore for source-backed graph counts and for resolving the same-world entity binding carried by WorldCharacterCore.entityId.
-- **[R-RWS-SCOPE-004]** Studio updates only creator-reviewed WorldCharacterCore fields through replaceWorldCharacter.
-- **[R-RWS-SCOPE-005]** Studio may generate local candidates for missing character fields when every candidate remains review-gated.
-- **[R-RWS-SCOPE-006]** Studio may keep local view preferences and authoring draft state for ergonomics only.
+- **[R-RWS-SCOPE-001]** World Atlas reads public worlds through typed Realm public world surfaces and presents them to ordinary users as explorable worlds.
+- **[R-RWS-SCOPE-002]** The detail page loads public world detail before showing Hero, stats, tabs, world relationship sidebar, or content modules.
+- **[R-RWS-SCOPE-003]** The detail page lists public world-character cards under their parent world and may project them into "可结识人物" cards.
+- **[R-RWS-SCOPE-004]** The current page does not write WorldCore, WorldCharacterCore, RealmPersona, relationship, asset, or Runtime source records.
+- **[R-RWS-SCOPE-005]** AI generation, missing-field completion, source skeleton repair, and creator review are out of scope for this page.
+- **[R-RWS-SCOPE-006]** The page may keep session-local UI state for tabs, drawers, collect toggles, friend toggles, and chat-entry affordances only.
 - **[R-RWS-SCOPE-007]** RealmPersona owner portfolio, Persona settings, Forge curation, post scheduling, gift/economic settlement, team collaboration, and localAgent private runtime are out of scope.
-- **[R-RWS-SCOPE-008]** Public world catalog reads and creator legacy routes must not be fallback success paths.
-- **[R-RWS-SCOPE-009]** World creation is not admitted in this app until this kernel adds a create WorldCore rule and implementation path.
-- **[R-RWS-SCOPE-010]** Studio may read WorldRelationshipCore lists for source-backed graph counts, relationship ontology inspection, and diagnostics; RelationshipCore editing is not admitted until a replace relationship rule exists.
-- **[R-RWS-SCOPE-011]** The default Creator Worlds screen must translate Realm Core source facts into localizable creator-facing world inventory, world frame, cast, structure, timeline, asset, and next-action language; schema ids, controller names, content hashes, and raw unavailable reasons belong in diagnostics, not the default product layer.
+- **[R-RWS-SCOPE-008]** Creator legacy routes, source connection routes, Runtime readiness routes, and owner-persona routes must not be fallback success paths for World Atlas.
+- **[R-RWS-SCOPE-009]** World creation and world generation are not admitted in this app until this kernel adds an explicit creation/generation surface.
+- **[R-RWS-SCOPE-010]** Relationship, entity, system, scene, and timeline facts may be displayed only when returned by typed public world DTOs or derived directly from their public counts/arrays.
+- **[R-RWS-SCOPE-011]** The World Atlas detail screen must translate public Realm facts into localizable user-facing exploration language; schema ids, controller names, content hashes, source connection language, and raw unavailable reasons belong outside the default product layer.

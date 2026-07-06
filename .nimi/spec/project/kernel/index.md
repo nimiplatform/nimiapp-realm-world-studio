@@ -1,20 +1,27 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-KERNEL-INDEX-001
-title: Realm World Studio Kernel Authority
+title: World Atlas Kernel Authority
 status: active
 owner: "@team"
-updated: 2026-06-18
+updated: 2026-06-27
 ---
 
-# Realm World Studio Kernel Authority
+# World Atlas Kernel Authority
 
 ## Scope
 
-This kernel is the single authoritative product/app contract source for Realm World Studio. Every current rule uses R-RWS-<DOMAIN>-NNN.
+This kernel is the single authoritative product/app contract source for the
+World Atlas world detail surface carried by this app package. Every current
+rule uses R-RWS-<DOMAIN>-NNN.
 
-Realm World Studio maintains WorldCore records and their WorldCharacterCore objects through Realm core surfaces. It is not Realm Persona Studio, not localAgent runtime management, not Forge curation, and not a generic world control panel.
+World Atlas is a public, user-facing world showcase and exploration page. It
+helps ordinary users understand a world, browse public资料, meet world
+characters, enter scenes, follow timeline context, collect a world, and start
+relationship-oriented exploration. It is not a creator maintenance cockpit,
+world generation backend, source connection page, owner-persona portfolio, or
+Runtime readiness console.
 
-- **[R-RWS-CORE-001]** This kernel is the only current app authority for Realm World Studio.
+- **[R-RWS-CORE-001]** This kernel is the only current app authority for the World Atlas world detail surface.
 
 ## Rule ID Format
 
@@ -36,18 +43,25 @@ R-RWS-<DOMAIN>-NNN
 
 ## Canonical Current Surfaces
 
-- Realm WorldCoreController.listWorldCores is the world list surface.
-- Realm WorldCoreController.getWorldCore is the world detail surface.
-- Realm WorldCoreController.listWorldCharacters is the world-character list surface.
-- Realm WorldCoreController.getWorldCharacter is the world-character detail surface.
-- Realm WorldCoreController.listWorldEntities is the world entity list surface when entity-backed facts are displayed.
-- Realm WorldCoreController.getWorldEntity is the canonical world entity detail surface for a WorldCharacterCore.entityId binding.
-- Realm WorldCoreController.listWorldRelationships is the relationship list surface for source-backed RelationshipCore counts and relationship ontology cockpit checks.
-- Realm WorldCoreController.replaceWorldCharacter is the creator-reviewed world-character replacement surface.
-- Realm WorldCoreController.createRuntimeSourceSnapshot materializes runtime input by value through sourceRef and never mutates WorldCore or WorldCharacterCore.
+- Realm WorldPublicController.getWorldDetailWithCharacters is the world detail
+  showcase read surface.
+- Realm WorldPublicController.getWorld is the single-world public metadata read
+  surface when characters are not needed.
+- Realm WorldPublicController.listWorldCharacters is the public world-character
+  card read surface.
+- Realm WorldPublicController.listWorlds is the public atlas listing read
+  surface for future list surfaces.
+- Public media assets returned by the same DTO are the visual source for hero,
+  icon, highlight, character avatar, and scene presentation.
 
 ## Explicit Non-Current Surfaces
 
-- /api/me/creator/worlds/**, /api/creator/characters/**, /api/agent/**, owner persona portfolio routes, world-control binding APIs, raw AgentRule CRUD, and public world catalog fallback are not current success paths for this Studio.
-- Realm Persona Studio owns owner-created RealmPersona work. Realm World Studio owns WorldCore and WorldCharacterCore work.
-- LocalAgent may be named only when describing runtime-private state that must not be read or written by this app.
+- Creator maintenance reads/writes, replaceWorldCharacter, Runtime readiness,
+  source connection, generation, owner persona portfolio routes, Forge curation,
+  raw AgentRule CRUD, and localAgent private state are not current success paths
+  for this World Atlas page.
+- RealmPersona records returned by public DTOs are not world-character showcase
+  authority for this page.
+- Missing public detail, characters, media, or relation capability must fail
+  closed or render user-facing unavailable copy; the page must not synthesize
+  backend success.

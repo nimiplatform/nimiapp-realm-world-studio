@@ -1,7 +1,7 @@
 import { useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Globe2, LogOut, User, SlidersHorizontal } from 'lucide-react';
+import { Bookmark, ChevronDown, Compass, Globe2, LogOut, MessageCircle, Settings, User, Users } from 'lucide-react';
 import {
   AmbientBackground,
   Avatar,
@@ -31,8 +31,13 @@ const TITLEBAR_INTERACTIVE_SELECTOR = [
 ].join(',');
 
 const navItems = [
-  { to: '/worlds', labelKey: 'shell.nav.worlds', Icon: Globe2, end: true },
-  { to: '/ai-config', labelKey: 'shell.nav.aiModels', Icon: SlidersHorizontal, end: true },
+  { to: '/worlds', labelKey: 'shell.nav.worldAtlas', Icon: Globe2, end: false },
+  { to: '/discover', labelKey: 'shell.nav.discover', Icon: Compass, end: true },
+  { to: '/favorites', labelKey: 'shell.nav.favorites', Icon: Bookmark, end: true },
+  { to: '/messages', labelKey: 'shell.nav.messages', Icon: MessageCircle, end: true },
+  { to: '/friends', labelKey: 'shell.nav.friends', Icon: Users, end: true },
+  { to: '/settings', labelKey: 'shell.nav.settings', Icon: Settings, end: true },
+  { to: '/profile', labelKey: 'shell.nav.profile', Icon: User, end: true },
 ] as const;
 
 function SidebarItem({
@@ -154,7 +159,7 @@ function AccountMenu() {
                 navigate('/worlds');
               }}
             >
-              {t('shell.account.creatorWorlds')}
+              {t('shell.account.worldAtlas')}
             </Button>
             <Button
               tone="danger"
@@ -198,7 +203,7 @@ export function ShellLayout({ children }: { children: ReactNode }) {
       <div className="ras-topbar" onMouseDown={handleTitlebarMouseDown}>
         <div className="ras-topbar__inner">
           <h1 className="ras-topbar__title">{t('app.name')}</h1>
-          <span className="ras-topbar__chip">{t('shell.creatorBadge')}</span>
+          <span className="ras-topbar__chip">{t('shell.atlasBadge')}</span>
           <div className="ras-topbar__right">
             <LanguageSwitcher />
             <AccountMenu />

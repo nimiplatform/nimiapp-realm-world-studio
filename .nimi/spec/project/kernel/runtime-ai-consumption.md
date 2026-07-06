@@ -1,17 +1,17 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-RUNTIME-AI-001
-title: Runtime AI Consumption
+title: Runtime Boundary
 status: active
 owner: "@team"
-updated: 2026-06-18
+updated: 2026-06-27
 ---
 
-# Runtime AI Consumption
+# Runtime Boundary
 
-- **[R-RWS-RUNTIME-001]** Runtime text, image, and speech calls are candidate-generation surfaces.
-- **[R-RWS-RUNTIME-002]** RuntimeSourceSnapshot creation uses sourceRef.kind = worldCharacter, worldId, sourceId, and sourceContentHash.
-- **[R-RWS-RUNTIME-003]** RuntimeSourceSnapshot payloads are by-value materializations and must not write back to WorldCore or WorldCharacterCore.
-- **[R-RWS-RUNTIME-004]** Runtime readiness summaries may expose source counts, missing targets, and checksums only.
-- **[R-RWS-RUNTIME-005]** Studio must never send private LocalAgent memory, emotions, cognition, private transcript, or app-specific memory fragments.
-- **[R-RWS-RUNTIME-006]** Runtime output accepted by a creator still requires replaceWorldCharacter before it becomes source state.
-- **[R-RWS-RUNTIME-007]** Runtime route-unbound, transport-unavailable, malformed-output, and invalid-payload states are explicit failures.
+- **[R-RWS-RUNTIME-001]** Runtime text, image, speech, and generation calls are not part of the World Atlas detail page.
+- **[R-RWS-RUNTIME-002]** RuntimeSourceSnapshot creation is not admitted from this page.
+- **[R-RWS-RUNTIME-003]** The chat-entry affordance may open or signal a conversation entry only when a future typed chat route exists; it must not materialize Runtime source state.
+- **[R-RWS-RUNTIME-004]** Runtime readiness summaries, source counts, checksums, and blocked states must not appear in default World Atlas copy.
+- **[R-RWS-RUNTIME-005]** The page must never read or send private LocalAgent memory, emotions, cognition, private transcript, or app-specific memory fragments.
+- **[R-RWS-RUNTIME-006]** Runtime output cannot become showcase source state from this page.
+- **[R-RWS-RUNTIME-007]** Runtime route-unbound, transport-unavailable, malformed-output, and invalid-payload states remain explicit failures if future chat surfaces are wired.

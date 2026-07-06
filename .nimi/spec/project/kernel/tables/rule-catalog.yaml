@@ -127,6 +127,14 @@ rules:
     domain: CHARACTER
     title: r-rws-character-009
     source: world-character-object.md
+  - rule_id: R-RWS-CHARACTER-010
+    domain: CHARACTER
+    title: r-rws-character-010
+    source: world-character-object.md
+  - rule_id: R-RWS-CHARACTER-011
+    domain: CHARACTER
+    title: r-rws-character-011
+    source: world-character-object.md
   - rule_id: R-RWS-SETTING-001
     domain: SETTING
     title: r-rws-setting-001

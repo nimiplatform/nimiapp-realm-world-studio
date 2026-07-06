@@ -2,15 +2,10 @@ import type { Realm } from '@nimiplatform/sdk/realm';
 import { getCurrentStudioNimiClient } from '@renderer/app-shell/studio-platform.js';
 
 export const STUDIO_REALM_SURFACE_METHODS = [
-  'worldCoreControllerListWorldCores',
-  'worldCoreControllerGetWorldCore',
-  'worldCoreControllerListWorldEntities',
-  'worldCoreControllerGetWorldEntity',
-  'worldCoreControllerListWorldRelationships',
-  'worldCoreControllerListWorldCharacters',
-  'worldCoreControllerGetWorldCharacter',
-  'worldCoreControllerReplaceWorldCharacter',
-  'worldCoreControllerCreateRuntimeSourceSnapshot',
+  'worldPublicControllerGetWorld',
+  'worldPublicControllerGetWorldDetailWithCharacters',
+  'worldPublicControllerListWorldCharacters',
+  'worldPublicControllerListWorlds',
 ] as const;
 
 export type StudioRealmSurfaceMethod = typeof STUDIO_REALM_SURFACE_METHODS[number];
@@ -19,15 +14,10 @@ export type StudioRealmSurface = Pick<Realm['generated'], StudioRealmSurfaceMeth
 export function createStudioRealmSurface(realm: Pick<Realm, 'generated'>): StudioRealmSurface {
   const generated = realm.generated;
   return {
-    worldCoreControllerListWorldCores: generated.worldCoreControllerListWorldCores.bind(generated),
-    worldCoreControllerGetWorldCore: generated.worldCoreControllerGetWorldCore.bind(generated),
-    worldCoreControllerListWorldEntities: generated.worldCoreControllerListWorldEntities.bind(generated),
-    worldCoreControllerGetWorldEntity: generated.worldCoreControllerGetWorldEntity.bind(generated),
-    worldCoreControllerListWorldRelationships: generated.worldCoreControllerListWorldRelationships.bind(generated),
-    worldCoreControllerListWorldCharacters: generated.worldCoreControllerListWorldCharacters.bind(generated),
-    worldCoreControllerGetWorldCharacter: generated.worldCoreControllerGetWorldCharacter.bind(generated),
-    worldCoreControllerReplaceWorldCharacter: generated.worldCoreControllerReplaceWorldCharacter.bind(generated),
-    worldCoreControllerCreateRuntimeSourceSnapshot: generated.worldCoreControllerCreateRuntimeSourceSnapshot.bind(generated),
+    worldPublicControllerGetWorld: generated.worldPublicControllerGetWorld.bind(generated),
+    worldPublicControllerGetWorldDetailWithCharacters: generated.worldPublicControllerGetWorldDetailWithCharacters.bind(generated),
+    worldPublicControllerListWorldCharacters: generated.worldPublicControllerListWorldCharacters.bind(generated),
+    worldPublicControllerListWorlds: generated.worldPublicControllerListWorlds.bind(generated),
   };
 }
 

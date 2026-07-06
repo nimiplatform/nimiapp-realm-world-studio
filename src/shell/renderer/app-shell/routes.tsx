@@ -3,17 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Surface } from '@nimiplatform/kit/ui';
 
-const CreatorWorldListPage = lazy(() =>
-  import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldListPage })),
-);
-const CreatorWorldDetailPage = lazy(() =>
-  import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldDetailPage })),
-);
-const CreatorWorldCharacterDetailPage = lazy(() =>
-  import('../features/world-studio/world-studio-pages.js').then((m) => ({ default: m.CreatorWorldCharacterDetailPage })),
-);
-const StudioAIConfigPage = lazy(() =>
-  import('../features/ai-config/studio-ai-config-page.js').then((m) => ({ default: m.StudioAIConfigPage })),
+const WorldShowcasePage = lazy(() =>
+  import('../features/world-showcase/world-showcase-pages.js').then((m) => ({ default: m.WorldShowcasePage })),
 );
 
 function PageFallback() {
@@ -30,10 +21,8 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
-        <Route path="/worlds" element={<CreatorWorldListPage />} />
-        <Route path="/worlds/:worldId" element={<CreatorWorldDetailPage />} />
-        <Route path="/worlds/:worldId/characters/:characterId" element={<CreatorWorldCharacterDetailPage />} />
-        <Route path="/ai-config" element={<StudioAIConfigPage />} />
+        <Route path="/worlds" element={<WorldShowcasePage />} />
+        <Route path="/worlds/:worldId" element={<WorldShowcasePage />} />
         <Route path="*" element={<Navigate to="/worlds" replace />} />
       </Routes>
     </Suspense>

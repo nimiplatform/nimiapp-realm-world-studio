@@ -22,10 +22,10 @@ export type {
   JsonPrimitive,
 } from '@nimiplatform/kit/shell/renderer/bridge';
 
-import type { TauriOAuthBridge } from '@nimiplatform/kit/core/oauth';
+import type { ShellOAuthBridge } from '@nimiplatform/kit/core/oauth';
 import {
   focusMainWindow,
-  hasTauriInvoke,
+  hasShellHostInvoke,
   oauthListenForCode,
   openExternalUrl,
 } from '@nimiplatform/kit/shell/renderer/bridge';
@@ -77,8 +77,8 @@ export async function getStudioRuntimeDefaults(): Promise<StudioRuntimeDefaults>
   };
 }
 
-export const studioTauriOAuthBridge: TauriOAuthBridge = {
-  hasTauriInvoke,
+export const studioTauriOAuthBridge: ShellOAuthBridge = {
+  hasShellHostInvoke,
   oauthListenForCode,
   openExternalUrl,
   focusMainWindow,

@@ -1,20 +1,20 @@
 ---
 id: SPEC-REALM-WORLD-STUDIO-STORYBOOK-001
-title: Realm World Studio Storybook
+title: World Atlas Storybook
 status: active
 owner: "@team"
-updated: 2026-06-18
+updated: 2026-06-27
 ---
 
 # Storybook
 
 | Story | Rule |
 |---|---|
-| Review worlds | **[R-RWS-STORY-001]** Worlds load from listWorldCores and display source-backed character counts. |
-| Inspect world | **[R-RWS-STORY-002]** World detail loads getWorldCore plus listWorldCharacters before showing character workspaces. |
-| Inspect character | **[R-RWS-STORY-003]** Character detail loads getWorldCharacter and keeps contentHash visible to save logic. |
-| Complete missing fields | **[R-RWS-STORY-004]** Authoring targets derive from missing WorldCharacterCore source fields. |
-| Save character | **[R-RWS-STORY-005]** Creator-reviewed changes save through replaceWorldCharacter with baseContentHash. |
-| Generate candidates | **[R-RWS-STORY-006]** Runtime text/image/voice outputs remain local candidates until creator review and Realm core replacement. |
-| Prepare runtime snapshot | **[R-RWS-STORY-007]** Runtime readiness uses RuntimeSourceSnapshot by value and does not expose private LocalAgent memory. |
-| Keep adjacent products out | **[R-RWS-STORY-008]** Realm Persona Studio, Forge curation, owner persona portfolio, and legacy Agent routes stay out of World Studio routes. |
+| Open public world | **[R-RWS-STORY-001]** World detail loads from WorldPublicController.getWorldDetailWithCharacters before showing showcase content. |
+| Understand world | **[R-RWS-STORY-002]** Hero, stats, guide, routes, and settings translate public facts into user exploration language. |
+| Meet characters | **[R-RWS-STORY-003]** Public world-character cards render as可结识人物 with expertise, questions, friend affordance, chat entry, and档案 drawer. |
+| Browse资料 | **[R-RWS-STORY-004]** Public systems, entity kinds, relationship types, and rules become user-facing资料馆 cards. |
+| Explore scenes | **[R-RWS-STORY-005]** Public scenes render as explorable spaces with related people,资料, and recommended questions. |
+| Follow time | **[R-RWS-STORY-006]** Timeline renders public events, or a user-facing整理中 state when no events are present. |
+| Keep relations local unless typed | **[R-RWS-STORY-007]** Collect, friend, drawer, tab, and chat-entry interactions are session UI state unless a typed platform write exists. |
+| Keep creator products out | **[R-RWS-STORY-008]** Creator cockpit, source connection, Forge curation, owner persona portfolio, Runtime readiness, and localAgent routes stay out of World Atlas routes. |
