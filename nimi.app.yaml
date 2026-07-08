@@ -9,22 +9,13 @@ permissions:
   declared_nimi_api_scopes:
     - scope: realm.core.worlds.read
       qualifier: creator-worlds
-      purpose: List WorldCore records available to the signed-in Studio account.
+      purpose: List and inspect WorldCore records available to the signed-in Studio account.
+    - scope: realm.core.worlds.write
+      qualifier: creator-worlds
+      purpose: Create or update creator-owned WorldCore records only through typed Realm core authority.
     - scope: realm.core.world-characters.read
       qualifier: creator-world-characters
       purpose: List and inspect world-owned WorldCharacterCore sources under signed-in creator worlds.
     - scope: realm.core.world-characters.write
       qualifier: creator-world-characters
-      purpose: Update world-character settings, profile media, and voice through Realm core authority.
-    - scope: realm.core.runtime-snapshots.write
-      qualifier: world-character-materialization
-      purpose: Create RuntimeSourceSnapshot payloads for world-character runtime materialization.
-    - scope: runtime.ai.text.generate
-      qualifier: studio-text
-      purpose: Generate reviewed world and world-character candidate text.
-    - scope: runtime.ai.executeScenario.image.generate
-      qualifier: studio-image
-      purpose: Generate reviewed world, avatar, and profile cover candidates.
-    - scope: runtime.ai.executeScenario.audio.synthesize
-      qualifier: studio-voice
-      purpose: Generate voice-demo candidates for reviewed world-character voice settings.
+      purpose: Create or update world-character settings, profile media references, and voice/source settings through Realm core authority.

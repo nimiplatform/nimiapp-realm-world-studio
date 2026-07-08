@@ -19,14 +19,14 @@ describe('studio i18n', () => {
   it('switches resources and document language together', async () => {
     await setStudioLocale('zh-CN');
 
-    expect(studioI18n.t('shell.nav.worldAtlas')).toBe('世界图谱');
+    expect(studioI18n.t('shell.nav.worlds')).toBe('世界');
     expect(document.documentElement.lang).toBe('zh-CN');
-    expect(document.title).toBe('World Atlas');
+    expect(document.title).toBe('Realm World Studio');
     expect(window.localStorage.getItem('nimi.realm-world-studio.locale')).toBe('zh-CN');
 
     await setStudioLocale('en');
 
-    expect(studioI18n.t('shell.nav.worldAtlas')).toBe('World atlas');
+    expect(studioI18n.t('shell.nav.worlds')).toBe('Worlds');
     expect(document.documentElement.lang).toBe('en');
   });
 });

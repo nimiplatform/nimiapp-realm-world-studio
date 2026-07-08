@@ -39,13 +39,15 @@ from `@nimiplatform/nimi-coding`; refresh with `pnpm exec nimicoding start
 --yes` after bumping the package.
 
 Studio canonical world surfaces are `Realm WorldCoreController.listWorldCores`,
-`getWorldCore`, `listWorldCharacters`, `getWorldCharacter`,
-`listWorldEntities`, `getWorldEntity`, `replaceWorldCharacter`, and
-`createRuntimeSourceSnapshot`. RealmPersona portfolio surfaces belong to Realm
-Persona Studio and must not be used as world-character authority.
-`/api/agent/forge-imported-system/**`, `/api/creator/characters/**`, resource
-upload/direct-publication APIs, and public world catalog reads are explicitly
-non-current anti-targets.
+`getWorldCore`, `createWorldCore`, `replaceWorldCore`,
+`listWorldCharacters`, `getWorldCharacter`, `createWorldCharacter`,
+`replaceWorldCharacter`, `listWorldEntities`, `getWorldEntity`,
+`listWorldRelationships`, `getWorldRelationship`, and typed source
+materialization surfaces when admitted. RealmPersona portfolio surfaces belong
+to Realm Persona Studio and must not be used as world-character authority.
+`WorldPublicController.*`, `/api/agent/forge-imported-system/**`,
+`/api/creator/characters/**`, resource upload/direct-publication APIs, and
+public world catalog reads are explicitly non-current anti-targets.
 
 Nimi-generated Realm world data is maintained by `halliday@nimi.ai`. Studio
 must not synthesize maintenance authority for worlds owned by any other
@@ -54,7 +56,7 @@ creatorId.
 ## Hard Boundaries
 
 ### Scope boundary
-- **In scope:** WorldCore records, WorldCharacterCore detail, world-character settings, profile media, voice, and RuntimeSourceSnapshot readiness through Realm core authority.
+- **In scope:** WorldCore records, WorldCharacterCore detail, creator world creation/update, world-character settings, profile media references, voice/source settings, and typed source materialization readiness through Realm core authority when admitted.
 - **Out of scope:** RealmPersona owner portfolio, LocalAgent private runtime / memory / emotion state, owner-authored post scheduling, fallback from world reads to owner-persona reads, gift/economic settlement, team collaboration.
 
 ### Failure mode
@@ -147,7 +149,7 @@ admission decision.
 
 ## Retrieval Defaults
 
-Start with: `.nimi/spec/INDEX.md`, `.nimi/spec/project/kernel/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/portfolio/`, `src-tauri/src/`.
+Start with: `.nimi/spec/INDEX.md`, `.nimi/spec/project/kernel/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/worlds/`, `src-tauri/src/`.
 
 Skip: `node_modules/`, `dist/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles.
 

@@ -3,8 +3,23 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Surface } from '@nimiplatform/kit/ui';
 
-const WorldShowcasePage = lazy(() =>
-  import('../features/world-showcase/world-showcase-pages.js').then((m) => ({ default: m.WorldShowcasePage })),
+const CreatorWorldListPage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldListPage })),
+);
+const CreatorWorldDetailPage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldDetailPage })),
+);
+const CreatorWorldCharacterDetailPage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCharacterDetailPage })),
+);
+const CreatorWorldCreatePage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCreatePage })),
+);
+const CreatorWorldEditPage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldEditPage })),
+);
+const CreatorWorldCharacterEditPage = lazy(() =>
+  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCharacterEditPage })),
 );
 
 function PageFallback() {
@@ -21,8 +36,12 @@ export function AppRoutes() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
-        <Route path="/worlds" element={<WorldShowcasePage />} />
-        <Route path="/worlds/:worldId" element={<WorldShowcasePage />} />
+        <Route path="/worlds" element={<CreatorWorldListPage />} />
+        <Route path="/worlds/new" element={<CreatorWorldCreatePage />} />
+        <Route path="/worlds/:worldId" element={<CreatorWorldDetailPage />} />
+        <Route path="/worlds/:worldId/edit" element={<CreatorWorldEditPage />} />
+        <Route path="/worlds/:worldId/characters/:characterId" element={<CreatorWorldCharacterDetailPage />} />
+        <Route path="/worlds/:worldId/characters/:characterId/edit" element={<CreatorWorldCharacterEditPage />} />
         <Route path="*" element={<Navigate to="/worlds" replace />} />
       </Routes>
     </Suspense>

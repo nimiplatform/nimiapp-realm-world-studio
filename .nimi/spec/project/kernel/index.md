@@ -1,27 +1,30 @@
 ---
-id: SPEC-REALM-WORLD-STUDIO-KERNEL-INDEX-001
-title: World Atlas Kernel Authority
+id: SPEC-REALM-WORLD-STUDIO-KERNEL-INDEX-002
+title: Realm World Studio Kernel Authority
 status: active
 owner: "@team"
-updated: 2026-06-27
+updated: 2026-07-09
 ---
 
-# World Atlas Kernel Authority
+# Realm World Studio Kernel Authority
 
 ## Scope
 
-This kernel is the single authoritative product/app contract source for the
-World Atlas world detail surface carried by this app package. Every current
-rule uses R-RWS-<DOMAIN>-NNN.
+This kernel is the single authoritative product/app contract source for Realm
+World Studio in this repository. Realm World Studio is a creator-facing desktop
+workspace for creator-owned Realm worlds and world-owned characters. It helps a
+creator browse, create, inspect, edit, update, and prepare Realm world source
+records without reimplementing Nimi platform substrate.
 
-World Atlas is a public, user-facing world showcase and exploration page. It
-helps ordinary users understand a world, browse public资料, meet world
-characters, enter scenes, follow timeline context, collect a world, and start
-relationship-oriented exploration. It is not a creator maintenance cockpit,
-world generation backend, source connection page, owner-persona portfolio, or
-Runtime readiness console.
+- **[R-RWS-CORE-001]** This kernel is the only current app authority for Realm World Studio creator workflows.
 
-- **[R-RWS-CORE-001]** This kernel is the only current app authority for the World Atlas world detail surface.
+## Thin Product Layer Principle
+
+Realm World Studio owns creator product composition: navigation, workbench
+layout, form drafts, review affordances, typed DTO projection, and explicit
+failure presentation. It does not own Nimi account custody, design-system
+primitives, model/provider configuration authority, Runtime AI execution,
+Runtime private state, Realm transport, or Realm canonical source truth.
 
 ## Rule ID Format
 
@@ -43,25 +46,16 @@ R-RWS-<DOMAIN>-NNN
 
 ## Canonical Current Surfaces
 
-- Realm WorldPublicController.getWorldDetailWithCharacters is the world detail
-  showcase read surface.
-- Realm WorldPublicController.getWorld is the single-world public metadata read
-  surface when characters are not needed.
-- Realm WorldPublicController.listWorldCharacters is the public world-character
-  card read surface.
-- Realm WorldPublicController.listWorlds is the public atlas listing read
-  surface for future list surfaces.
-- Public media assets returned by the same DTO are the visual source for hero,
-  icon, highlight, character avatar, and scene presentation.
+- Realm `WorldCoreController.listWorldCores` is the creator world inventory read surface.
+- Realm `WorldCoreController.getWorldCore` is the creator world detail read surface.
+- Realm `WorldCoreController.createWorldCore` and `replaceWorldCore` are the typed world create/update surfaces when the corresponding creator form submits.
+- Realm `WorldCoreController.listWorldCharacters` and `getWorldCharacter` are the world-owned character read surfaces.
+- Realm `WorldCoreController.createWorldCharacter` and `replaceWorldCharacter` are the typed world-character create/update surfaces when admitted form submissions exist.
+- Realm `WorldCoreController.listWorldEntities`, `getWorldEntity`, `listWorldRelationships`, and `getWorldRelationship` are creator inspection surfaces for world graph slices when routed.
+- Runtime AI, model configuration, and source materialization are accessed only through admitted SDK/kit/Runtime or Realm core surfaces, never through app-local substitutes.
 
 ## Explicit Non-Current Surfaces
 
-- Creator maintenance reads/writes, replaceWorldCharacter, Runtime readiness,
-  source connection, generation, owner persona portfolio routes, Forge curation,
-  raw AgentRule CRUD, and localAgent private state are not current success paths
-  for this World Atlas page.
-- RealmPersona records returned by public DTOs are not world-character showcase
-  authority for this page.
-- Missing public detail, characters, media, or relation capability must fail
-  closed or render user-facing unavailable copy; the page must not synthesize
-  backend success.
+- `WorldPublicController.*` public showcase reads are not Realm World Studio success paths.
+- RealmPersona owner portfolio routes, public World Atlas presentation, Forge imported-system curation, generic public catalog fallback, resource direct-publication/upload, LocalAgent private memory/emotion/cognition state, economic settlement, and team collaboration are not current success paths.
+- Missing typed Realm/Runtime/kit/SDK capability must fail closed or render capability-unavailable creator copy; the app must not synthesize platform success.

@@ -1,16 +1,16 @@
 ---
-id: SPEC-REALM-WORLD-STUDIO-ASSET-BINDING-001
-title: Showcase Asset Boundary
+id: SPEC-REALM-WORLD-STUDIO-ASSET-BINDING-002
+title: Realm World Studio Asset Boundary
 status: active
 owner: "@team"
-updated: 2026-06-27
+updated: 2026-07-09
 ---
 
-# Showcase Asset Boundary
+# Asset And Binding Boundary
 
-- **[R-RWS-ASSET-001]** Hero, icon, highlight, avatar, profile cover, and scene imagery are display assets only on the World Atlas detail page.
-- **[R-RWS-ASSET-002]** Public media URLs may be displayed but never promoted into source state by this page.
-- **[R-RWS-ASSET-003]** Resource, OwnableAsset, Binding publication, upload, and direct-publication APIs are not admitted for this page.
-- **[R-RWS-ASSET-004]** World Atlas must not write AGENT host bindings, AGENT_* binding points, or Runtime materialization bindings.
-- **[R-RWS-ASSET-005]** Theme fallback media is visual presentation only and must not be treated as platform publication evidence.
-- **[R-RWS-ASSET-006]** Missing media renders through theme fallback or user-facing unavailable states, not placeholder public asset claims.
+- **[R-RWS-ASSET-001]** World and world-character media shown in RWS are creator display/source references only when present in typed Realm core payloads or admitted resource references.
+- **[R-RWS-ASSET-002]** RWS must not promote a local file path, public URL, or generated preview into Realm source state until a typed Realm write succeeds.
+- **[R-RWS-ASSET-003]** Resource upload, direct publication, OwnableAsset, binding publication, AGENT host binding, and Runtime materialization bindings are not current success paths unless explicitly added by this kernel.
+- **[R-RWS-ASSET-004]** Missing media resolver capability must render as capability unavailable or incomplete, not as successful asset readiness.
+- **[R-RWS-ASSET-005]** AI-generated images/audio are candidate assets until creator review and typed Realm/resource admission succeeds.
+- **[R-RWS-ASSET-006]** Asset readiness must never be inferred from display URLs alone.

@@ -2,22 +2,40 @@ import type { Realm } from '@nimiplatform/sdk/realm';
 import { getCurrentStudioNimiClient } from '@renderer/app-shell/studio-platform.js';
 
 export const STUDIO_REALM_SURFACE_METHODS = [
-  'worldPublicControllerGetWorld',
-  'worldPublicControllerGetWorldDetailWithCharacters',
-  'worldPublicControllerListWorldCharacters',
-  'worldPublicControllerListWorlds',
+  'worldCoreControllerListWorldCores',
+  'worldCoreControllerGetWorldCore',
+  'worldCoreControllerCreateWorldCore',
+  'worldCoreControllerReplaceWorldCore',
+  'worldCoreControllerListWorldCharacters',
+  'worldCoreControllerGetWorldCharacter',
+  'worldCoreControllerCreateWorldCharacter',
+  'worldCoreControllerReplaceWorldCharacter',
+  'worldCoreControllerListWorldEntities',
+  'worldCoreControllerGetWorldEntity',
+  'worldCoreControllerListWorldRelationships',
+  'worldCoreControllerGetWorldRelationship',
+  'worldCoreControllerCreateSourceMaterializationPacket',
 ] as const;
 
 export type StudioRealmSurfaceMethod = typeof STUDIO_REALM_SURFACE_METHODS[number];
-export type StudioRealmSurface = Pick<Realm['generated'], StudioRealmSurfaceMethod>;
+export type StudioRealmSurface = Pick<Realm['worldCore'], StudioRealmSurfaceMethod>;
 
-export function createStudioRealmSurface(realm: Pick<Realm, 'generated'>): StudioRealmSurface {
-  const generated = realm.generated;
+export function createStudioRealmSurface(realm: Pick<Realm, 'worldCore'>): StudioRealmSurface {
+  const worldCore = realm.worldCore;
   return {
-    worldPublicControllerGetWorld: generated.worldPublicControllerGetWorld.bind(generated),
-    worldPublicControllerGetWorldDetailWithCharacters: generated.worldPublicControllerGetWorldDetailWithCharacters.bind(generated),
-    worldPublicControllerListWorldCharacters: generated.worldPublicControllerListWorldCharacters.bind(generated),
-    worldPublicControllerListWorlds: generated.worldPublicControllerListWorlds.bind(generated),
+    worldCoreControllerListWorldCores: worldCore.worldCoreControllerListWorldCores,
+    worldCoreControllerGetWorldCore: worldCore.worldCoreControllerGetWorldCore,
+    worldCoreControllerCreateWorldCore: worldCore.worldCoreControllerCreateWorldCore,
+    worldCoreControllerReplaceWorldCore: worldCore.worldCoreControllerReplaceWorldCore,
+    worldCoreControllerListWorldCharacters: worldCore.worldCoreControllerListWorldCharacters,
+    worldCoreControllerGetWorldCharacter: worldCore.worldCoreControllerGetWorldCharacter,
+    worldCoreControllerCreateWorldCharacter: worldCore.worldCoreControllerCreateWorldCharacter,
+    worldCoreControllerReplaceWorldCharacter: worldCore.worldCoreControllerReplaceWorldCharacter,
+    worldCoreControllerListWorldEntities: worldCore.worldCoreControllerListWorldEntities,
+    worldCoreControllerGetWorldEntity: worldCore.worldCoreControllerGetWorldEntity,
+    worldCoreControllerListWorldRelationships: worldCore.worldCoreControllerListWorldRelationships,
+    worldCoreControllerGetWorldRelationship: worldCore.worldCoreControllerGetWorldRelationship,
+    worldCoreControllerCreateSourceMaterializationPacket: worldCore.worldCoreControllerCreateSourceMaterializationPacket,
   };
 }
 

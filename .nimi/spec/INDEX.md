@@ -1,7 +1,7 @@
 # Spec Index
 
-`.nimi/spec/**` is the active product/app contract source for the World Atlas
-world detail surface in this repository. Topic notes, screenshots, conversation summaries,
+`.nimi/spec/**` is the active product/app contract source for Realm World
+Studio in this repository. Topic notes, screenshots, conversation summaries,
 generated artifacts, and `.nimi/local/**` execution state are evidence, not
 authority.
 

@@ -10,7 +10,7 @@ function LocalizedProbe() {
   return (
     <div>
       <LanguageSwitcher />
-      <span>{t('shell.nav.worldAtlas')}</span>
+      <span>{t('shell.nav.worlds')}</span>
     </div>
   );
 }
@@ -29,11 +29,11 @@ describe('LanguageSwitcher', () => {
   it('switches visible React copy through the kit segmented control', async () => {
     render(<LocalizedProbe />);
 
-    expect(screen.getByText('World atlas')).toBeInTheDocument();
+    expect(screen.getByText('Worlds')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: '中' }));
 
-    await waitFor(() => expect(screen.getByText('世界图谱')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('世界')).toBeInTheDocument());
     expect(document.documentElement.lang).toBe('zh-CN');
     expect(window.localStorage.getItem('nimi.realm-world-studio.locale')).toBe('zh-CN');
   });

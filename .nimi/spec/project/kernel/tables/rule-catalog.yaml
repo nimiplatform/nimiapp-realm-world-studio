@@ -47,6 +47,10 @@ rules:
     domain: CORE
     title: r-rws-core-011
     source: core-rules.md
+  - rule_id: R-RWS-CORE-012
+    domain: CORE
+    title: r-rws-core-012
+    source: core-rules.md
   - rule_id: R-RWS-SCOPE-001
     domain: SCOPE
     title: r-rws-scope-001
@@ -91,6 +95,10 @@ rules:
     domain: SCOPE
     title: r-rws-scope-011
     source: product-scope.md
+  - rule_id: R-RWS-SCOPE-012
+    domain: SCOPE
+    title: r-rws-scope-012
+    source: product-scope.md
   - rule_id: R-RWS-CHARACTER-001
     domain: CHARACTER
     title: r-rws-character-001
@@ -131,10 +139,6 @@ rules:
     domain: CHARACTER
     title: r-rws-character-010
     source: world-character-object.md
-  - rule_id: R-RWS-CHARACTER-011
-    domain: CHARACTER
-    title: r-rws-character-011
-    source: world-character-object.md
   - rule_id: R-RWS-SETTING-001
     domain: SETTING
     title: r-rws-setting-001
@@ -166,6 +170,10 @@ rules:
   - rule_id: R-RWS-SETTING-008
     domain: SETTING
     title: r-rws-setting-008
+    source: character-setting-field-map.md
+  - rule_id: R-RWS-SETTING-009
+    domain: SETTING
+    title: r-rws-setting-009
     source: character-setting-field-map.md
   - rule_id: R-RWS-ASSET-001
     domain: ASSET
@@ -235,6 +243,14 @@ rules:
     domain: RUNTIME
     title: r-rws-runtime-007
     source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-008
+    domain: RUNTIME
+    title: r-rws-runtime-008
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-009
+    domain: RUNTIME
+    title: r-rws-runtime-009
+    source: runtime-ai-consumption.md
   - rule_id: R-RWS-METRIC-001
     domain: METRIC
     title: r-rws-metric-001
@@ -266,14 +282,6 @@ rules:
   - rule_id: R-RWS-METRIC-008
     domain: METRIC
     title: r-rws-metric-008
-    source: metrics-and-realm-gaps.md
-  - rule_id: R-RWS-METRIC-009
-    domain: METRIC
-    title: r-rws-metric-009
-    source: metrics-and-realm-gaps.md
-  - rule_id: R-RWS-METRIC-010
-    domain: METRIC
-    title: r-rws-metric-010
     source: metrics-and-realm-gaps.md
   - rule_id: R-RWS-FAIL-001
     domain: FAIL

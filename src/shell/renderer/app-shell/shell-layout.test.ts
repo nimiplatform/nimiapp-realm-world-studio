@@ -44,31 +44,28 @@ describe('Studio shell kit boundary', () => {
     expect(source).not.toContain('onTransitionEnd');
   });
 
-  it('exposes World Atlas user navigation without creator tooling', () => {
+  it('exposes creator-world navigation without public showcase tooling', () => {
     const source = shellLayoutSource();
 
     expect(source).toContain("to: '/worlds'");
-    expect(source).toContain("to: '/discover'");
-    expect(source).toContain("to: '/favorites'");
-    expect(source).toContain("to: '/messages'");
-    expect(source).toContain("to: '/friends'");
-    expect(source).toContain("to: '/settings'");
-    expect(source).toContain("to: '/profile'");
+    expect(source).toContain("to: '/worlds/new'");
+    expect(source).not.toContain("to: '/settings'");
+    expect(source).not.toContain("to: '/discover'");
+    expect(source).not.toContain("to: '/favorites'");
+    expect(source).not.toContain("to: '/messages'");
+    expect(source).not.toContain("to: '/friends'");
     expect(source).not.toContain("to: '/ai-config'");
-    expect(source).not.toContain("to: '/curation/forge-imported-system'");
-    expect(source).not.toContain("label: 'System curation'");
-    expect(source).not.toContain('ShieldCheck');
+    expect(source).not.toContain("to: '/curation/forge-" + "imported-system'");
     expect(source).not.toContain("to: '/portfolio'");
-    expect(source).not.toContain("to: '/portfolio/create'");
   });
 
-  it('does not polyfill kit button or Tailwind arbitrary-value utilities in app CSS', () => {
+  it('keeps app CSS scoped to shell/product layout rather than kit primitive forks', () => {
     const styles = rendererStylesSource();
 
     expect(styles).not.toContain('Kit Button tone polyfill');
     expect(styles).not.toContain('Tailwind arbitrary-value polyfills');
     expect(styles).not.toContain('.nimi-action--primary');
-    expect(styles).not.toContain('.bg-\\[var\\(--nimi-action-primary-bg\\)\\]');
+    expect(styles).toContain('.rws-page');
   });
 
   it('does not use a blank renderer-entry lazy fallback', () => {

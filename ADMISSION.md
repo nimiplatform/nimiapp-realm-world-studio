@@ -22,7 +22,7 @@ pnpm dev:renderer    # renderer only (vite dev server on http://127.0.0.1:1451)
 - `nimi.app.yaml` declares app identity and requested Nimi API scopes.
 - `.nimi/admission/submission.yaml` records publish-readiness commands and review inputs.
 - `.nimi/admission/build-profile.yaml` records install, build, and lockfile policy.
-- `.nimi/spec/project/kernel/**` is the canonical product/app authority surface (kernel-style, with the enumerated `R-RWS-<DOMAIN>-NNN` rule catalog at `tables/rule-catalog.yaml`).
+- `.nimi/spec/project/kernel/**` is the canonical Realm World Studio creator product/app authority surface (kernel-style, with the enumerated `R-RWS-<DOMAIN>-NNN` rule catalog at `tables/rule-catalog.yaml`).
 - `dist/nimi-app-submission.json` is produced by `pnpm run pack` after a successful renderer build.
 
 ## Reviewer Boundary

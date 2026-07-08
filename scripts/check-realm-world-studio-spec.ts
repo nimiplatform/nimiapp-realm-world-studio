@@ -6,8 +6,8 @@
  * `.nimi/spec/project/kernel/`. This check verifies the required canonical kernel files
  * exist, the rule catalog is bidirectionally consistent with every inline
  * R-RWS-* identifier used across the kernel docs, stale adjacent-app authority
- * is absent, and obvious scope-violation phrases never leak into implementation
- * code.
+ * is absent, and public-showcase / adjacent-app anti-targets never leak into
+ * implementation success paths.
  */
 
 import { promises as fs } from 'node:fs';
@@ -61,8 +61,48 @@ const FORBIDDEN_PHRASES: Array<{ phrase: string; rationale: string }> = [
     rationale: 'Owner persona creation belongs to the adjacent Realm Persona Studio app, not Realm World Studio.',
   },
   {
+    phrase: 'WorldPublicController',
+    rationale: 'Public showcase reads must not be used for Realm World Studio creator success state.',
+  },
+  {
+    phrase: 'worldPublicController',
+    rationale: 'Public showcase SDK methods must not be used for Realm World Studio creator success state.',
+  },
+  {
+    phrase: 'world-showcase',
+    rationale: 'World Atlas showcase implementation must not be a Realm World Studio success path.',
+  },
+  {
+    phrase: 'WorldShowcase',
+    rationale: 'World Atlas showcase implementation must not be a Realm World Studio success path.',
+  },
+  {
     phrase: 'WorldController_listWorlds',
     rationale: 'Public world catalog reads must not be used for creator-world success state.',
+  },
+  {
+    phrase: 'WorldAtlas',
+    rationale: 'World Atlas implementation naming must not be a Realm World Studio success path.',
+  },
+  {
+    phrase: 'worldAtlas',
+    rationale: 'World Atlas implementation naming must not be a Realm World Studio success path.',
+  },
+  {
+    phrase: '/api/creator/characters',
+    rationale: 'Creator character portfolio APIs must not be used as world-character authority.',
+  },
+  {
+    phrase: '/api/agent/forge-imported-system',
+    rationale: 'Forge imported-system APIs are non-current anti-targets for Realm World Studio.',
+  },
+  {
+    phrase: 'forge-imported-system',
+    rationale: 'Forge imported-system implementation naming is a non-current anti-target for Realm World Studio.',
+  },
+  {
+    phrase: 'forgeImportedSystem',
+    rationale: 'Forge imported-system client bindings are non-current anti-targets for Realm World Studio.',
   },
   {
     phrase: '/api/agent/dev/my-characters',
