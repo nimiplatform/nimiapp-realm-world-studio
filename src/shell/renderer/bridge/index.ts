@@ -8,6 +8,7 @@ export {
   invokeChecked,
   BridgeError,
   getDaemonStatus,
+  getRuntimeDefaults,
   oauthListenForCode,
   openExternalUrl,
   focusMainWindow,
@@ -20,11 +21,13 @@ export type {
   JsonValue,
   JsonObject,
   JsonPrimitive,
+  RuntimeDefaults,
 } from '@nimiplatform/kit/shell/renderer/bridge';
 
 import type { ShellOAuthBridge } from '@nimiplatform/kit/core/oauth';
 import {
   focusMainWindow,
+  getRuntimeDefaults as getNimiRuntimeDefaults,
   hasShellHostInvoke,
   oauthListenForCode,
   openExternalUrl,
@@ -39,37 +42,9 @@ export type StudioRuntimeDefaults = {
   } | null;
 };
 
-function readEnv(name: string): string {
-  const importMetaEnv = (import.meta as { env?: Record<string, string> }).env;
-  const processEnv =
-    typeof globalThis.process !== 'undefined'
-      ? ((globalThis.process as { env?: Record<string, string> }).env ?? {})
-      : {};
-  return String(importMetaEnv?.[name] || processEnv[name] || '').trim();
-}
-
-function normalizeLoopbackHttpUrl(rawValue: string, defaultPort: number): string {
-  const value = String(rawValue || '').trim();
-  if (!value) return '';
-  try {
-    const parsed = new URL(value);
-    const host = String(parsed.hostname || '').toLowerCase();
-    const hasExplicitPort = String(parsed.port || '').trim().length > 0;
-    const isLoopbackHttp = parsed.protocol === 'http:' && (host === 'localhost' || host === '127.0.0.1');
-    if (isLoopbackHttp && !hasExplicitPort) {
-      parsed.port = String(defaultPort);
-    }
-    return parsed.toString().replace(/\/+$/, '');
-  } catch {
-    return value.replace(/\/+$/, '');
-  }
-}
-
 export async function getStudioRuntimeDefaults(): Promise<StudioRuntimeDefaults> {
-  const realmBaseUrl = normalizeLoopbackHttpUrl(
-    readEnv('NIMI_REALM_URL') || readEnv('VITE_NIMI_REALM_BASE_URL') || 'http://localhost:3002',
-    3002,
-  ) || null;
+  const defaults = await getNimiRuntimeDefaults();
+  const realmBaseUrl = String(defaults.realm.realmBaseUrl || '').trim() || null;
   return {
     realm: {
       realmBaseUrl,

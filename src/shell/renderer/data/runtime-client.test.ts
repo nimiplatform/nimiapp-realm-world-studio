@@ -47,7 +47,7 @@ describe('studio runtime client gate', () => {
     expect(studioPlatformSource).toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
     expect(studioPlatformSource).toContain('createNimiRuntimeAppSessionMetadataProvider');
     expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
-    expect(realmTransportSource).toContain('invokeRealmUnary');
+    expect(realmTransportSource).toContain('createRuntimeAccountMediatedRealmTransport');
     expect(realmTransportSource).not.toContain('realm_' + 'agent_studio_realm_unary');
     expect(realmTransportSource).not.toContain('realm_world_studio_realm_unary');
     expect(realmTransportSource).not.toContain('getAccessToken');
@@ -55,14 +55,12 @@ describe('studio runtime client gate', () => {
     expect(studioPlatformSource).not.toContain('createRealmFetchTransport');
     expect(studioPlatformSource).not.toMatch(/VITE_REALM_ACCESS_TOKEN|refreshToken|sessionStore|subjectUserIdProvider/);
     expect(bridgeSource).toContain('getStudioRuntimeDefaults');
-    expect(bridgeSource).not.toContain('  getRuntimeDefaults,');
-    expect(bridgeSource).not.toContain('  RuntimeDefaults,');
-    expect(bridgeSource).not.toContain('  RealmDefaults,');
-    expect(bridgeSource).not.toContain('  RuntimeExecutionDefaults,');
+    expect(bridgeSource).toContain('getNimiRuntimeDefaults');
+    expect(bridgeSource).toContain('RuntimeDefaults');
+    expect(bridgeSource).not.toContain('VITE_NIMI_REALM_BASE_URL');
+    expect(bridgeSource).not.toContain('NIMI_REALM_URL');
+    expect(bridgeSource).not.toContain('localhost:3002');
     expect(appStoreSource).toContain('StudioRuntimeDefaults');
-    expect(appStoreSource).not.toContain('import type { RuntimeDefaults');
-    expect(appStoreSource).not.toContain('runtimeDefaults: RuntimeDefaults');
-    expect(appStoreSource).not.toContain('setRuntimeDefaults: (defaults: RuntimeDefaults)');
     expect(appStoreSource).not.toContain('accessToken');
   });
 });

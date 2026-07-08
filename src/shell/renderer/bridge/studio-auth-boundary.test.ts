@@ -57,19 +57,22 @@ describe('studio auth bridge boundary', () => {
     expect(tauriMainSource).not.toContain('oauth_token_exchange,');
   });
 
-  it('does not register token-bearing RuntimeDefaults in the Tauri invoke handler', () => {
-    expect(tauriMainSource).not.toMatch(/runtime_defaults::runtime_defaults|defaults::runtime_defaults/);
+  it('registers standard Runtime defaults while keeping token custody out of Studio state', () => {
+    expect(tauriMainSource).toContain('runtime_defaults::runtime_defaults');
     expect(bootstrapSource).toContain('getStudioRuntimeDefaults');
+    expect(bootstrapSource).not.toContain('accessToken');
+    expect(bootstrapSource).not.toContain('refreshToken');
   });
 
   it('registers standard shell capabilities and shell-ui aliases through Kit', () => {
-    expect(tauriMainSource).toContain('use nimi_shell_tauri::capabilities::{oauth, runtime, session_logging}');
+    expect(tauriMainSource).toContain('use nimi_shell_tauri::capabilities::{oauth, runtime, runtime_defaults, session_logging}');
     expect(tauriMainSource).toContain('oauth::open_external_url');
     expect(tauriMainSource).toContain('oauth::oauth_listen_for_code');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_unary');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_stream_open');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_stream_close');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_status');
+    expect(tauriMainSource).toContain('runtime_defaults::runtime_defaults');
     expect(tauriMainSource).toContain('confirm_dialog');
     expect(tauriMainSource).toContain('start_window_drag');
     expect(tauriMainSource).toContain('focus_main_window');

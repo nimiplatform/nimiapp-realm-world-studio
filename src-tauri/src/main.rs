@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use tauri::Manager;
 
-use nimi_shell_tauri::capabilities::{oauth, runtime, session_logging};
+use nimi_shell_tauri::capabilities::{oauth, runtime, runtime_defaults, session_logging};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -123,6 +123,7 @@ fn main() {
             runtime::runtime_bridge_stream_open,
             runtime::runtime_bridge_stream_close,
             runtime::runtime_bridge_status,
+            runtime_defaults::runtime_defaults,
             session_logging::log_renderer_event,
         ])
         .run(tauri::generate_context!())
