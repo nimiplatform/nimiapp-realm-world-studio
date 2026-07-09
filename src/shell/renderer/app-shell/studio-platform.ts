@@ -15,22 +15,33 @@ import {
   type RuntimeOptions,
 } from '@nimiplatform/sdk/runtime';
 import { createNimiError, ReasonCode, type CoreMetadata } from '@nimiplatform/sdk/types';
+import {
+  REALM_WORLD_STUDIO_RUNTIME_APP_ID,
+  REALM_WORLD_STUDIO_RUNTIME_APP_INSTANCE_ID,
+  REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_DEVICE_ID,
+  REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID,
+  REALM_WORLD_STUDIO_RUNTIME_DEVICE_ID,
+} from '../../app-identity.js';
 import { createStudioRealmBridgeOptions } from './studio-realm-transport.js';
+import { hasElectronRuntime } from '../bridge/index.js';
 import { getStudioNimiClient, setStudioNimiClient } from '../infra/studio-nimi-client.js';
 
 // Studio is a Nimi first-party local Runtime account/session consumer.
 // Runtime owns login custody, app sessions, protected account state, and Realm
 // mediation. Raw Realm account tokens are not exposed here.
-export const STUDIO_RUNTIME_APP_ID = 'nimi.realm-world-studio';
-export const STUDIO_RUNTIME_APP_INSTANCE_ID = `${STUDIO_RUNTIME_APP_ID}.local-first-party`;
-export const STUDIO_RUNTIME_DEVICE_ID = 'local-first-party-device';
+export const STUDIO_RUNTIME_APP_ID = REALM_WORLD_STUDIO_RUNTIME_APP_ID;
+export const STUDIO_RUNTIME_APP_INSTANCE_ID = REALM_WORLD_STUDIO_RUNTIME_APP_INSTANCE_ID;
+export const STUDIO_RUNTIME_DEVICE_ID = REALM_WORLD_STUDIO_RUNTIME_DEVICE_ID;
 
-const STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID = `${STUDIO_RUNTIME_APP_ID}.platform-runtime-session`;
-const STUDIO_RUNTIME_APP_SESSION_DEVICE_ID = 'platform-runtime-session';
+const STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID = REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID;
+const STUDIO_RUNTIME_APP_SESSION_DEVICE_ID = REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_DEVICE_ID;
 const STUDIO_RUNTIME_APP_SESSION_TTL_SECONDS = 3600;
 const STUDIO_RUNTIME_APP_SESSION_REFRESH_SKEW_MS = 30_000;
 const STUDIO_RUNTIME_CAPABILITIES: readonly string[] = [];
 const STUDIO_RUNTIME_DEVELOPER_REGISTRATION = false;
+const RUNTIME_BRIDGE_NAMESPACE = 'runtime_bridge';
+
+export type StudioRuntimeHostKind = 'electron' | 'tauri';
 
 export const studioRuntimeAccountCaller: NimiRuntimeAccountCaller =
   createNimiLocalFirstPartyRuntimeAccountCaller({
@@ -68,19 +79,36 @@ export async function loadStudioRuntimeAccountUser(runtime: Runtime): Promise<St
   return normalizeStudioAccountProjection(response.accountProjection);
 }
 
-function studioRuntimeOptions(authMetadata?: () => Promise<CoreMetadata>): RuntimeOptions {
+export function resolveStudioRuntimeHostKind(): StudioRuntimeHostKind {
+  return hasElectronRuntime() ? 'electron' : 'tauri';
+}
+
+export function createStudioRuntimeTransportConfig(
+  hostKind: StudioRuntimeHostKind = resolveStudioRuntimeHostKind(),
+): RuntimeOptions['transport'] {
+  if (hostKind === 'electron') {
+    return { type: 'electron-ipc' };
+  }
+  return {
+    type: 'tauri-ipc',
+    commandNamespace: RUNTIME_BRIDGE_NAMESPACE,
+    eventNamespace: RUNTIME_BRIDGE_NAMESPACE,
+  };
+}
+
+function studioRuntimeOptions(input: {
+  readonly authMetadata?: () => Promise<CoreMetadata>;
+  readonly hostKind?: StudioRuntimeHostKind;
+} = {}): RuntimeOptions {
+  const hostKind = input.hostKind ?? resolveStudioRuntimeHostKind();
   return {
     appId: STUDIO_RUNTIME_APP_ID,
     metadata: {
       callerId: STUDIO_RUNTIME_APP_ID,
       surfaceId: 'realm-world-studio',
     },
-    ...(authMetadata ? { authMetadata } : {}),
-    transport: {
-      type: 'tauri-ipc',
-      commandNamespace: 'runtime_bridge',
-      eventNamespace: 'runtime_bridge',
-    },
+    ...(input.authMetadata && hostKind !== 'electron' ? { authMetadata: input.authMetadata } : {}),
+    transport: createStudioRuntimeTransportConfig(hostKind),
   };
 }
 
@@ -134,12 +162,14 @@ export async function buildStudioNimiClient(options: { realmBaseUrl?: string | n
       source: 'sdk',
     });
   }
-  const accountRuntime = new Runtime(studioRuntimeOptions());
+  const hostKind = resolveStudioRuntimeHostKind();
+  const accountRuntime = new Runtime(studioRuntimeOptions({ hostKind }));
   await accountRuntime.ready();
   await registerStudioRuntimeAccountCaller(accountRuntime);
-  const runtime = new Runtime(studioRuntimeOptions(
-    createStudioRuntimeAuthMetadataProvider(accountRuntime),
-  ));
+  const runtime = new Runtime(studioRuntimeOptions({
+    hostKind,
+    authMetadata: createStudioRuntimeAuthMetadataProvider(accountRuntime),
+  }));
   const client = createNimiClient({
     appId: STUDIO_RUNTIME_APP_ID,
     runtime,

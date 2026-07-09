@@ -14,10 +14,10 @@
 
 | Layer | Technology | Location |
 |-------|-----------|----------|
-| Desktop shell | Tauri 2 | `src-tauri/` |
+| Desktop shell | Tauri 2 + Electron 42 dev shell | `src-tauri/`, `src-electron/` |
 | Renderer | React 19 + Vite 7 + Tailwind 4 | `src/shell/renderer/` |
 | Routing | react-router-dom 7 | `src/shell/renderer/app-shell/routes.tsx` |
-| Auth & runtime bridge | local `nimi-shell-tauri` crate | `src-tauri/src/main.rs` |
+| Auth & runtime bridge | `nimi-shell-tauri` + kit Electron shell bridge | `src-tauri/src/main.rs`, `src-electron/` |
 | UI components | `@nimiplatform/kit` (npm) | renderer-wide |
 | Platform client | `@nimiplatform/sdk` (npm) | `app-shell/studio-platform.ts` |
 | State | Zustand | `app-shell/app-store.ts` |
@@ -66,7 +66,7 @@ creatorId.
 
 ### Auth boundary
 - Studio does **not** own access or refresh tokens (mirrors parentos PO-SHELL-008 / K-ACCSVC-008).
-- All Runtime account state flows through `runtime.account.*` via the `nimi-shell-tauri` IPC bridge.
+- All Runtime account state flows through `runtime.account.*` via the admitted desktop shell IPC bridge (`nimi-shell-tauri` or kit Electron shell bridge).
 - Login uses the kit's `DesktopShellAuthPage` with a code-only proof envelope; refresh-token custody lives in Runtime.
 
 ## Development Principles
@@ -118,6 +118,7 @@ When editing admission inputs:
 pnpm typecheck
 pnpm test
 pnpm lint
+pnpm run build:electron
 
 # Rust layer
 (cd src-tauri && cargo check)
@@ -138,7 +139,7 @@ pnpm run check          # aggregate: validate + local-audit + spec-consistency +
 `.github/workflows/ci.yml` runs three jobs:
 
 - `spec-and-typescript` — nimicoding doctor, spec consistency, typecheck,
-  lint, vitest, renderer build (uploads `renderer-dist` artifact).
+  lint, vitest, Electron build, renderer build (uploads `renderer-dist` artifact).
 - `pre-submission-self-check` — needs `spec-and-typescript`, runs `validate`
   + `local-audit`, then re-packs the submission packet from the renderer
   artifact and uploads `nimi-app-submission`.
@@ -149,16 +150,17 @@ admission decision.
 
 ## Retrieval Defaults
 
-Start with: `.nimi/spec/INDEX.md`, `.nimi/spec/project/kernel/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/worlds/`, `src-tauri/src/`.
+Start with: `.nimi/spec/INDEX.md`, `.nimi/spec/project/kernel/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/worlds/`, `src-tauri/src/`, `src-electron/`.
 
-Skip: `node_modules/`, `dist/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles.
+Skip: `node_modules/`, `dist/`, `dist-electron/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles.
 
 ## Code Conventions
 
 - ULID for new app-level IDs.
 - ISO 8601 for date/time fields.
 - ESM imports use `.js` extension even for `.ts` files.
-- Tauri host glue is consumed from `nimi-shell-tauri` (`crates.io` 0.1.0) and `@nimiplatform/kit/shell/renderer/bridge` (npm).
+- Tauri host glue is consumed from `nimi-shell-tauri` (`crates.io` 0.1.0) and renderer bridge APIs from `@nimiplatform/kit/shell/renderer/bridge` (npm).
+- Electron host glue is consumed from `@nimiplatform/kit/shell/electron/*`; renderer Runtime transport selects `electron-ipc` only when the kit Electron preload is present.
 
 <!-- nimicoding:managed:characters:start -->
 # Nimi Coding Managed Block

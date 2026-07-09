@@ -1,11 +1,11 @@
-import { hasTauriInvoke, invoke } from './index.js';
+import { hasShellHostInvoke, startWindowDrag } from './index.js';
 
 export async function startStudioWindowDrag(): Promise<void> {
-  if (!hasTauriInvoke()) {
+  if (!hasShellHostInvoke()) {
     return;
   }
   try {
-    await invoke('realm_world_studio_start_window_drag', {});
+    await startWindowDrag();
   } catch {
     // Dragging is best-effort and must not break interaction.
   }

@@ -58,6 +58,9 @@ jobs:
       - name: Test
         run: pnpm test
 
+      - name: Electron build
+        run: pnpm build:electron
+
       - name: Renderer build
         run: pnpm build:renderer
 

@@ -9,7 +9,7 @@ updated: 2026-07-09
 # Core Rules
 
 - **[R-RWS-CORE-001]** `.nimi/spec/project/kernel/**` is the only current app authority for Realm World Studio.
-- **[R-RWS-CORE-002]** Product success state must come from typed Realm core DTOs, Runtime account state, SDK results, kit-owned UI/model-config contracts, or Tauri host results.
+- **[R-RWS-CORE-002]** Product success state must come from typed Realm core DTOs, Runtime account state, SDK results, kit-owned UI/model-config contracts, or admitted desktop shell host results (Tauri or Electron).
 - **[R-RWS-CORE-003]** Realm World Studio is a thin creator product layer over Nimi platform substrate; it may compose workflows but must not reimplement auth custody, Realm transport, model configuration, AI execution, or canonical Realm source state.
 - **[R-RWS-CORE-004]** Creator-visible world data authority comes from Realm `WorldCoreController` world, world-character, entity, relationship, and source-materialization surfaces admitted by this kernel.
 - **[R-RWS-CORE-005]** App-local drafts, generated candidates, screenshots, tests, and local audit output are not canonical Realm source truth.

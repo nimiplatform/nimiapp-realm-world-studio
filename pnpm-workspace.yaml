@@ -4,6 +4,7 @@ packages:
 overrides:
   '@nimiplatform/kit': link:../../nimi/kit
   '@nimiplatform/sdk': link:../../nimi/sdks/typescript
+  'electron>@types/node': 24.13.2
 
 allowBuilds:
   esbuild: true

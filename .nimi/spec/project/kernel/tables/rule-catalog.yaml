@@ -9,7 +9,7 @@ rules:
     source: core-rules.md
   - rule_id: R-RWS-CORE-002
     domain: CORE
-    title: r-rws-core-002
+    title: product-success-authority-sources
     source: core-rules.md
   - rule_id: R-RWS-CORE-003
     domain: CORE

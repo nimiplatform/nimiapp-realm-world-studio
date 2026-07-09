@@ -12,6 +12,10 @@ describe('studio platform runtime auth boundary', () => {
       join(process.cwd(), 'src/shell/renderer/infra/studio-bootstrap.ts'),
       'utf8',
     );
+    const appIdentitySource = readFileSync(
+      join(process.cwd(), 'src/shell/app-identity.ts'),
+      'utf8',
+    );
     const viteConfigSource = readFileSync(
       join(process.cwd(), 'vite.config.ts'),
       'utf8',
@@ -20,15 +24,16 @@ describe('studio platform runtime auth boundary', () => {
       join(process.cwd(), 'src/shell/renderer/styles.css'),
       'utf8',
     );
-    const combined = `${studioPlatformSource}\n${bootstrapSource}`;
+    const combined = `${studioPlatformSource}\n${bootstrapSource}\n${appIdentitySource}`;
 
     expect(studioPlatformSource).toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
     expect(studioPlatformSource).toContain('createNimiRuntimeAppSessionMetadataProvider');
     expect(studioPlatformSource).toContain('createNimiRuntimeFullAppRegistration');
     expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
     expect(studioPlatformSource).toContain('realmBaseUrl');
-    expect(studioPlatformSource).toContain("'nimi.realm-world-studio'");
-    expect(studioPlatformSource).toContain('.local-first-party');
+    expect(appIdentitySource).toContain("'nimi.realm-world-studio'");
+    expect(studioPlatformSource).toContain('REALM_WORLD_STUDIO_RUNTIME_APP_ID');
+    expect(appIdentitySource).toContain('.local-first-party');
     expect(studioPlatformSource).not.toContain('createNimiDeveloperRegisteredRuntimeAccountCaller');
     expect(studioPlatformSource).not.toContain('getAccessToken');
     expect(studioPlatformSource).not.toContain('createRealmFetchTransport');

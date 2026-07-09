@@ -35,5 +35,6 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm lint
-pnpm dev:shell
+pnpm dev:shell      # Tauri
+pnpm dev:electron   # Electron dev shell
 ```

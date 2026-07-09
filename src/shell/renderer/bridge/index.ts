@@ -12,7 +12,10 @@ export {
   oauthListenForCode,
   openExternalUrl,
   focusMainWindow,
+  startWindowDrag,
   parseRuntimeBridgeDaemonStatus,
+  hasElectronRuntime,
+  hasShellHostInvoke,
   hasTauriRuntime,
   invokeTauri,
 } from '@nimiplatform/kit/shell/renderer/bridge';
