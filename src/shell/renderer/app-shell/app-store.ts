@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import type { StudioRuntimeDefaults } from '../bridge/index.js';
 
 export type AuthUser = {
   id: string;
@@ -19,13 +18,11 @@ interface AppState {
   };
   bootstrapReady: boolean;
   bootstrapError: string | null;
-  runtimeDefaults: StudioRuntimeDefaults | null;
 
   setAuthSession: (user: AuthUser) => void;
   clearAuthSession: () => void;
   setBootstrapReady: (ready: boolean) => void;
   setBootstrapError: (error: string | null) => void;
-  setRuntimeDefaults: (defaults: StudioRuntimeDefaults) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -35,7 +32,6 @@ export const useAppStore = create<AppState>((set) => ({
   },
   bootstrapReady: false,
   bootstrapError: null,
-  runtimeDefaults: null,
 
   setAuthSession(user) {
     set({ auth: { status: 'authenticated', user } });
@@ -47,5 +43,4 @@ export const useAppStore = create<AppState>((set) => ({
   },
   setBootstrapReady: (ready) => set({ bootstrapReady: ready }),
   setBootstrapError: (error) => set({ bootstrapError: error }),
-  setRuntimeDefaults: (defaults) => set({ runtimeDefaults: defaults }),
 }));

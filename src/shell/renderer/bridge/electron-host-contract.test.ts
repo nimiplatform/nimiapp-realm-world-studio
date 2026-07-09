@@ -35,6 +35,7 @@ describe('Realm World Studio Electron host contract', () => {
     const mainSource = read('src-electron/main.ts');
     const preloadSource = read('src-electron/preload.cts');
     const runtimeAuthSource = read('src-electron/runtime-auth.ts');
+    const runElectronDevSource = read('scripts/run-electron-dev.mjs');
 
     expect(mainSource).toContain('@nimiplatform/kit/shell/electron/main');
     expect(mainSource).toContain('registerNimiElectronRuntimeBridge');
@@ -45,23 +46,33 @@ describe('Realm World Studio Electron host contract', () => {
     expect(mainSource).toContain('NIMI_REALM_WORLD_STUDIO_ELECTRON_RUNTIME_ENDPOINT');
     expect(mainSource).toContain('isAllowedElectronRendererUrl');
     expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['runtime.unary']");
-    expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['runtime-defaults.get']");
-    expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['oauth.openExternalUrl']");
-    expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['oauth.listenForCode']");
+    expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['ai-config.get']");
+    expect(mainSource).toContain("NIMI_STANDARD_SHELL_COMMANDS['ai-config.set']");
+    expect(mainSource).toContain("capabilitySetRef: 'installed-nimi-app-standard-shell-v1'");
+    expect(mainSource).toContain('--nimi-installed-app-launch-binding=');
+    expect(mainSource).not.toContain("NIMI_STANDARD_SHELL_COMMANDS['runtime-defaults.get']");
+    expect(mainSource).not.toContain("NIMI_STANDARD_SHELL_COMMANDS['oauth.openExternalUrl']");
+    expect(mainSource).not.toContain("NIMI_STANDARD_SHELL_COMMANDS['oauth.listenForCode']");
     expect(mainSource).not.toContain("NIMI_STANDARD_SHELL_COMMANDS['oauth.tokenExchange']");
-    expect(mainSource).not.toContain('createNimiElectronFileAIConfigStore');
-    expect(mainSource).not.toContain('standardDataRootBinding');
+    expect(mainSource).toContain('createNimiElectronFileAIConfigStore');
+    expect(mainSource).toContain('standardDataRootBinding');
     expect(mainSource).not.toContain('localAgentIdentity');
 
     expect(preloadSource).toContain('@nimiplatform/kit/shell/electron/preload-cjs');
     expect(preloadSource).toContain('installNimiElectronRuntimeBridge');
     expect(preloadSource).not.toContain('exposeInMainWorld(\'electron\'');
 
-    expect(runtimeAuthSource).toContain('createNimiRuntimeAppSessionMetadataProvider');
-    expect(runtimeAuthSource).toContain('local-first-party-app');
+    expect(runtimeAuthSource).toContain('createNimiElectronInstalledAppRuntimeAccountTrustedMetadataProvider');
+    expect(runtimeAuthSource).toContain('createRealmWorldStudioRendererLaunchBinding');
+    expect(runtimeAuthSource).toMatch(/requireText\(\s*process\.env\.NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE/);
+    expect(runtimeAuthSource).toContain('new URL(realmBaseUrl).toString()');
+    expect(runElectronDevSource).toContain('randomUUID');
+    expect(runElectronDevSource).toContain('NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE: electronLaunchNonce');
+    expect(runtimeAuthSource).not.toContain('ElectronRuntimeBridgeTrustedMetadataProvider | undefined');
+    expect(runtimeAuthSource).not.toContain('RealmWorldStudioRendererLaunchBinding | undefined');
+    expect(runtimeAuthSource).not.toContain('return undefined');
     expect(runtimeAuthSource).not.toContain('getAccessToken');
     expect(runtimeAuthSource).not.toContain('refreshToken');
-    expect(runtimeAuthSource).not.toContain('protectedAccess');
   });
 
   it('selects electron-ipc in the renderer without spoofing Tauri transport', () => {
@@ -72,10 +83,10 @@ describe('Realm World Studio Electron host contract', () => {
     expect(studioPlatformSource).toContain('hasElectronRuntime');
     expect(studioPlatformSource).toContain("type: 'electron-ipc'");
     expect(studioPlatformSource).toContain("type: 'tauri-ipc'");
-    expect(studioPlatformSource).toContain("hostKind !== 'electron'");
     expect(bridgeSource).toContain('hasElectronRuntime');
-    expect(bridgeSource).toContain('hasShellHostInvoke');
+    expect(bridgeSource).toContain('hasNimiShellRuntime');
     expect(bridgeSource).toContain('startWindowDrag');
+    expect(windowDragSource).toContain('hasNimiShellRuntime');
     expect(windowDragSource).toContain('startWindowDrag');
     expect(windowDragSource).not.toContain('realm_world_studio_start_window_drag');
   });

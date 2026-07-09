@@ -1,16 +1,19 @@
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { appendFile, mkdir } from 'node:fs/promises';
-import { app, BrowserWindow, ipcMain, Menu, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import { NIMI_STANDARD_SHELL_COMMANDS } from '@nimiplatform/kit/shell/capabilities';
 import {
+  createNimiElectronFileAIConfigStore,
   createNimiElectronStandardApplicationMenuTemplate,
   isAllowedElectronRendererUrl,
   registerNimiElectronRuntimeBridge,
   type NimiElectronHostCommandPolicy,
 } from '@nimiplatform/kit/shell/electron/main';
 import { REALM_WORLD_STUDIO_APP_ID } from '../src/shell/app-identity.js';
-import { createRealmWorldStudioElectronTrustedRuntimeMetadataProvider } from './runtime-auth.js';
+import {
+  createRealmWorldStudioElectronTrustedRuntimeMetadataProvider,
+  createRealmWorldStudioRendererLaunchBinding,
+} from './runtime-auth.js';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -38,12 +41,23 @@ async function bootstrapElectron(): Promise<void> {
     allowedRendererUrls: allowedRendererUrls(),
     ipcMain,
     trustedRuntimeMetadataProvider: createRealmWorldStudioElectronTrustedRuntimeMetadataProvider({
-      appId: REALM_WORLD_STUDIO_APP_ID,
       runtimeEndpoint,
     }),
     commandPolicy: realmWorldStudioElectronCommandPolicy,
     standardShellHost: {
-      openExternalUrl: openRealmWorldStudioExternalUrl,
+      capabilitySetRef: 'installed-nimi-app-standard-shell-v1',
+      standardDataRootBinding: {
+        source: 'runtime-launch-projection',
+        durableDataRoot: path.join(app.getPath('userData'), 'installed-app-data'),
+        cacheRoot: path.join(app.getPath('userData'), 'installed-app-cache'),
+        tempRoot: path.join(app.getPath('temp'), 'realm-world-studio'),
+        projectionRef: 'realm-world-studio-electron-dev-shell',
+      },
+      localAssetRoots: [appRoot],
+      aiConfigStore: createNimiElectronFileAIConfigStore({
+        dataRoot: path.join(app.getPath('userData'), 'installed-app-data'),
+        storeLabel: 'Realm World Studio Electron AI Config',
+      }),
       focusMainWindow,
     },
   });
@@ -86,6 +100,7 @@ app.on('window-all-closed', () => {
 });
 
 async function createMainWindow(): Promise<BrowserWindow> {
+  const launchBinding = createRealmWorldStudioRendererLaunchBinding();
   const window = new BrowserWindow({
     width: 1360,
     height: 860,
@@ -98,6 +113,13 @@ async function createMainWindow(): Promise<BrowserWindow> {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      ...(launchBinding
+        ? {
+            additionalArguments: [
+              `--nimi-installed-app-launch-binding=${Buffer.from(JSON.stringify(launchBinding), 'utf8').toString('base64url')}`,
+            ],
+          }
+        : {}),
     },
   });
   mainWindow = window;
@@ -172,9 +194,15 @@ const allowedStandardCommands: ReadonlySet<string> = new Set([
   NIMI_STANDARD_SHELL_COMMANDS['runtime.unary'],
   NIMI_STANDARD_SHELL_COMMANDS['runtime.streamOpen'],
   NIMI_STANDARD_SHELL_COMMANDS['runtime.streamClose'],
-  NIMI_STANDARD_SHELL_COMMANDS['runtime-defaults.get'],
-  NIMI_STANDARD_SHELL_COMMANDS['oauth.openExternalUrl'],
-  NIMI_STANDARD_SHELL_COMMANDS['oauth.listenForCode'],
+  NIMI_STANDARD_SHELL_COMMANDS['data.pathResolve'],
+  NIMI_STANDARD_SHELL_COMMANDS['storage.readJson'],
+  NIMI_STANDARD_SHELL_COMMANDS['storage.writeJson'],
+  NIMI_STANDARD_SHELL_COMMANDS['storage.removeJson'],
+  NIMI_STANDARD_SHELL_COMMANDS['config.get'],
+  NIMI_STANDARD_SHELL_COMMANDS['config.set'],
+  NIMI_STANDARD_SHELL_COMMANDS['ai-config.get'],
+  NIMI_STANDARD_SHELL_COMMANDS['ai-config.set'],
+  NIMI_STANDARD_SHELL_COMMANDS['local-assets.resolveUrl'],
   NIMI_STANDARD_SHELL_COMMANDS['shell-ui.confirmDialog'],
   NIMI_STANDARD_SHELL_COMMANDS['shell-ui.startWindowDrag'],
   NIMI_STANDARD_SHELL_COMMANDS['shell-ui.focusMainWindow'],
@@ -192,17 +220,6 @@ const realmWorldStudioElectronCommandPolicy: NimiElectronHostCommandPolicy = (in
     details: { command: input.command, commandKind: input.commandKind },
   };
 };
-
-async function openRealmWorldStudioExternalUrl(url: string): Promise<void> {
-  const capturePath = normalizeText(process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_OPEN_EXTERNAL_CAPTURE_FILE);
-  if (capturePath) {
-    const resolved = path.resolve(capturePath);
-    await mkdir(path.dirname(resolved), { recursive: true });
-    await appendFile(resolved, `${url}\n`, 'utf8');
-    return;
-  }
-  await shell.openExternal(url);
-}
 
 async function focusMainWindow(): Promise<void> {
   const window = mainWindow && !mainWindow.isDestroyed()

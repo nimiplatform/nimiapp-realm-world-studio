@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +12,7 @@ const runtimeEndpoint = resolveRuntimeEndpoint(
   'NIMI_RUNTIME_GRPC_ADDR',
   'NIMI_REALM_WORLD_STUDIO_ELECTRON_RUNTIME_ENDPOINT',
 );
+const electronLaunchNonce = resolveElectronLaunchNonce();
 const viteBin = path.join(appRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const electronBin = require('electron');
 const children = new Set();
@@ -55,6 +57,11 @@ function resolveRuntimeEndpoint(...envKeys) {
   return '127.0.0.1:46371';
 }
 
+function resolveElectronLaunchNonce() {
+  return String(process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE || '').trim()
+    || `realm-world-studio-electron-dev-${randomUUID()}`;
+}
+
 function ensureRendererPortAvailable() {
   const result = spawnSync(process.execPath, ['scripts/ensure-dev-renderer-port.mjs'], {
     cwd: appRoot,
@@ -76,6 +83,7 @@ function spawnElectron() {
       ...process.env,
       NIMI_REALM_WORLD_STUDIO_ELECTRON_RENDERER_URL: rendererUrl,
       NIMI_RUNTIME_GRPC_ADDR: runtimeEndpoint,
+      NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE: electronLaunchNonce,
     },
   });
   forwardChildOutput(electron.stdout, process.stdout);

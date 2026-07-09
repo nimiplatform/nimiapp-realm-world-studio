@@ -21,14 +21,14 @@ describe('studio runtime client gate', () => {
     } as unknown as typeof globalThis)).toBe(false);
   });
 
-  it('accepts test and native invoke hooks as available IPC runtime', () => {
+  it('accepts only Nimi-owned Tauri invoke hooks as available IPC runtime', () => {
     const invoke = async () => undefined;
 
     expect(hasTauriIpcRuntime({ __NIMI_TAURI_TEST__: { invoke } } as unknown as typeof globalThis)).toBe(true);
     expect(hasTauriIpcRuntime({ __NIMI_TAURI_RUNTIME__: { invoke } } as unknown as typeof globalThis)).toBe(true);
-    expect(hasTauriIpcRuntime({ __TAURI__: { core: { invoke } } } as unknown as typeof globalThis)).toBe(true);
-    expect(hasTauriIpcRuntime({ __TAURI_INTERNALS__: { invoke } } as unknown as typeof globalThis)).toBe(true);
-    expect(hasTauriIpcRuntime({ __TAURI_IPC__: { invoke } } as unknown as typeof globalThis)).toBe(true);
+    expect(hasTauriIpcRuntime({ __TAURI__: { core: { invoke } } } as unknown as typeof globalThis)).toBe(false);
+    expect(hasTauriIpcRuntime({ __TAURI_INTERNALS__: { invoke } } as unknown as typeof globalThis)).toBe(false);
+    expect(hasTauriIpcRuntime({ __TAURI_IPC__: { invoke } } as unknown as typeof globalThis)).toBe(false);
   });
 
   it('does not construct app-owned Realm or Runtime clients in renderer data modules', () => {
@@ -44,8 +44,12 @@ describe('studio runtime client gate', () => {
     expect(combinedDataSource).not.toMatch(/createRealmClient|createPlatformClient/);
     expect(studioPlatformSource).toContain('createNimiClient');
     expect(studioPlatformSource).toContain("type: 'tauri-ipc'");
-    expect(studioPlatformSource).toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
-    expect(studioPlatformSource).toContain('createNimiRuntimeAppSessionMetadataProvider');
+    expect(studioPlatformSource).toContain('createInstalledNimiAppBootstrap');
+    expect(studioPlatformSource).toContain('readInstalledNimiAppLaunchBinding');
+    expect(studioPlatformSource).toContain('createInstalledNimiAppStandardShellSurface');
+    expect(studioPlatformSource).not.toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
+    expect(studioPlatformSource).not.toContain('createNimiRuntimeAppSessionMetadataProvider');
+    expect(studioPlatformSource).not.toContain('createNimiRuntimeFullAppRegistration');
     expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
     expect(realmTransportSource).toContain('createRuntimeAccountMediatedRealmTransport');
     expect(realmTransportSource).not.toContain('realm_' + 'agent_studio_realm_unary');
@@ -54,13 +58,15 @@ describe('studio runtime client gate', () => {
     expect(studioPlatformSource).not.toContain('getAccessToken');
     expect(studioPlatformSource).not.toContain('createRealmFetchTransport');
     expect(studioPlatformSource).not.toMatch(/VITE_REALM_ACCESS_TOKEN|refreshToken|sessionStore|subjectUserIdProvider/);
-    expect(bridgeSource).toContain('getStudioRuntimeDefaults');
-    expect(bridgeSource).toContain('getNimiRuntimeDefaults');
-    expect(bridgeSource).toContain('RuntimeDefaults');
+    expect(bridgeSource).toContain('readInstalledNimiAppLaunchBinding');
+    expect(bridgeSource).toContain('createInstalledNimiAppStandardShellSurface');
+    expect(bridgeSource).not.toContain('getStudioRuntimeDefaults');
+    expect(bridgeSource).not.toContain('getNimiRuntimeDefaults');
+    expect(bridgeSource).not.toContain('RuntimeDefaults');
     expect(bridgeSource).not.toContain('VITE_NIMI_REALM_BASE_URL');
     expect(bridgeSource).not.toContain('NIMI_REALM_URL');
     expect(bridgeSource).not.toContain('localhost:3002');
-    expect(appStoreSource).toContain('StudioRuntimeDefaults');
+    expect(appStoreSource).not.toContain('StudioRuntimeDefaults');
     expect(appStoreSource).not.toContain('accessToken');
   });
 });

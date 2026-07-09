@@ -1,7 +1,7 @@
-import { hasShellHostInvoke, startWindowDrag } from './index.js';
+import { hasNimiShellRuntime, startWindowDrag } from './index.js';
 
 export async function startStudioWindowDrag(): Promise<void> {
-  if (!hasShellHostInvoke()) {
+  if (!hasNimiShellRuntime()) {
     return;
   }
   try {

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('studio platform runtime auth boundary', () => {
-  it('uses first-party Runtime auth without renderer-owned token custody', () => {
+  it('uses host-owned installed app bootstrap without renderer-owned token/session custody', () => {
     const studioPlatformSource = readFileSync(
       join(process.cwd(), 'src/shell/renderer/app-shell/studio-platform.ts'),
       'utf8',
@@ -26,14 +26,17 @@ describe('studio platform runtime auth boundary', () => {
     );
     const combined = `${studioPlatformSource}\n${bootstrapSource}\n${appIdentitySource}`;
 
-    expect(studioPlatformSource).toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
-    expect(studioPlatformSource).toContain('createNimiRuntimeAppSessionMetadataProvider');
-    expect(studioPlatformSource).toContain('createNimiRuntimeFullAppRegistration');
+    expect(studioPlatformSource).toContain('createInstalledNimiAppBootstrap');
+    expect(studioPlatformSource).toContain('createInstalledNimiAppStandardShellSurface');
+    expect(studioPlatformSource).toContain('readInstalledNimiAppLaunchBinding');
     expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
-    expect(studioPlatformSource).toContain('realmBaseUrl');
+    expect(studioPlatformSource).toContain('launchBinding.realmBaseUrl');
     expect(appIdentitySource).toContain("'nimi.realm-world-studio'");
     expect(studioPlatformSource).toContain('REALM_WORLD_STUDIO_RUNTIME_APP_ID');
-    expect(appIdentitySource).toContain('.local-first-party');
+    expect(appIdentitySource).toContain('.desktop-installed');
+    expect(studioPlatformSource).not.toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
+    expect(studioPlatformSource).not.toContain('createNimiRuntimeAppSessionMetadataProvider');
+    expect(studioPlatformSource).not.toContain('createNimiRuntimeFullAppRegistration');
     expect(studioPlatformSource).not.toContain('createNimiDeveloperRegisteredRuntimeAccountCaller');
     expect(studioPlatformSource).not.toContain('getAccessToken');
     expect(studioPlatformSource).not.toContain('createRealmFetchTransport');
@@ -45,7 +48,8 @@ describe('studio platform runtime auth boundary', () => {
     expect(combined).not.toContain('VITE_REALM_BASE_URL');
     expect(combined).not.toContain('NIMI_REALM_URL');
     expect(combined).not.toContain('resolveStudioRealmBaseUrl');
-    expect(combined).toContain('runtimeDefaults.realm?.realmBaseUrl');
+    expect(bootstrapSource).not.toContain('getStudioRuntimeDefaults');
+    expect(bootstrapSource).not.toContain('runtimeDefaults.realm?.realmBaseUrl');
     expect(viteConfigSource).toContain("find: /^@nimiplatform\\/sdk\\/runtime$/");
     expect(viteConfigSource).toContain("replacement: path.resolve(nimiSdkSourceRoot, 'runtime/index.ts')");
     expect(viteConfigSource).toContain("find: /^@nimiplatform\\/kit\\/shell\\/renderer\\/bootstrap$/");

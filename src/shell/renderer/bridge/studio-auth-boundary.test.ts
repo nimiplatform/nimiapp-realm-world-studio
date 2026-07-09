@@ -42,14 +42,14 @@ describe('studio auth bridge boundary', () => {
     expect('oauthTokenExchange' in bridge).toBe(false);
   });
 
-  it('fails closed if the kit auth bridge type tries to exchange tokens', async () => {
-    await expect(bridge.studioTauriOAuthBridge.oauthTokenExchange({
-      provider: 'CODEX',
-      clientId: 'nimi.realm-world-studio',
-      code: 'code',
-      redirectUri: 'http://127.0.0.1/callback',
-      codeVerifier: 'verifier',
-    })).rejects.toThrow('does not expose OAuth token exchange');
+  it('does not export Runtime defaults or OAuth bridge surfaces from the installed app bridge', () => {
+    expect('getStudioRuntimeDefaults' in bridge).toBe(false);
+    expect('getRuntimeDefaults' in bridge).toBe(false);
+    expect('oauthListenForCode' in bridge).toBe(false);
+    expect('openExternalUrl' in bridge).toBe(false);
+    expect('studioTauriOAuthBridge' in bridge).toBe(false);
+    expect('createInstalledNimiAppStandardShellSurface' in bridge).toBe(true);
+    expect('readInstalledNimiAppLaunchBinding' in bridge).toBe(true);
   });
 
   it('does not register oauth_token_exchange in the Tauri invoke handler', () => {
@@ -57,31 +57,49 @@ describe('studio auth bridge boundary', () => {
     expect(tauriMainSource).not.toContain('oauth_token_exchange,');
   });
 
-  it('registers standard Runtime defaults while keeping token custody out of Studio state', () => {
-    expect(tauriMainSource).toContain('runtime_defaults::runtime_defaults');
-    expect(bootstrapSource).toContain('getStudioRuntimeDefaults');
+  it('does not register Runtime defaults or OAuth in the Tauri invoke handler', () => {
+    expect(tauriMainSource).not.toContain('runtime_defaults::runtime_defaults');
+    expect(tauriMainSource).not.toContain('oauth::open_external_url');
+    expect(tauriMainSource).not.toContain('oauth::oauth_listen_for_code');
+    expect(bootstrapSource).not.toContain('getStudioRuntimeDefaults');
     expect(bootstrapSource).not.toContain('accessToken');
     expect(bootstrapSource).not.toContain('refreshToken');
   });
 
+  it('projects installed app launch binding through the shared Kit Tauri helper', () => {
+    expect(tauriMainSource).toContain('nimi_shell_tauri::installed_app_launch');
+    expect(tauriMainSource).toContain('resolve_installed_nimi_app_launch_binding_from_env');
+    expect(tauriMainSource).toContain('build_installed_nimi_app_launch_binding_script');
+    expect(tauriMainSource).toContain('append_invoke_initialization_script');
+    expect(tauriMainSource).toContain('NIMI_REALM_WORLD_STUDIO_TAURI_LAUNCH_NONCE');
+  });
+
   it('registers standard shell capabilities and shell-ui aliases through Kit', () => {
-    expect(tauriMainSource).toContain('use nimi_shell_tauri::capabilities::{oauth, runtime, runtime_defaults, session_logging}');
-    expect(tauriMainSource).toContain('oauth::open_external_url');
-    expect(tauriMainSource).toContain('oauth::oauth_listen_for_code');
+    expect(tauriMainSource).toContain('use nimi_shell_tauri::capabilities::{');
+    expect(tauriMainSource).toContain('ai_config');
+    expect(tauriMainSource).toContain('data');
+    expect(tauriMainSource).toContain('storage');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_unary');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_stream_open');
     expect(tauriMainSource).toContain('runtime::runtime_bridge_stream_close');
-    expect(tauriMainSource).toContain('runtime::runtime_bridge_status');
-    expect(tauriMainSource).toContain('runtime_defaults::runtime_defaults');
+    expect(tauriMainSource).toContain('data::data_path_resolve');
+    expect(tauriMainSource).toContain('storage::storage_read_json');
+    expect(tauriMainSource).toContain('storage::storage_write_json');
+    expect(tauriMainSource).toContain('storage::storage_remove_json');
+    expect(tauriMainSource).toContain('ai_config::ai_config_get');
+    expect(tauriMainSource).toContain('ai_config::ai_config_set');
     expect(tauriMainSource).toContain('confirm_dialog');
     expect(tauriMainSource).toContain('start_window_drag');
     expect(tauriMainSource).toContain('focus_main_window');
+    expect(tauriMainSource).not.toContain('runtime::runtime_bridge_status');
+    expect(tauriMainSource).not.toContain('session_logging::log_renderer_event');
     expect(tauriMainSource).not.toContain('use nimi_shell_tauri::oauth_commands');
     expect(tauriMainSource).not.toContain('use nimi_shell_tauri::runtime_bridge');
   });
 
-  it('keeps Runtime complete-login as an explicit code-only proof envelope', () => {
-    expect(studioAuthAdapterSource).toContain('createRuntimeAccountBrowserBroker');
+  it('keeps login/token flow out of the installed app renderer', () => {
+    expect(studioAuthAdapterSource).not.toContain('createRuntimeAccountBrowserBroker');
+    expect(studioAuthAdapterSource).not.toContain('studioTauriOAuthBridge');
     expect(studioAuthAdapterSource).not.toContain('runtime.account.completeLogin');
     expect(studioAuthAdapterSource).not.toContain('runtime.account.beginLogin');
     expect(studioAuthAdapterSource).not.toContain("refreshToken: ''");
@@ -89,11 +107,11 @@ describe('studio auth bridge boundary', () => {
     expect(studioAuthAdapterSource).not.toContain("uxTraceId: ''");
   });
 
-  it('passes Kit desktop auth status banners through the Studio login page', () => {
-    expect(studioLoginPageSource).toContain('DesktopShellAuthPage');
-    expect(studioLoginPageSource).toContain('authError: statusMessage');
-    expect(studioLoginPageSource).toContain('setStatusBanner');
-    expect(studioLoginPageSource).toContain("hintVisibility: 'always'");
+  it('does not mount a renderer-owned desktop browser OAuth login page', () => {
+    expect(studioLoginPageSource).not.toContain('DesktopShellAuthPage');
+    expect(studioLoginPageSource).not.toContain('desktopBrowserAuth');
+    expect(studioLoginPageSource).not.toContain('studioTauriOAuthBridge');
+    expect(studioLoginPageSource).not.toContain('createStudioRuntimeAccountBrowserBroker');
   });
 
   it('uses Kit bootstrap surfaces instead of app-local loading chrome', () => {

@@ -1,94 +1,94 @@
 import {
-  Runtime,
-  createNimiRuntimeAppSessionMetadataProvider,
-} from '@nimiplatform/sdk/runtime';
-import type { CoreMetadata } from '@nimiplatform/sdk/types';
-import type {
-  ElectronRuntimeBridgeTrustedMetadata,
-  ElectronRuntimeBridgeTrustedMetadataProvider,
+  createNimiElectronInstalledAppRuntimeAccountTrustedMetadataProvider,
+  resolveElectronRuntimeDefaults,
+  type ElectronRuntimeBridgeTrustedMetadataProvider,
 } from '@nimiplatform/kit/shell/electron/main';
 import {
+  REALM_WORLD_STUDIO_RELEASE_DESCRIPTOR_REF,
   REALM_WORLD_STUDIO_RUNTIME_APP_ID,
   REALM_WORLD_STUDIO_RUNTIME_APP_INSTANCE_ID,
-  REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_DEVICE_ID,
-  REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID,
+  REALM_WORLD_STUDIO_RUNTIME_DEVICE_ID,
 } from '../src/shell/app-identity.js';
 
-const runtimeAppSessionTtlSeconds = 3600;
-const runtimeAppSessionRefreshSkewMs = 30_000;
-const runtimeCapabilities: readonly string[] = [];
-const runtimeDeveloperRegistration = false;
-const runtimeCallerKind = 'local-first-party-app';
+export type RealmWorldStudioRendererLaunchBinding = {
+  readonly appId: string;
+  readonly appInstanceId: string;
+  readonly deviceId: string;
+  readonly launchHostId: string;
+  readonly launchNonce: string;
+  readonly releaseDescriptorRef: string;
+  readonly realmBaseUrl: string;
+};
+
+const DESKTOP_INSTALLED_APP_LAUNCH_HOST_ID = 'desktop-electron-installed-app-host';
 
 export function createRealmWorldStudioElectronTrustedRuntimeMetadataProvider(input: {
-  readonly appId: string;
   readonly runtimeEndpoint: string;
 }): ElectronRuntimeBridgeTrustedMetadataProvider {
-  const appId = requireText(input.appId, 'appId');
-  const runtimeEndpoint = requireText(input.runtimeEndpoint, 'runtimeEndpoint');
-  if (appId !== REALM_WORLD_STUDIO_RUNTIME_APP_ID) {
-    throw new Error(`Realm World Studio Electron Runtime auth received unexpected appId: ${appId}`);
-  }
-
-  let appSessionMetadataProvider = createAppSessionMetadataProvider(appId, runtimeEndpoint);
-  const trustedMetadataProvider: ElectronRuntimeBridgeTrustedMetadataProvider = async () => {
-    const appSessionMetadata = await appSessionMetadataProvider();
-    return toTrustedMetadata(appId, appSessionMetadata);
-  };
-  trustedMetadataProvider.invalidate = () => {
-    appSessionMetadataProvider = createAppSessionMetadataProvider(appId, runtimeEndpoint);
-  };
-  return trustedMetadataProvider;
-}
-
-function createAppSessionMetadataProvider(
-  appId: string,
-  runtimeEndpoint: string,
-): () => Promise<CoreMetadata> {
-  const runtime = new Runtime({
-    appId,
-    transport: {
-      type: 'node-grpc',
-      endpoint: runtimeEndpoint,
+  const launchBinding = createRealmWorldStudioRendererLaunchBinding();
+  return createNimiElectronInstalledAppRuntimeAccountTrustedMetadataProvider({
+    appId: REALM_WORLD_STUDIO_RUNTIME_APP_ID,
+    runtimeEndpoint: requireText(input.runtimeEndpoint, 'runtimeEndpoint'),
+    installedApp: {
+      appInstanceId: launchBinding.appInstanceId,
+      deviceId: launchBinding.deviceId,
+      launchHostId: launchBinding.launchHostId,
+      launchNonce: launchBinding.launchNonce,
+      releaseDescriptorRef: launchBinding.releaseDescriptorRef,
+    },
+    appSession: {
+      appVersion: '0.1.0',
+      capabilities: [],
+      developerRegistration: false,
+    },
+    protectedAccess: {
+      consentId: `${REALM_WORLD_STUDIO_RUNTIME_APP_ID}:electron-installed-app-runtime-account`,
+      authorizationVersion: 'electron-installed-app-runtime-account-v1',
+      scopeCatalogVersion: 'desktop-installed-app-standard-shell-v1',
+      scopes: [],
     },
   });
-  return createNimiRuntimeAppSessionMetadataProvider({
-    appId,
-    appInstanceId: REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_INSTANCE_ID,
-    deviceId: REALM_WORLD_STUDIO_RUNTIME_APP_SESSION_DEVICE_ID,
-    capabilities: [...runtimeCapabilities],
-    developerRegistration: runtimeDeveloperRegistration,
-    ttlSeconds: runtimeAppSessionTtlSeconds,
-    refreshSkewMs: runtimeAppSessionRefreshSkewMs,
-    auth: runtime.auth,
-  });
 }
 
-function toTrustedMetadata(
-  appId: string,
-  metadata: CoreMetadata,
-): ElectronRuntimeBridgeTrustedMetadata {
-  const sessionId = normalizeText(metadata['x-nimi-session-id']);
-  const sessionToken = normalizeText(metadata['x-nimi-session-token']);
+export function createRealmWorldStudioRendererLaunchBinding(): RealmWorldStudioRendererLaunchBinding {
+  const launchNonce = requireText(
+    process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE,
+    'NIMI_REALM_WORLD_STUDIO_ELECTRON_LAUNCH_NONCE',
+  );
   return {
-    metadata: {
-      participantId: appId,
-      callerKind: runtimeCallerKind,
-      callerId: REALM_WORLD_STUDIO_RUNTIME_APP_INSTANCE_ID,
-      surfaceId: 'realm-world-studio',
-    },
-    ...(sessionId && sessionToken ? { appSession: { sessionId, sessionToken } } : {}),
+    appId: REALM_WORLD_STUDIO_RUNTIME_APP_ID,
+    appInstanceId: optionalText(process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_APP_INSTANCE_ID)
+      || REALM_WORLD_STUDIO_RUNTIME_APP_INSTANCE_ID,
+    deviceId: optionalText(process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_DEVICE_ID)
+      || REALM_WORLD_STUDIO_RUNTIME_DEVICE_ID,
+    launchHostId: DESKTOP_INSTALLED_APP_LAUNCH_HOST_ID,
+    launchNonce,
+    releaseDescriptorRef: optionalText(process.env.NIMI_REALM_WORLD_STUDIO_ELECTRON_RELEASE_DESCRIPTOR_REF)
+      || REALM_WORLD_STUDIO_RELEASE_DESCRIPTOR_REF,
+    realmBaseUrl: resolveRealmWorldStudioRealmBaseUrl(),
   };
+}
+
+function resolveRealmWorldStudioRealmBaseUrl(): string {
+  const defaults = resolveElectronRuntimeDefaults();
+  const realm = defaults.realm;
+  const realmBaseUrl = realm && typeof realm === 'object' && !Array.isArray(realm)
+    ? optionalText((realm as { realmBaseUrl?: unknown }).realmBaseUrl)
+    : '';
+  if (!realmBaseUrl) {
+    throw new Error('Realm World Studio Electron launch binding requires host-projected Realm base URL.');
+  }
+  return new URL(realmBaseUrl).toString();
 }
 
 function requireText(value: unknown, field: string): string {
-  const normalized = normalizeText(value);
+  const normalized = optionalText(value);
   if (!normalized) {
     throw new Error(`Realm World Studio Electron Runtime auth requires ${field}`);
   }
   return normalized;
 }
 
-function normalizeText(value: unknown): string {
+function optionalText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
 }
