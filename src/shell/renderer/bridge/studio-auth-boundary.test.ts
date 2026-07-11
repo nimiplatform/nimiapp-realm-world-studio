@@ -62,7 +62,7 @@ describe('studio auth bridge boundary', () => {
   });
 
   it('installs only the protected native carrier and artifact command in Tauri', () => {
-    expect(tauriMainSource).toContain('RuntimeBridgeInstalledHost::platform_default()');
+    expect(tauriMainSource).toContain('RuntimeBridgeAppHost::platform_default()');
     expect(tauriMainSource).toContain('nimi_shell_tauri_installed_app_standard_shell_handler![]');
     expect(tauriMainSource).not.toContain('installed_app_launch');
     expect(tauriMainSource).not.toContain('resolve_installed_nimi_app_launch_binding_from_env');

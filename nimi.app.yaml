@@ -7,15 +7,20 @@ summary: >-
   world-owned WorldCharacterCore sources.
 permissions:
   declared_nimi_api_scopes:
-    - scope: realm.core.worlds.read
+    - scope: account.session.read
+      purpose: Bind product requests to the signed-in Nimi account when that operation family is admitted.
+    - scope: data.scope.read
       qualifier: creator-worlds
       purpose: List and inspect WorldCore records available to the signed-in Studio account.
-    - scope: realm.core.worlds.write
+    - scope: data.scope.write
       qualifier: creator-worlds
       purpose: Create or update creator-owned WorldCore records only through typed Realm core authority.
-    - scope: realm.core.world-characters.read
+    - scope: data.scope.read
       qualifier: creator-world-characters
       purpose: List and inspect world-owned WorldCharacterCore sources under signed-in creator worlds.
-    - scope: realm.core.world-characters.write
+    - scope: data.scope.write
       qualifier: creator-world-characters
       purpose: Create or update world-character settings, profile media references, and voice/source settings through Realm core authority.
+    - scope: data.scope.read
+      qualifier: runtime.artifacts
+      purpose: Read the Runtime-owned bootstrap artifact through the admitted typed app-host operation.

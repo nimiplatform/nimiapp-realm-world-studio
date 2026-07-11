@@ -10,12 +10,15 @@ pnpm run check
 pnpm run pack
 ```
 
-For local Tauri development:
+For protected local development through the Desktop-owned supervisor:
 
 ```bash
-pnpm dev:shell       # full Tauri shell (renderer + native window)
-pnpm dev:renderer    # renderer only (vite dev server on http://127.0.0.1:1451)
+pnpm dev
+pnpm dev:shell -- --shell electron
+pnpm dev:shell -- --shell tauri
 ```
+
+`pnpm dev:renderer` starts only the unprivileged renderer and cannot perform protected operations.
 
 ## Submission Inputs
 

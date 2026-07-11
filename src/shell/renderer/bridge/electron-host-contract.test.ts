@@ -11,7 +11,6 @@ describe('Realm World Studio Electron host contract', () => {
     for (const relativePath of [
       'src-electron/main.ts',
       'src-electron/preload.cts',
-      'scripts/run-electron-dev.mjs',
       'scripts/acceptance-electron.test.mjs',
       'scripts/ensure-dev-renderer-port.mjs',
       'scripts/bundle-electron-preload.mjs',
@@ -24,7 +23,9 @@ describe('Realm World Studio Electron host contract', () => {
       scripts: Record<string, string>;
       devDependencies: Record<string, string>;
     };
-    expect(packageJson.scripts['dev:electron'] || '').toContain('run-electron-dev.mjs');
+    expect(packageJson.scripts.dev).toBe('nimi-app dev --shell tauri');
+    expect(packageJson.scripts['dev:shell']).toBe('nimi-app dev');
+    expect(packageJson.scripts['dev:electron']).toBe('nimi-app dev --shell electron');
     expect(packageJson.scripts['build:electron'] || '').toContain('tsconfig.electron.json');
     expect(packageJson.scripts['acceptance:electron'] || '').toContain('acceptance-electron.test.mjs');
     expect(packageJson.scripts['typecheck:electron'] || '').toContain('tsconfig.electron.json');
@@ -35,10 +36,8 @@ describe('Realm World Studio Electron host contract', () => {
   it('registers a narrowed Kit Electron bridge without app-local token custody or shadow storage', () => {
     const mainSource = read('src-electron/main.ts');
     const preloadSource = read('src-electron/preload.cts');
-    const runElectronDevSource = read('scripts/run-electron-dev.mjs');
-
     expect(mainSource).toContain('@nimiplatform/kit/shell/electron/main');
-    expect(mainSource).toContain('registerNimiElectronInstalledAppBridge');
+    expect(mainSource).toContain('registerNimiElectronAppBridge');
     expect(mainSource).not.toContain('registerNimiElectronRuntimeBridge');
     expect(mainSource).not.toContain('createNimiElectronInstalledHost');
     expect(mainSource).not.toContain('NIMI_INSTALLED_NIMI_APP_STANDARD_SHELL_CAPABILITY_SET_ID');
@@ -56,14 +55,14 @@ describe('Realm World Studio Electron host contract', () => {
     expect(mainSource).not.toContain('NIMI_STANDARD_SHELL_COMMANDS');
     expect(mainSource).not.toContain('createNimiElectronFileAIConfigStore');
     expect(mainSource).not.toContain('standardDataRootBinding');
+    expect(mainSource).toContain('--nimi-dev-renderer-url=');
 
     expect(preloadSource).toContain('@nimiplatform/kit/shell/electron/preload-cjs');
     expect(preloadSource).toContain('installNimiElectronRuntimeBridge');
     expect(preloadSource).not.toContain('exposeInMainWorld(\'electron\'');
 
     expect(existsSync(join(process.cwd(), 'src-electron/runtime-auth.ts'))).toBe(false);
-    expect(runElectronDevSource).not.toContain('randomUUID');
-    expect(runElectronDevSource).not.toContain('LAUNCH_NONCE');
+    expect(existsSync(join(process.cwd(), 'scripts/run-electron-dev.mjs'))).toBe(false);
   });
 
   it('keeps generic Electron and Tauri Runtime transports out of the renderer', () => {
@@ -89,7 +88,7 @@ describe('Realm World Studio Electron host contract', () => {
 
     expect(identitySource).toContain("REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio'");
     expect(studioPlatformSource).toContain('REALM_WORLD_STUDIO_APP_ID');
-    expect(mainSource).toContain('REALM_WORLD_STUDIO_APP_ID');
+    expect(mainSource).toContain("REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio'");
     expect(identitySource).not.toContain('RUNTIME_APP_INSTANCE_ID');
     expect(identitySource).not.toContain('RELEASE_DESCRIPTOR_REF');
   });

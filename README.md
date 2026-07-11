@@ -35,6 +35,7 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm lint
-pnpm dev:shell      # Tauri
-pnpm dev:electron   # Electron dev shell
+pnpm dev                              # Desktop-supervised Tauri
+pnpm dev:shell -- --shell electron    # Desktop-supervised Electron
+pnpm dev:shell -- --shell tauri       # explicit Desktop-supervised Tauri
 ```

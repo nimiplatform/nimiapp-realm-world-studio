@@ -4,12 +4,11 @@ import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import {
   createNimiElectronStandardApplicationMenuTemplate,
   isAllowedElectronRendererUrl,
-  registerNimiElectronInstalledAppBridge,
+  registerNimiElectronAppBridge,
 } from '@nimiplatform/kit/shell/electron/main';
-import {
-  REALM_WORLD_STUDIO_APP_ID,
-  REALM_WORLD_STUDIO_APP_NAME,
-} from '../src/shell/app-identity.js';
+
+const REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio';
+const REALM_WORLD_STUDIO_APP_NAME = 'Realm World Studio';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -17,7 +16,7 @@ const appRoot = resolveAppRoot(currentDir);
 const preloadPath = path.join(currentDir, 'preload.cjs');
 const rendererDistIndex = path.join(appRoot, 'dist', 'index.html');
 const rendererDistUrl = pathToFileURL(rendererDistIndex).toString();
-const devRendererUrl = 'http://127.0.0.1:1451';
+const developmentRendererUrl = readDevelopmentRendererUrl();
 
 app.setName(REALM_WORLD_STUDIO_APP_NAME);
 installRealmWorldStudioStandardApplicationMenu();
@@ -26,7 +25,7 @@ configureRealmWorldStudioElectronChromiumRuntime();
 void app.whenReady().then(bootstrapElectron).catch(handleElectronStartupFailure);
 
 async function bootstrapElectron(): Promise<void> {
-  registerNimiElectronInstalledAppBridge({
+  registerNimiElectronAppBridge({
     appId: REALM_WORLD_STUDIO_APP_ID,
     allowedRendererUrls: [activeRendererUrl()],
     ipcMain,
@@ -91,7 +90,30 @@ async function createMainWindow(): Promise<BrowserWindow> {
 }
 
 function activeRendererUrl(): string {
-  return app.isPackaged ? rendererDistUrl : devRendererUrl;
+  return developmentRendererUrl || rendererDistUrl;
+}
+
+function readDevelopmentRendererUrl(): string {
+  const prefix = '--nimi-dev-renderer-url=';
+  const values = process.argv.filter((value) => value.startsWith(prefix));
+  if (values.length === 0) return '';
+  if (values.length !== 1) throw new Error('Nimi development renderer URL must be singular.');
+  const selected = values[0];
+  if (!selected) throw new Error('Nimi development renderer URL is missing.');
+  const parsed = new URL(selected.slice(prefix.length));
+  if (
+    parsed.protocol !== 'http:'
+    || !['127.0.0.1', 'localhost', '[::1]', '::1'].includes(parsed.hostname.toLowerCase())
+    || !parsed.port
+    || parsed.username
+    || parsed.password
+    || (parsed.pathname !== '/' && parsed.pathname !== '')
+    || parsed.search
+    || parsed.hash
+  ) {
+    throw new Error('Nimi development renderer URL must be exact loopback.');
+  }
+  return parsed.origin;
 }
 
 function hardenRealmWorldStudioWindowChrome(window: BrowserWindow): void {
