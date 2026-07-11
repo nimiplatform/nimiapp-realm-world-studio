@@ -5,56 +5,11 @@ import {
   toCreatorWorldSummary,
   toCreatorWorldWorkbench,
 } from './world-core-read-model.js';
-
-const worldCore = {
-  id: 'world-yuan-academy',
-  creatorId: 'creator-1',
-  visibility: 'private',
-  schemaVersion: 'world-core.v1',
-  contentHash: 'hash-world-1',
-  contentRevision: 7,
-  createdAt: '2026-07-09T00:00:00.000Z',
-  updatedAt: '2026-07-09T01:00:00.000Z',
-  origin: { kind: 'manual' },
-  core: {
-    identity: {
-      name: '元代文人书院世界',
-      summary: '创作者维护的元代文人世界源。',
-    },
-    ontology: {
-      entityKinds: ['人物', '书院'],
-      relationshipTypes: ['师承', '同僚'],
-    },
-    tags: ['历史', '书院'],
-    stats: {
-      characterCount: 1,
-    },
-  },
-} satisfies WorldCoreDto;
-
-const characterCore = {
-  id: 'yao-sui',
-  worldId: 'world-yuan-academy',
-  entityId: 'entity-yao-sui',
-  schemaVersion: 'world-character.v1',
-  contentHash: 'hash-character-1',
-  contentRevision: 3,
-  createdAt: '2026-07-09T00:10:00.000Z',
-  updatedAt: '2026-07-09T01:10:00.000Z',
-  origin: { kind: 'manual' },
-  core: {
-    profile: {
-      displayName: '姚燧',
-      role: '元代文人',
-      summary: '世界拥有的人物源。',
-      tags: ['文人'],
-    },
-  },
-} satisfies WorldCharacterCoreDto;
+import { TEST_WORLD_CHARACTER_CORE, TEST_WORLD_CORE } from './world-core-test-fixtures.js';
 
 describe('Realm World Studio creator read model', () => {
-  it('projects WorldCoreDto without public showcase semantics', () => {
-    const summary = toCreatorWorldSummary(worldCore);
+  it('projects the current typed WorldCoreDto without public showcase semantics', () => {
+    const summary = toCreatorWorldSummary(TEST_WORLD_CORE);
 
     expect(summary).toMatchObject({
       id: 'world-yuan-academy',
@@ -62,14 +17,15 @@ describe('Realm World Studio creator read model', () => {
       summary: '创作者维护的元代文人世界源。',
       visibility: 'private',
       contentHash: 'hash-world-1',
-      characterCountExact: 1,
+      characterCountExact: null,
     });
     expect(summary.entityKinds).toEqual(['人物', '书院']);
     expect(summary.relationshipTypes).toEqual(['师承', '同僚']);
+    expect(summary.tags).toEqual(['历史', '书院']);
   });
 
-  it('requires parent world context for WorldCharacterCore projections', () => {
-    const workbench = toCreatorWorldWorkbench(worldCore, [characterCore]);
+  it('requires parent world context and derives the exact character count from the typed list', () => {
+    const workbench = toCreatorWorldWorkbench(TEST_WORLD_CORE, [TEST_WORLD_CHARACTER_CORE]);
 
     expect(workbench.world.characterCountExact).toBe(1);
     expect(workbench.characters[0]).toMatchObject({
@@ -79,18 +35,25 @@ describe('Realm World Studio creator read model', () => {
       name: '姚燧',
       role: '元代文人',
     });
-    expect(() => toCreatorWorldCharacterDetail('other-world', characterCore)).toThrow(/parent mismatch/);
+    expect(() => toCreatorWorldCharacterDetail('other-world', TEST_WORLD_CHARACTER_CORE)).toThrow(/parent mismatch/);
   });
 
-  it('does not synthesize display names from Realm ids when source names are missing', () => {
-    const unnamedWorld = {
-      ...worldCore,
-      core: { identity: { summary: 'No name here.' } },
-    } satisfies WorldCoreDto;
-    const unnamedCharacter = {
-      ...characterCore,
+  it('does not synthesize display names from Realm ids when source names are blank', () => {
+    const unnamedWorld: WorldCoreDto = {
+      ...TEST_WORLD_CORE,
+      core: {
+        ...TEST_WORLD_CORE.core,
+        identity: {
+          ...TEST_WORLD_CORE.core.identity,
+          name: '',
+          summary: 'No name here.',
+        },
+      },
+    };
+    const unnamedCharacter: WorldCharacterCoreDto = {
+      ...TEST_WORLD_CHARACTER_CORE,
       core: { profile: { summary: 'No character name here.' } },
-    } satisfies WorldCharacterCoreDto;
+    };
 
     expect(toCreatorWorldSummary(unnamedWorld).name).toBeNull();
     expect(toCreatorWorldWorkbench(unnamedWorld, [unnamedCharacter]).characters[0]?.name).toBeNull();
@@ -98,11 +61,11 @@ describe('Realm World Studio creator read model', () => {
 
   it('fails closed when Realm core payloads are malformed', () => {
     const malformedWorld = {
-      ...worldCore,
+      ...TEST_WORLD_CORE,
       core: null,
     } as unknown as WorldCoreDto;
     const malformedCharacter = {
-      ...characterCore,
+      ...TEST_WORLD_CHARACTER_CORE,
       core: [],
     } as unknown as WorldCharacterCoreDto;
 

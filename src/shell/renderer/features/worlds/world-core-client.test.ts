@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { WorldCharacterCoreDto, WorldCoreDto } from '@nimiplatform/sdk/realm/generated';
 import { createStudioRealmClient, type StudioRealmSurface } from '@renderer/data/realm-client.js';
 import {
   createCreatorWorldCore,
@@ -7,36 +6,34 @@ import {
   replaceCreatorWorldCharacterCore,
   replaceCreatorWorldCore,
 } from './world-core-client.js';
+import { TEST_WORLD_CHARACTER_CORE, TEST_WORLD_CORE } from './world-core-test-fixtures.js';
 
 vi.mock('@renderer/data/realm-client.js', () => ({
   createStudioRealmClient: vi.fn(),
 }));
 
 const worldCore = {
+  ...TEST_WORLD_CORE,
   id: 'world-1',
-  creatorId: 'creator-1',
-  visibility: 'private',
-  schemaVersion: 'world-core.v1',
-  contentHash: 'hash-world-1',
   contentRevision: 1,
-  createdAt: '2026-07-09T00:00:00.000Z',
-  updatedAt: '2026-07-09T00:00:00.000Z',
-  origin: { kind: 'manual' },
-  core: { identity: { name: 'World 1' } },
-} satisfies WorldCoreDto;
+  core: {
+    ...TEST_WORLD_CORE.core,
+    identity: {
+      ...TEST_WORLD_CORE.core.identity,
+      name: 'World 1',
+      summary: 'World 1 summary',
+    },
+  },
+};
 
 const characterCore = {
+  ...TEST_WORLD_CHARACTER_CORE,
   id: 'character-1',
   worldId: 'world-1',
   entityId: 'entity-1',
-  schemaVersion: 'world-character-core.v1',
-  contentHash: 'hash-character-1',
   contentRevision: 1,
-  createdAt: '2026-07-09T00:00:00.000Z',
-  updatedAt: '2026-07-09T00:00:00.000Z',
-  origin: { kind: 'manual' },
   core: { profile: { displayName: 'Character 1' } },
-} satisfies WorldCharacterCoreDto;
+};
 
 function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface, ReturnType<typeof vi.fn>>> = {}) {
   const realm = {

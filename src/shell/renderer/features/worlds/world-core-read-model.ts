@@ -97,12 +97,8 @@ export function toCreatorWorldSummary(world: WorldCoreDto): CreatorWorldSummary 
     updatedAt: requireText(world.updatedAt, 'WorldCoreDto.updatedAt'),
     entityKinds: firstStringArray(core, [['ontology', 'entityKinds'], ['entityKinds']]),
     relationshipTypes: firstStringArray(core, [['ontology', 'relationshipTypes'], ['relationshipTypes']]),
-    tags: firstStringArray(core, [['profile', 'tags'], ['tags']]),
-    characterCountExact: firstNumber(core, [
-      ['stats', 'characterCount'],
-      ['counts', 'characterCount'],
-      ['characterCount'],
-    ]) ?? arrayLength(core, [['characters'], ['worldCharacters']]),
+    tags: firstStringArray(core, [['identity', 'themes']]),
+    characterCountExact: null,
   };
 }
 
@@ -208,20 +204,4 @@ function firstStringArray(record: Record<string, unknown>, paths: readonly Path[
     }
   }
   return [];
-}
-
-function firstNumber(record: Record<string, unknown>, paths: readonly Path[]): number | null {
-  for (const path of paths) {
-    const value = Number(readPath(record, path));
-    if (Number.isInteger(value) && value >= 0) return value;
-  }
-  return null;
-}
-
-function arrayLength(record: Record<string, unknown>, paths: readonly Path[]): number | null {
-  for (const path of paths) {
-    const value = readPath(record, path);
-    if (Array.isArray(value)) return value.length;
-  }
-  return null;
 }

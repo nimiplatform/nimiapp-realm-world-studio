@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('studio platform runtime auth boundary', () => {
-  it('uses host-owned installed app bootstrap without renderer-owned token/session custody', () => {
+  it('uses the artifact-only installed bootstrap without renderer-owned identity or Runtime authority', () => {
     const studioPlatformSource = readFileSync(
       join(process.cwd(), 'src/shell/renderer/app-shell/studio-platform.ts'),
       'utf8',
@@ -26,14 +26,18 @@ describe('studio platform runtime auth boundary', () => {
     );
     const combined = `${studioPlatformSource}\n${bootstrapSource}\n${appIdentitySource}`;
 
-    expect(studioPlatformSource).toContain('createInstalledNimiAppBootstrap');
+    expect(studioPlatformSource).toContain('createInstalledNimiAppBootstrap({ standardShell })');
     expect(studioPlatformSource).toContain('createInstalledNimiAppStandardShellSurface');
-    expect(studioPlatformSource).toContain('readInstalledNimiAppLaunchBinding');
-    expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
-    expect(studioPlatformSource).toContain('launchBinding.realmBaseUrl');
     expect(appIdentitySource).toContain("'nimi.realm-world-studio'");
-    expect(studioPlatformSource).toContain('REALM_WORLD_STUDIO_RUNTIME_APP_ID');
-    expect(appIdentitySource).toContain('.desktop-installed');
+    expect(studioPlatformSource).toContain('world-studio-protected-operation-set-not-admitted');
+    expect(studioPlatformSource).not.toContain('readInstalledNimiAppLaunchBinding');
+    expect(studioPlatformSource).not.toContain('createStudioRealmBridgeOptions');
+    expect(studioPlatformSource).not.toContain('realmBaseUrl');
+    expect(studioPlatformSource).not.toContain('new Runtime');
+    expect(studioPlatformSource).not.toContain('createNimiClient');
+    expect(studioPlatformSource).not.toContain('getAccountSessionStatus');
+    expect(appIdentitySource).not.toContain('bundled-with-nimi');
+    expect(appIdentitySource).not.toContain('.desktop-installed');
     expect(studioPlatformSource).not.toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeAppSessionMetadataProvider');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeFullAppRegistration');

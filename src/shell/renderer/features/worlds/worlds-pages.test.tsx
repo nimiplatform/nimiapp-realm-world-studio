@@ -23,6 +23,7 @@ import {
   CreatorWorldEditPage,
   CreatorWorldListPage,
 } from './worlds-pages.js';
+import { TEST_WORLD_CHARACTER_CORE, TEST_WORLD_CORE } from './world-core-test-fixtures.js';
 
 vi.mock('./world-core-client.js', () => ({
   listCreatorWorlds: vi.fn(),
@@ -68,28 +69,15 @@ const characterSummary = {
 };
 
 const worldCore = {
+  ...TEST_WORLD_CORE,
   ...worldSummary,
-  createdAt: '2026-07-09T00:00:00.000Z',
-  origin: { kind: 'manual' as const },
-  core: {
-    identity: {
-      name: '元代文人书院世界',
-      summary: '创作者维护的元代文人世界源。',
-    },
-  },
+  core: TEST_WORLD_CORE.core,
 };
 
 const characterCore = {
+  ...TEST_WORLD_CHARACTER_CORE,
   ...characterSummary,
-  createdAt: '2026-07-09T00:10:00.000Z',
-  origin: { kind: 'manual' as const },
-  core: {
-    profile: {
-      displayName: '姚燧',
-      role: '元代文人',
-      summary: '世界拥有的人物源。',
-    },
-  },
+  core: TEST_WORLD_CHARACTER_CORE.core,
 };
 
 function renderWithRouter(initialEntry: string, element: ReactNode) {

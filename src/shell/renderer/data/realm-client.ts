@@ -1,5 +1,5 @@
 import type { Realm } from '@nimiplatform/sdk/realm';
-import { getCurrentStudioNimiClient } from '@renderer/app-shell/studio-platform.js';
+import { createStudioProtectedOperationUnavailableError } from '@renderer/app-shell/studio-platform.js';
 
 export const STUDIO_REALM_SURFACE_METHODS = [
   'worldCoreControllerListWorldCores',
@@ -40,11 +40,5 @@ export function createStudioRealmSurface(realm: Pick<Realm, 'worldCore'>): Studi
 }
 
 export function createStudioRealmClient(): StudioRealmSurface {
-  const realm = getCurrentStudioNimiClient().realm;
-  if (!realm) {
-    throw new Error(
-      'Realm World Studio Realm client is unavailable. Reopen Studio after Runtime account bootstrap completes.',
-    );
-  }
-  return createStudioRealmSurface(realm);
+  throw createStudioProtectedOperationUnavailableError();
 }

@@ -14,7 +14,6 @@ import {
 import { useAppStore } from './app-store.js';
 import { startStudioWindowDrag } from '../bridge/window-drag.js';
 import { logoutStudioRuntimeAccount } from '../features/auth/studio-auth-adapter.js';
-import { clearStudioNimiClient } from './studio-platform.js';
 import { studioQueryClient } from '../infra/query-client.js';
 import { LanguageSwitcher } from './language-switcher.js';
 
@@ -78,7 +77,6 @@ function AccountMenu() {
     try {
       await logoutStudioRuntimeAccount();
       studioQueryClient.clear();
-      clearStudioNimiClient();
       clearAuth();
       setOpen(false);
       navigate('/worlds');

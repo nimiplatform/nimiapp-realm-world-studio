@@ -21,3 +21,4 @@ updated: 2026-07-09
 - **[R-RWS-FAIL-011]** Asset/resource resolver unavailable.
 - **[R-RWS-FAIL-012]** Session UI state unavailable.
 - **[R-RWS-FAIL-013]** No failure may be converted into placeholder success, fake return data, synthesized metric, or app-local authority.
+- **[R-RWS-FAIL-014]** Installed-session failure UI distinguishes `login-required`, `runtime-unavailable`, `permission-denied`, `repair-required`, and `capability-unavailable`; it exposes a retry action and reason code while keeping world/account operations disabled.

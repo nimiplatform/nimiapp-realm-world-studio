@@ -51,6 +51,10 @@ rules:
     domain: CORE
     title: r-rws-core-012
     source: core-rules.md
+  - rule_id: R-RWS-CORE-013
+    domain: CORE
+    title: installed-executable-is-not-operation-admission
+    source: core-rules.md
   - rule_id: R-RWS-SCOPE-001
     domain: SCOPE
     title: r-rws-scope-001
@@ -251,6 +255,14 @@ rules:
     domain: RUNTIME
     title: r-rws-runtime-009
     source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-010
+    domain: RUNTIME
+    title: transitional-artifact-only-installed-bootstrap
+    source: runtime-ai-consumption.md
+  - rule_id: R-RWS-RUNTIME-011
+    domain: RUNTIME
+    title: native-carrier-is-the-only-installed-host-trust
+    source: runtime-ai-consumption.md
   - rule_id: R-RWS-METRIC-001
     domain: METRIC
     title: r-rws-metric-001
@@ -335,6 +347,10 @@ rules:
     domain: FAIL
     title: r-rws-fail-013
     source: failure-semantics.md
+  - rule_id: R-RWS-FAIL-014
+    domain: FAIL
+    title: typed-installed-session-failure-ui
+    source: failure-semantics.md
   - rule_id: R-RWS-STORY-001
     domain: STORY
     title: r-rws-story-001
@@ -406,4 +422,12 @@ rules:
   - rule_id: R-RWS-ACCEPT-010
     domain: ACCEPT
     title: r-rws-accept-010
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-011
+    domain: ACCEPT
+    title: artifact-only-real-shell-hardcut
+    source: product-acceptance-and-execution-plan.md
+  - rule_id: R-RWS-ACCEPT-012
+    domain: ACCEPT
+    title: real-shell-negative-and-platform-independent-proof
     source: product-acceptance-and-execution-plan.md

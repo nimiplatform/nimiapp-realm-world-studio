@@ -66,8 +66,8 @@ creatorId.
 
 ### Auth boundary
 - Studio does **not** own access or refresh tokens (mirrors parentos PO-SHELL-008 / K-ACCSVC-008).
-- All Runtime account state flows through `runtime.account.*` via the admitted desktop shell IPC bridge (`nimi-shell-tauri` or kit Electron shell bridge).
-- Login uses the kit's `DesktopShellAuthPage` with a code-only proof envelope; refresh-token custody lives in Runtime.
+- The current installed bootstrap is artifact-only; account, Realm, AI, and publication operations remain fail-closed until their typed protected operation set is separately admitted.
+- Future account projection flows through a Runtime-owned protected installed session. Studio must not add embedded login, a generic Runtime bridge, direct Realm transport, environment/argument launch identity, or app-owned release/session material.
 
 ## Development Principles
 

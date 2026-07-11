@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -34,7 +34,6 @@ describe('studio runtime client gate', () => {
   it('does not construct app-owned Realm or Runtime clients in renderer data modules', () => {
     const runtimeClientSource = readFileSync(resolve(dataDir, 'runtime-client.ts'), 'utf8');
     const realmClientSource = readFileSync(resolve(dataDir, 'realm-client.ts'), 'utf8');
-    const realmTransportSource = readFileSync(resolve(rendererRoot, 'app-shell', 'studio-realm-transport.ts'), 'utf8');
     const bridgeSource = readFileSync(resolve(rendererRoot, 'bridge', 'index.ts'), 'utf8');
     const appStoreSource = readFileSync(resolve(rendererRoot, 'app-shell', 'app-store.ts'), 'utf8');
     const studioPlatformSource = readFileSync(resolve(rendererRoot, 'app-shell', 'studio-platform.ts'), 'utf8');
@@ -42,23 +41,20 @@ describe('studio runtime client gate', () => {
 
     expect(combinedDataSource).not.toMatch(/VITE_REALM_ACCESS_TOKEN|external_principal|allowAnonymousRealm/);
     expect(combinedDataSource).not.toMatch(/createRealmClient|createPlatformClient/);
-    expect(studioPlatformSource).toContain('createNimiClient');
-    expect(studioPlatformSource).toContain("type: 'tauri-ipc'");
+    expect(studioPlatformSource).not.toContain('createNimiClient');
+    expect(studioPlatformSource).not.toContain("type: 'tauri-ipc'");
     expect(studioPlatformSource).toContain('createInstalledNimiAppBootstrap');
-    expect(studioPlatformSource).toContain('readInstalledNimiAppLaunchBinding');
     expect(studioPlatformSource).toContain('createInstalledNimiAppStandardShellSurface');
     expect(studioPlatformSource).not.toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeAppSessionMetadataProvider');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeFullAppRegistration');
-    expect(studioPlatformSource).toContain('createStudioRealmBridgeOptions');
-    expect(realmTransportSource).toContain('createRuntimeAccountMediatedRealmTransport');
-    expect(realmTransportSource).not.toContain('realm_' + 'agent_studio_realm_unary');
-    expect(realmTransportSource).not.toContain('realm_world_studio_realm_unary');
-    expect(realmTransportSource).not.toContain('getAccessToken');
+    expect(studioPlatformSource).not.toContain('readInstalledNimiAppLaunchBinding');
+    expect(studioPlatformSource).not.toContain('createStudioRealmBridgeOptions');
+    expect(existsSync(resolve(rendererRoot, 'app-shell', 'studio-realm-transport.ts'))).toBe(false);
     expect(studioPlatformSource).not.toContain('getAccessToken');
     expect(studioPlatformSource).not.toContain('createRealmFetchTransport');
     expect(studioPlatformSource).not.toMatch(/VITE_REALM_ACCESS_TOKEN|refreshToken|sessionStore|subjectUserIdProvider/);
-    expect(bridgeSource).toContain('readInstalledNimiAppLaunchBinding');
+    expect(bridgeSource).not.toContain('readInstalledNimiAppLaunchBinding');
     expect(bridgeSource).toContain('createInstalledNimiAppStandardShellSurface');
     expect(bridgeSource).not.toContain('getStudioRuntimeDefaults');
     expect(bridgeSource).not.toContain('getNimiRuntimeDefaults');

@@ -18,3 +18,5 @@ updated: 2026-07-09
 - **[R-RWS-ACCEPT-008]** Failure states are explicit and fail closed.
 - **[R-RWS-ACCEPT-009]** `pnpm run check:spec-consistency`, `typecheck`, `test`, `validate`, `local-audit`, `build`, and `check` must pass before acceptance.
 - **[R-RWS-ACCEPT-010]** Downstream work must extend RWS creator workbench modules without restoring public showcase routes or app-local substrate replacements.
+- **[R-RWS-ACCEPT-011]** Before the World Studio protected operation set is admitted, real Electron and Tauri shells expose only the shared protected artifact carrier, render the actionable installed-session failure surface, and register no generic Runtime, account, Realm, storage, AI-config, local-asset, or app-domain command path.
+- **[R-RWS-ACCEPT-012]** Acceptance includes desktop and 390px narrow-shell interaction/visual proof plus negative proof that a direct renderer, ordinary localhost gRPC caller, environment/argument launch binding, and unadmitted native command cannot obtain a positive World Studio operation result. Platform support is admitted independently; unsupported platforms remain fail-closed and are not reported as complete.

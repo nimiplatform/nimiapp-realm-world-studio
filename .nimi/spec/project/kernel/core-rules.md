@@ -20,3 +20,4 @@ updated: 2026-07-09
 - **[R-RWS-CORE-010]** User-facing copy uses creator/workbench/world-character terminology; implementation types use Realm world/world-character/source terminology rather than public showcase terminology.
 - **[R-RWS-CORE-011]** Spec changes and implementation changes for the same behavior must land together.
 - **[R-RWS-CORE-012]** No contract violation may be hidden behind fallback logic, fake return data, pseudo-success metrics, or compatibility shims.
+- **[R-RWS-CORE-013]** Being a correctly installed executable does not itself admit account, Realm, AI, publication, lifecycle, storage, or local-asset authority; each positive product operation requires a typed Runtime-owned protected operation surface, and an absent surface remains fail-closed.
