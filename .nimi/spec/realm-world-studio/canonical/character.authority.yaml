@@ -1,0 +1,114 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.character
+units:
+  - id: rule.realm-world-studio.character.r001
+    kind: rule
+    title: Typed world-character existence
+    modality: must
+    statement: A Realm World Studio world character exists only as a typed WorldCharacterCoreDto returned by Realm core authority.
+    condition: Always.
+    failure: Render the world character as unavailable when no typed WorldCharacterCoreDto is returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r002
+    kind: rule
+    title: Parent world proof
+    modality: must
+    statement: WorldCharacterCoreDto.worldId together with the selected WorldCoreDto.id proves the parent world.
+    condition: When a world-character record is read, routed, drafted, or written.
+    failure: Render the world character as unavailable when its parent world cannot be proven.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.character.r003
+    kind: rule
+    title: Parent context preservation
+    modality: must
+    statement: Reads, routes, drafts, and writes preserve parent world context because characterId alone is insufficient for Realm World Studio authority.
+    condition: When a world-character read, route, draft, or write uses characterId.
+    failure: Reject the operation or render it unavailable when parent world context is missing.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.character.r004
+    kind: rule
+    title: Character display fields
+    modality: must
+    statement: Character display projections read name, role, summary, tags, avatar or profile media, voice, and behavior settings only from typed core payload fields or admitted media or resource references.
+    condition: When Realm World Studio displays a world character.
+    failure: Render an unavailable or incomplete field instead of synthesizing character display data.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r005
+    kind: rule
+    title: Character replacement hash
+    modality: must
+    statement: Character replacement uses baseContentHash from the last typed Realm read.
+    condition: When a creator submits a world-character replacement.
+    failure: Fail the replacement when baseContentHash is missing or stale and preserve the creator draft.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r006
+    kind: rule
+    title: No persona substitution
+    modality: must_not
+    statement: Realm World Studio shows RealmPersona records as world-character authority.
+    condition: Always.
+    failure: Withhold the world-character success state and render typed Realm world-character data as unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r007
+    kind: rule
+    title: No private runtime authority
+    modality: must_not
+    statement: Runtime or private LocalAgent state serves as world-character source authority.
+    condition: Always.
+    failure: Reject the private runtime source and keep world-character authority unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r008
+    kind: rule
+    title: Generated character candidates
+    modality: must
+    statement: AI-generated character material remains candidate draft material until creator review and a successful typed Realm core write.
+    condition: When AI produces world-character material.
+    failure: Preserve the material as a candidate and do not present it as world-character source authority.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r009
+    kind: rule
+    title: Missing optional fields
+    modality: must
+    statement: Missing optional character fields render as creator-facing incomplete or unavailable states rather than synthesized values.
+    condition: When an optional world-character field is absent.
+    failure: Render the field as incomplete or unavailable and do not synthesize a value.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.character.r010
+    kind: rule
+    title: No character shadow records
+    modality: must_not
+    statement: World-character create or update UI builds compatibility DTOs or app-local shadow records outside the typed Realm core contract.
+    condition: When a creator creates or updates a world character.
+    failure: Reject the incompatible payload or shadow record and preserve the creator draft.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core

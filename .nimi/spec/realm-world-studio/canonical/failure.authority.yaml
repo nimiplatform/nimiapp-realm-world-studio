@@ -1,0 +1,95 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.failure
+units:
+  - id: definition.realm-world-studio.failure.failure-state
+    kind: definition
+    title: Failure state
+    meaning: A typed, explicitly rendered failure state of the Studio.
+  - id: definition.realm-world-studio.failure.realm-unavailable
+    kind: definition
+    title: Realm unavailable
+    meaning: A typed failure condition indicating that Realm is unavailable.
+  - id: definition.realm-world-studio.failure.runtime-transport-unavailable
+    kind: definition
+    title: Runtime transport unavailable
+    meaning: A typed failure condition indicating that Runtime transport is unavailable.
+  - id: definition.realm-world-studio.failure.permission-missing
+    kind: definition
+    title: Permission missing
+    meaning: A typed failure condition indicating that a required permission is missing.
+  - id: definition.realm-world-studio.failure.creator-world-inventory-unavailable
+    kind: definition
+    title: Creator world inventory unavailable
+    meaning: A typed failure condition indicating that creator world inventory is unavailable.
+  - id: definition.realm-world-studio.failure.world-core-detail-unavailable
+    kind: definition
+    title: World core detail unavailable
+    meaning: A typed failure condition indicating that WorldCore detail is unavailable.
+  - id: definition.realm-world-studio.failure.world-character-list-detail-unavailable
+    kind: definition
+    title: World-character list or detail unavailable
+    meaning: A typed failure condition indicating that WorldCharacterCore list or detail is unavailable.
+  - id: definition.realm-world-studio.failure.realm-write-rejected-or-hash-stale
+    kind: definition
+    title: Realm write rejected or hash stale
+    meaning: A typed failure condition indicating that a Realm write was rejected or its content hash was stale.
+  - id: definition.realm-world-studio.failure.typed-dto-payload-invalid
+    kind: definition
+    title: Typed DTO payload invalid
+    meaning: A typed failure condition indicating that a typed DTO payload is invalid.
+  - id: definition.realm-world-studio.failure.kit-capability-unavailable
+    kind: definition
+    title: Kit capability unavailable
+    meaning: A typed failure condition indicating that a kit UI or model-config capability is unavailable.
+  - id: definition.realm-world-studio.failure.runtime-ai-route-or-output-failure
+    kind: definition
+    title: Runtime AI route or output failure
+    meaning: A typed failure condition indicating that a Runtime AI route is unbound or its output is malformed.
+  - id: definition.realm-world-studio.failure.asset-resource-resolver-unavailable
+    kind: definition
+    title: Asset or resource resolver unavailable
+    meaning: A typed failure condition indicating that an asset or resource resolver is unavailable.
+  - id: definition.realm-world-studio.failure.session-ui-state-unavailable
+    kind: definition
+    title: Session UI state unavailable
+    meaning: A typed failure condition indicating that session UI state is unavailable.
+  - id: definition.realm-world-studio.failure.installed-session-failure-surface
+    kind: definition
+    title: Desktop-supervised session failure surface
+    meaning: The Desktop-supervised session failure UI that distinguishes action-required, runtime-unavailable, permission-denied, revoked, repair-required, and capability-unavailable while affected world and account operations stay disabled.
+  - id: definition.realm-world-studio.failure.action-required-taxonomy-redesign
+    kind: definition
+    title: Action-required failure taxonomy redesign
+    meaning: The approved Desktop-supervised failure redesign replaces the legacy login-required category plus universal retry-action and reason-code requirements with action-required and revoked categories and does not impose a universal retry action or legacy reason-code field.
+  - id: rule.realm-world-studio.failure.r001
+    kind: rule
+    title: No failure conversion
+    modality: must_not
+    statement: A failure is converted into placeholder success, fake return data, a synthesized metric, or app-local authority.
+    condition: When any Realm World Studio failure occurs.
+    failure: Render the typed failure explicitly and withhold product success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.failure.failure-state
+  - id: rule.realm-world-studio.failure.r002
+    kind: rule
+    lifecycle: removed
+    title: Legacy installed-session failure UI
+    reason: Superseded by rule.realm-world-studio.failure.r003 after approval of the action-required and revoked failure taxonomy.
+  - id: rule.realm-world-studio.failure.r003
+    kind: rule
+    title: Desktop-supervised action-required failure UI
+    modality: must
+    statement: Desktop-supervised session failure UI distinguishes action-required, runtime-unavailable, permission-denied, revoked, repair-required, and capability-unavailable, keeps each affected world or account operation disabled, and does not require a universal retry action or legacy reason-code field.
+    condition: When the Desktop-supervised session or a protected operation cannot provide a positive state.
+    failure: Render the matching bounded failure, keep affected world and account operations disabled, and do not substitute the legacy login-required category.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.failure.action-required-taxonomy-redesign
+      - type: applies_to
+        target: definition.realm-world-studio.failure.failure-state
+      - type: applies_to
+        target: definition.realm-world-studio.failure.installed-session-failure-surface
+      - type: supersedes
+        target: rule.realm-world-studio.failure.r002

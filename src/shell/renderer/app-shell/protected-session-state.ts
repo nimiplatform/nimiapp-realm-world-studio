@@ -1,18 +1,19 @@
 export type StudioProtectedSessionState =
-  | 'login-required'
+  | 'action-required'
   | 'runtime-unavailable'
   | 'permission-denied'
+  | 'revoked'
   | 'repair-required'
   | 'capability-unavailable';
 
 export type StudioProtectedSessionFailure = {
   readonly state: StudioProtectedSessionState;
-  readonly reasonCode: string;
-  readonly actionHint: string;
+  readonly reasonCode?: string;
+  readonly actionHint?: string;
   readonly message: string;
 };
 
-const LOGIN_REQUIRED_REASONS = new Set([
+const ACTION_REQUIRED_REASONS = new Set([
   'account-authentication-required',
   'runtime-account-authentication-required',
   'runtime-unauthenticated',
@@ -28,6 +29,9 @@ const RUNTIME_UNAVAILABLE_REASONS = new Set([
 const PERMISSION_DENIED_REASONS = new Set([
   'runtime-permission-denied',
   'local-app-permission-denied',
+]);
+
+const REVOKED_REASONS = new Set([
   'local-app-permission-revoked',
 ]);
 
@@ -52,35 +56,27 @@ export function classifyStudioProtectedSessionFailure(
     direct?.code,
     embedded?.reasonCode,
     embedded?.code,
-  ) || 'world-studio-protected-operation-set-not-admitted';
+  );
   const actionHint = firstText(
     direct?.actionHint,
     embedded?.actionHint,
-  ) || actionHintFor(reasonCode);
+  );
 
   return {
     state: stateFor(reasonCode),
-    reasonCode,
-    actionHint,
+    ...(reasonCode ? { reasonCode } : {}),
+    ...(actionHint ? { actionHint } : {}),
     message,
   };
 }
 
 function stateFor(reasonCode: string): StudioProtectedSessionState {
-  if (LOGIN_REQUIRED_REASONS.has(reasonCode)) return 'login-required';
+  if (ACTION_REQUIRED_REASONS.has(reasonCode)) return 'action-required';
   if (RUNTIME_UNAVAILABLE_REASONS.has(reasonCode)) return 'runtime-unavailable';
+  if (REVOKED_REASONS.has(reasonCode)) return 'revoked';
   if (PERMISSION_DENIED_REASONS.has(reasonCode)) return 'permission-denied';
   if (REPAIR_REQUIRED_REASONS.has(reasonCode)) return 'repair-required';
   return 'capability-unavailable';
-}
-
-function actionHintFor(reasonCode: string): string {
-  const state = stateFor(reasonCode);
-  if (state === 'login-required') return 'sign_in_with_nimi_desktop';
-  if (state === 'runtime-unavailable') return 'start_verified_runtime_service';
-  if (state === 'permission-denied') return 'review_local_app_authorization';
-  if (state === 'repair-required') return 'repair_verified_runtime_service';
-  return 'wait_for_world_studio_protected_operation_admission';
 }
 
 function messageFrom(error: unknown): string {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, type ReactNode } from 'react';
-import { LockKeyhole, RefreshCw, ShieldAlert } from 'lucide-react';
+import { LockKeyhole, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   AmbientBackground,
@@ -56,7 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <InlineAlert tone="warning" role="alert" icon={<LockKeyhole size={17} aria-hidden="true" />}>
               <div className="ras-protected-session__alert-copy">
                 <strong>{t('auth.protectedSession.operationsLocked')}</strong>
-                <span>{t('auth.protectedSession.reasonCode')}: {bootstrapFailure.reasonCode}</span>
+                {bootstrapFailure.reasonCode
+                  ? <span>{t('auth.protectedSession.reasonCode')}: {bootstrapFailure.reasonCode}</span>
+                  : null}
               </div>
             </InlineAlert>
 
@@ -73,14 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 leadingIcon={<LockKeyhole size={16} aria-hidden="true" />}
               >
                 {t('auth.protectedSession.operationsUnavailable')}
-              </Button>
-              <Button
-                data-testid="world-studio-protected-session-retry"
-                tone="primary"
-                leadingIcon={<RefreshCw size={16} aria-hidden="true" />}
-                onClick={retryBootstrap}
-              >
-                {t('common.retry')}
               </Button>
             </div>
           </div>

@@ -1,0 +1,72 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.asset
+units:
+  - id: definition.realm-world-studio.asset.media-reference
+    kind: definition
+    title: Media reference
+    meaning: World and world-character media as creator display or source references present in typed Realm core payloads or admitted resource references.
+  - id: definition.realm-world-studio.asset.asset-candidate
+    kind: definition
+    title: Asset candidate
+    meaning: AI-generated image or audio material as a candidate asset pending creator review and typed Realm or resource admission.
+  - id: rule.realm-world-studio.asset.r001
+    kind: rule
+    title: Typed media references
+    modality: must
+    statement: World and world-character media shown in Realm World Studio are creator display or source references only when present in typed Realm core payloads or admitted resource references.
+    condition: When Realm World Studio shows world or world-character media.
+    failure: Render media as unavailable or incomplete when no typed Realm core or admitted resource reference is present.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.media-reference
+  - id: rule.realm-world-studio.asset.r002
+    kind: rule
+    title: No local media promotion
+    modality: must_not
+    statement: A local file path, public URL, or generated preview is promoted into Realm source state before a typed Realm write succeeds.
+    condition: Before a typed Realm write returns canonical success.
+    failure: Keep the media labeled as a local candidate and withhold Realm source success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.media-reference
+  - id: rule.realm-world-studio.asset.r003
+    kind: rule
+    title: Unadmitted asset paths
+    modality: must_not
+    statement: Resource upload, direct publication, OwnableAsset, binding publication, AGENT host binding, or Runtime materialization bindings serve as current success paths.
+    condition: While no explicit canonical authority admits the surface.
+    failure: Render the surface as capability unavailable and withhold asset success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.asset.r004
+    kind: rule
+    title: Missing media resolver
+    modality: must
+    statement: Missing media resolver capability renders as capability unavailable or incomplete rather than successful asset readiness.
+    condition: When a media reference cannot be resolved through an admitted capability.
+    failure: Render capability unavailable or incomplete and withhold asset readiness.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.media-reference
+  - id: rule.realm-world-studio.asset.r005
+    kind: rule
+    title: Generated asset candidates
+    modality: must
+    statement: AI-generated images and audio remain candidate assets until creator review and successful typed Realm or resource admission.
+    condition: When AI generates image or audio material.
+    failure: Preserve the generated material as a candidate and do not present it as an admitted asset.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.asset-candidate
+  - id: rule.realm-world-studio.asset.r006
+    kind: rule
+    title: No URL readiness inference
+    modality: must_not
+    statement: Asset readiness is inferred from display URLs alone.
+    condition: When a media display URL is present.
+    failure: Render asset readiness as unavailable until an admitted typed source proves it.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.media-reference

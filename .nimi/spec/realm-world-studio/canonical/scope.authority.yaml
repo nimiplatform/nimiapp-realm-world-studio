@@ -1,0 +1,128 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.scope
+units:
+  - id: rule.realm-world-studio.scope.r001
+    kind: rule
+    title: Creator workbench worlds
+    modality: must
+    statement: Realm World Studio presents creator-owned Realm worlds as creator workbench objects rather than public World Atlas showcase pages.
+    condition: Always.
+    failure: Do not render a public showcase projection as the creator workbench success state.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r002
+    kind: rule
+    title: Creator world inventory
+    modality: must
+    statement: The /worlds route lists creator-accessible WorldCoreDto records through typed Realm core surfaces.
+    condition: When the creator opens the /worlds route.
+    failure: Render creator world inventory as unavailable when typed Realm core records cannot be returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r003
+    kind: rule
+    title: World detail prerequisite
+    modality: must
+    statement: A world detail route loads WorldCoreDto before showing creator workbench identity, ontology, graph, character, or operation modules.
+    condition: When a creator opens a world detail route.
+    failure: Keep the creator workbench modules unavailable when WorldCoreDto does not load.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r004
+    kind: rule
+    title: Typed world writes
+    modality: must
+    statement: World creation and update routes submit only typed CreateWorldCoreDto or ReplaceWorldCoreDto payloads and render the returned WorldCoreDto as post-write authority.
+    condition: When a creator submits a world creation or update.
+    failure: Preserve the draft and render the write as failed if the typed payload is rejected or no WorldCoreDto is returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r005
+    kind: rule
+    title: World-character reads
+    modality: must
+    statement: World-character list and detail routes read world-owned WorldCharacterCoreDto records under their parent world context.
+    condition: When a creator opens a world-character list or detail route.
+    failure: Render the world-character data as unavailable when typed records with parent world context cannot be read.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.scope.r006
+    kind: rule
+    title: Typed world-character writes
+    modality: must
+    statement: World-character create and update routes submit only typed CreateWorldCharacterCoreDto or ReplaceWorldCharacterCoreDto payloads and render the returned WorldCharacterCoreDto as post-write authority.
+    condition: When a creator submits a world-character creation or update.
+    failure: Preserve the draft and render the write as failed if the typed payload is rejected or no WorldCharacterCoreDto is returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.scope.r007
+    kind: rule
+    title: Explicit extension admission
+    modality: must
+    statement: Entity, relationship, scene, timeline, source-materialization, and AI-assisted generation modules become creator workbench success paths only after explicit canonical authority rules admit them.
+    condition: When an incremental creator workbench extension is proposed.
+    failure: Keep the extension unavailable until explicit canonical authority admits its success path.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.scope.r008
+    kind: rule
+    title: Out-of-scope products
+    modality: must_not
+    statement: RealmPersona owner portfolio, public World Atlas browsing, Forge curation, post scheduling, gift or economic settlement, team collaboration, or LocalAgent private runtime become Realm World Studio product scope.
+    condition: Always.
+    failure: Reject the scope expansion and keep the surface unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.scope.r009
+    kind: rule
+    title: Draft-state labeling
+    modality: must
+    statement: App-local form drafts and review notes remain labeled as draft or candidate and remain outside Realm source success.
+    condition: When Realm World Studio retains unsaved form state or review notes.
+    failure: Do not present the unsaved state as Realm source success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.scope.r010
+    kind: rule
+    title: Actionable gap copy
+    modality: must
+    statement: Creator workflow copy distinguishes creator-actionable gaps from platform-unavailable capabilities.
+    condition: When a workflow cannot proceed.
+    failure: Render the gap as incomplete until its creator-actionable or platform-unavailable category is explicit.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.scope.r011
+    kind: rule
+    title: No authority fallback
+    modality: must_not
+    statement: A route falls back from Realm core reads to public world reads or owner-persona reads to produce a success state.
+    condition: When a Realm core read is unavailable or fails.
+    failure: Render the Realm core read failure and withhold route success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.scope.r012
+    kind: rule
+    title: Thin-layer expansion
+    modality: must
+    statement: Product expansion adds workflow composition in Realm World Studio and reusable substrate in kit, SDK, Runtime, or Realm while preserving the thin product layer.
+    condition: When Realm World Studio product scope expands.
+    failure: Do not accept an expansion that introduces app-owned platform substrate.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer

@@ -1,0 +1,92 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.metrics
+units:
+  - id: definition.realm-world-studio.metrics.metric-source
+    kind: definition
+    title: Metric source
+    meaning: A metric admitted for display only with a typed source owner, exact derivation, unavailable state, and fail-closed behavior.
+  - id: rule.realm-world-studio.metrics.r001
+    kind: rule
+    title: Typed inventory counts
+    modality: must
+    statement: Creator inventory counts come from typed Realm core arrays, typed DTO count fields, or exact returned list lengths.
+    condition: When Realm World Studio displays a creator inventory count.
+    failure: Render the count as unavailable when no typed array, count field, or exact returned list length exists.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r002
+    kind: rule
+    title: Missing count state
+    modality: must
+    statement: Missing counts render as unavailable or incomplete and are not zero-filled.
+    condition: When a requested count has no typed source value.
+    failure: Render the count as unavailable or incomplete instead of displaying zero.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r003
+    kind: rule
+    title: Exact character count
+    modality: must
+    statement: World-character count may use the exact returned listWorldCharacters length when no typed aggregate count exists.
+    condition: When a typed aggregate world-character count is absent and listWorldCharacters returns a complete typed list.
+    failure: Render world-character count as unavailable when no typed aggregate or exact returned list length exists.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r004
+    kind: rule
+    title: Count source prerequisites
+    modality: must
+    statement: Entity, relationship, scene, timeline, media, and issue counts have a typed source owner and unavailable state before display.
+    condition: Before Realm World Studio displays an entity, relationship, scene, timeline, media, or issue count.
+    failure: Keep the count unavailable until its typed source owner and unavailable state are defined.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r005
+    kind: rule
+    title: Limitation categorization
+    modality: must
+    statement: Platform limitations are presented separately from creator-actionable tasks.
+    condition: When Realm World Studio presents gaps, issues, or unavailable metrics.
+    failure: Render the item as incomplete until its platform or creator-actionable category is explicit.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r006
+    kind: rule
+    title: Excluded default metrics
+    modality: must_not
+    statement: Runtime readiness, materialization health, private LocalAgent state, or public relation metrics are used as Realm World Studio default metrics.
+    condition: Always.
+    failure: Remove the metric from the default surface and render any dependent summary as unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source
+  - id: rule.realm-world-studio.metrics.r007
+    kind: rule
+    title: No URL-derived readiness
+    modality: must_not
+    statement: Asset readiness is inferred from URLs or media references are treated as more than display or source references.
+    condition: When Realm World Studio displays media references or asset readiness.
+    failure: Render asset readiness as unavailable until an admitted typed source proves it.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.asset.media-reference
+  - id: rule.realm-world-studio.metrics.r008
+    kind: rule
+    title: New metric admission
+    modality: must
+    statement: A new metric defines its source owner, exact derivation, unavailable state, and fail-closed behavior before use.
+    condition: Before Realm World Studio uses a new metric.
+    failure: Keep the metric unavailable until every required property is defined.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.metrics.metric-source

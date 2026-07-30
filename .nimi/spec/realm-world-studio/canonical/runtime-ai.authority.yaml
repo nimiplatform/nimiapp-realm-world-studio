@@ -1,0 +1,135 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.runtime-ai
+units:
+  - id: definition.realm-world-studio.runtime-ai.sdk-surfaces
+    kind: definition
+    title: SDK surfaces
+    meaning: "The admitted platform substrate: Runtime account SDK and IPC surfaces, kit model-config surfaces with injected SDK and Runtime services, and @nimiplatform/sdk Runtime, AI, and generation surfaces."
+  - id: definition.realm-world-studio.runtime-ai.materialization-output
+    kind: definition
+    title: Materialization output
+    meaning: Runtime-owned materialization state created only after an admitted typed Runtime operation receives a canonical CharacterSourceRef; source materialization packets are never exposed to this App or the public Realm SDK.
+  - id: definition.realm-world-studio.runtime-ai.reference-only-materialization-redesign
+    kind: definition
+    title: Reference-only materialization redesign
+    meaning: "The approved Runtime materialization redesign: Realm World Studio never creates or receives a source materialization packet and may send only a canonical CharacterSourceRef to a future admitted Runtime-owned materialization operation."
+  - id: rule.realm-world-studio.runtime-ai.r001
+    kind: rule
+    title: Runtime account custody
+    modality: must
+    statement: Runtime account and session state flows only through Runtime account SDK or IPC surfaces without Realm World Studio owning access or refresh token custody.
+    condition: When account or session state is required.
+    failure: Keep the account-dependent operation unavailable when the Runtime account surface is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r002
+    kind: rule
+    title: Model configuration substrate
+    modality: must
+    statement: AI model, provider, and capability configuration uses kit model-config surfaces and injected SDK or Runtime services rather than app-local model configuration systems.
+    condition: When model, provider, or capability configuration is needed.
+    failure: Render model configuration capability as unavailable when the kit and injected platform services are absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r003
+    kind: rule
+    title: Admitted AI execution
+    modality: must
+    statement: Text, image, speech, embedding, workflow, and scenario AI execution goes through @nimiplatform/sdk Runtime, AI, or generation surfaces.
+    condition: When Realm World Studio requests AI execution.
+    failure: Render AI execution as unavailable when no admitted SDK surface can perform the request.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r004
+    kind: rule
+    title: AI candidate boundary
+    modality: must
+    statement: AI output remains candidate material until creator human review and a successful typed Realm core write.
+    condition: When an AI surface returns generated output.
+    failure: Preserve the output as candidate material and withhold Realm source success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.runtime-ai.r005
+    kind: rule
+    lifecycle: removed
+    title: Legacy typed materialization creation
+    reason: Superseded by rule.realm-world-studio.runtime-ai.r012 after approval of the reference-only Runtime materialization redesign.
+  - id: rule.realm-world-studio.runtime-ai.r006
+    kind: rule
+    title: No synthetic readiness
+    modality: must_not
+    statement: Runtime readiness summaries, checksums, source counts, or blocked states are synthesized as creator success metrics.
+    condition: When source materialization or Runtime readiness is displayed.
+    failure: Render the metric as unavailable or blocked and withhold creator success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.materialization-output
+  - id: rule.realm-world-studio.runtime-ai.r007
+    kind: rule
+    title: No private LocalAgent material
+    modality: must_not
+    statement: Realm World Studio reads or sends private LocalAgent memory, emotions, cognition, private transcripts, or app-specific memory fragments as source material.
+    condition: Always.
+    failure: Reject the private source material and keep the operation unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r008
+    kind: rule
+    title: Explicit Runtime failures
+    modality: must
+    statement: Runtime route-unbound, transport-unavailable, malformed-output, invalid-payload, and permission-missing states render as explicit failures.
+    condition: When any listed Runtime or AI state occurs.
+    failure: Render the matching explicit failure and withhold AI or Runtime success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r009
+    kind: rule
+    title: Preserve draft on AI failure
+    modality: must
+    statement: AI-assisted creation preserves owner draft state on failure and does not invent replacement world or character source data.
+    condition: When future AI-assisted creation fails.
+    failure: Preserve the owner draft, render the AI failure, and leave source data unchanged.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.runtime-ai.r010
+    kind: rule
+    title: No app-owned bootstrap authority
+    modality: must_not
+    statement: Realm World Studio constructs an installed-app bootstrap, generic Runtime client, account caller, Realm transport, release descriptor, launch nonce, endpoint override, or renderer-owned session authority.
+    condition: Always.
+    failure: Reject the app-owned bootstrap path and expose only the Desktop-supervised protected standard bridge.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
+  - id: rule.realm-world-studio.runtime-ai.r011
+    kind: rule
+    title: Native host trust
+    modality: must
+    statement: The active Electron host uses registerNimiElectronAppBridge and the Desktop-supervised protected local-app carrier; renderer metadata, environment variables, command-line arguments, app-local files, and ordinary localhost gRPC convey no identity, release trust, authorization, or protected operation access, and Tauri remains outside the active development path.
+    condition: When the active development host establishes identity, authorization, or protected operation access.
+    failure: Exit or remain explicitly fail-closed when the Desktop-supervised protected carrier is absent or revoked.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
+  - id: rule.realm-world-studio.runtime-ai.r012
+    kind: rule
+    title: Reference-only Runtime materialization
+    modality: must
+    statement: Realm World Studio never creates or receives a source materialization packet; a future admitted materialization action may send only a canonical CharacterSourceRef to the Runtime-owned materialization operation.
+    condition: When source materialization is requested.
+    failure: Render source materialization as unavailable when the exact Runtime-owned operation is not admitted, and never substitute an app-created or app-received materialization packet.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.materialization-output
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.reference-only-materialization-redesign
+      - type: supersedes
+        target: rule.realm-world-studio.runtime-ai.r005

@@ -1,0 +1,88 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.story
+units:
+  - id: rule.realm-world-studio.story.r001
+    kind: rule
+    title: "Story: Open creator workspace"
+    modality: must
+    statement: Runtime account bootstrap completes before creator routes request Realm core data.
+    condition: When a creator opens the workspace.
+    failure: Keep creator routes disabled and render the installed-session failure surface when bootstrap does not complete.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
+  - id: rule.realm-world-studio.story.r002
+    kind: rule
+    title: "Story: Browse worlds"
+    modality: must
+    statement: /worlds lists creator-accessible WorldCore records through Realm core authority.
+    condition: When a creator browses worlds.
+    failure: Render creator world inventory as unavailable when Realm core authority cannot return the records.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.story.r003
+    kind: rule
+    title: "Story: Inspect world"
+    modality: must
+    statement: World detail loads WorldCore and world-character slices before showing creator workbench modules.
+    condition: When a creator inspects a world.
+    failure: Keep creator workbench modules unavailable until the required world and world-character slices load.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.story.r004
+    kind: rule
+    title: "Story: Create world"
+    modality: must
+    statement: World creation drafts remain local until createWorldCore returns canonical data.
+    condition: When a creator drafts a world creation.
+    failure: Preserve the local draft and withhold creation success when canonical data is not returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.story.r005
+    kind: rule
+    title: "Story: Update world"
+    modality: must
+    statement: World updates require baseContentHash and render returned WorldCoreDto after replaceWorldCore.
+    condition: When a creator updates a world.
+    failure: Preserve the draft and render the update as failed when baseContentHash is absent or no WorldCoreDto is returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.story.r006
+    kind: rule
+    title: "Story: Edit world character"
+    modality: must
+    statement: Character edits require parent world context, baseContentHash, and returned WorldCharacterCoreDto.
+    condition: When a creator edits a world character.
+    failure: Preserve the draft and render the edit as failed when parent context, baseContentHash, or returned WorldCharacterCoreDto is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+  - id: rule.realm-world-studio.story.r007
+    kind: rule
+    title: "Story: Use AI carefully"
+    modality: must
+    statement: AI-assisted generation produces candidate material only; creator review and Realm write are required for source success.
+    condition: When a creator uses AI-assisted generation.
+    failure: Preserve generated output as candidate material and withhold source success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.story.r008
+    kind: rule
+    title: "Story: Keep platform substrate out"
+    modality: must
+    statement: Auth custody, design system primitives, model config, AI execution, Realm transport, public showcase, and LocalAgent private state stay outside RWS-owned implementation.
+    condition: When Realm World Studio composes creator workbench behavior.
+    failure: Keep the affected workflow unavailable instead of implementing platform substrate in Realm World Studio.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer

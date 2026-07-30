@@ -1,0 +1,112 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.setting
+units:
+  - id: definition.realm-world-studio.setting.world-field-map
+    kind: definition
+    title: World field map
+    meaning: "The admitted world field surface: world identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, media references, and provenance present in WorldCoreDto.core or typed top-level WorldCoreDto fields."
+  - id: definition.realm-world-studio.setting.character-field-map
+    kind: definition
+    title: Character field map
+    meaning: "The admitted world-character field surface: settings, profile media, voice settings, behavior settings, source references, and provenance present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields."
+  - id: definition.realm-world-studio.setting.authority-metadata
+    kind: definition
+    title: Authority metadata
+    meaning: Content hash, schema version, revision, origin, creatorId, worldId, and updatedAt are Realm authority metadata.
+  - id: rule.realm-world-studio.setting.r001
+    kind: rule
+    title: Admitted world fields
+    modality: must
+    statement: World identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, media references, and provenance are admitted only when present in WorldCoreDto.core or typed top-level WorldCoreDto fields.
+    condition: When Realm World Studio reads or writes creator-visible world fields.
+    failure: Render a missing field as unavailable instead of admitting a value outside the typed WorldCoreDto surface.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.world-field-map
+  - id: rule.realm-world-studio.setting.r002
+    kind: rule
+    title: Admitted character fields
+    modality: must
+    statement: World-character settings, profile media, voice settings, behavior settings, source references, and provenance are admitted only when present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields.
+    condition: When Realm World Studio reads or writes creator-visible world-character fields.
+    failure: Render a missing field as unavailable instead of admitting a value outside the typed WorldCharacterCoreDto surface.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.character-field-map
+  - id: rule.realm-world-studio.setting.r003
+    kind: rule
+    title: Faithful field projection
+    modality: must
+    statement: Creator-friendly projections of nested core payload fields preserve unavailable and unknown states.
+    condition: When Realm World Studio projects a nested core payload field into a creator-friendly label.
+    failure: Render the field as unavailable or unknown rather than substituting a value.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.character-field-map
+      - type: applies_to
+        target: definition.realm-world-studio.setting.world-field-map
+  - id: rule.realm-world-studio.setting.r004
+    kind: rule
+    title: No missing-field concealment
+    modality: must_not
+    statement: Public DTOs, owner persona DTOs, generated defaults, or local placeholders hide missing source fields.
+    condition: When a world or world-character source field is missing.
+    failure: Render the field as unavailable or unknown and withhold source success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.character-field-map
+      - type: applies_to
+        target: definition.realm-world-studio.setting.world-field-map
+  - id: rule.realm-world-studio.setting.r005
+    kind: rule
+    title: Complete typed saves
+    modality: must
+    statement: Save actions submit complete typed Realm core DTO payloads with explicit origin and required content-hash preconditions.
+    condition: When a creator submits a world or world-character save action.
+    failure: Reject the save and preserve the creator draft when the typed payload, origin, or content-hash precondition is incomplete.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.setting.r006
+    kind: rule
+    title: Realm-owned metadata
+    modality: must
+    statement: Content hash, schema version, revision, origin, creatorId, worldId, and updatedAt remain Realm-owned authority metadata and are only projected in diagnostics or workbench copy without local rewriting.
+    condition: When authority metadata appears in diagnostics or creator workbench copy.
+    failure: Render the metadata as unavailable when it cannot be projected without local rewriting.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.authority-metadata
+  - id: rule.realm-world-studio.setting.r007
+    kind: rule
+    title: No alternate setting authority
+    modality: must_not
+    statement: Raw AgentRule CRUD, public showcase DTOs, owner persona settings, source connection anti-targets, or generated hidden fields serve as Realm World Studio setting authority.
+    condition: Always.
+    failure: Reject the alternate source and render the setting as unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.setting.r008
+    kind: rule
+    title: Save response authority
+    modality: must
+    statement: App-local draft validation may guide creators, while the Realm response after submit remains the only save success authority.
+    condition: When a creator validates or submits an app-local draft.
+    failure: Preserve the draft and withhold save success when no canonical Realm response is returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.setting.r009
+    kind: rule
+    title: Unavailable contract fields
+    modality: must
+    statement: Form fields unavailable from current typed contracts render as capability unavailable or contract missing rather than disabled success controls.
+    condition: When a requested form field is absent from current typed contracts.
+    failure: Render capability unavailable or contract missing and withhold control success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.character-field-map
+      - type: applies_to
+        target: definition.realm-world-studio.setting.world-field-map

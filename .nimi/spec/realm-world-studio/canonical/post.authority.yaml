@@ -1,0 +1,48 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.post
+units:
+  - id: definition.realm-world-studio.post.post-draft
+    kind: definition
+    title: Post draft
+    meaning: Runtime-generated or creator-authored social post copy as draft or candidate material with no admitted typed Realm publishing surface.
+  - id: rule.realm-world-studio.post.r001
+    kind: rule
+    title: No public post ownership
+    modality: must_not
+    statement: Realm World Studio owns public post publishing for world characters.
+    condition: While no typed Realm publishing surface is admitted.
+    failure: Keep public post publishing unavailable and retain any copy as a draft.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.post.post-draft
+  - id: rule.realm-world-studio.post.r002
+    kind: rule
+    title: Candidate post copy
+    modality: must
+    statement: Runtime-generated or creator-authored social post copy remains draft or candidate material until a typed Realm publishing surface is admitted.
+    condition: When Realm World Studio holds social post copy.
+    failure: Label the copy as draft or candidate and withhold publication success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.post.post-draft
+  - id: rule.realm-world-studio.post.r003
+    kind: rule
+    title: No local publication authority
+    modality: must_not
+    statement: Realm World Studio creates app-local schedule, campaign, moderation, or publication authority.
+    condition: Always.
+    failure: Reject the app-local authority and retain affected copy as a draft or candidate.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.post.post-draft
+  - id: rule.realm-world-studio.post.r004
+    kind: rule
+    title: Future post prerequisites
+    modality: must
+    statement: A future post surface defines author source, Realm write owner, attachment envelope, review state, scheduling semantics, and fail-closed behavior before implementation.
+    condition: When a future post surface is proposed.
+    failure: Keep the post surface unimplemented and unavailable until every required boundary is defined.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.post.post-draft

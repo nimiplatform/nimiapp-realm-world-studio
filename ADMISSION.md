@@ -24,7 +24,7 @@ pnpm dev:shell -- --shell electron
 - `nimi.app.yaml` declares app identity, an empty permission set, and the exact local Electron renderer origin.
 - `.nimi/admission/submission.yaml` records publish-readiness commands and review inputs.
 - `.nimi/admission/build-profile.yaml` records install, build, and lockfile policy.
-- `.nimi/spec/project/kernel/**` is the canonical Realm World Studio creator product/app authority surface (kernel-style, with the enumerated `R-RWS-<DOMAIN>-NNN` rule catalog at `tables/rule-catalog.yaml`).
+- `.nimi/spec/realm-world-studio/**` is the canonical Realm World Studio creator product/app authority surface.
 - `dist/nimi-app-submission.json` is produced by `pnpm run pack` after a successful renderer build.
 
 ## Reviewer Boundary

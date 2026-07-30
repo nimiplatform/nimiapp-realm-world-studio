@@ -18,7 +18,5 @@ publish_readiness:
 review_inputs:
   manifest: nimi.app.yaml
   build_profile: .nimi/admission/build-profile.yaml
-  spec_authority_root: .nimi/spec/project/kernel
-  spec_rule_catalog: .nimi/spec/project/kernel/tables/rule-catalog.yaml
-  spec_index: .nimi/spec/INDEX.md
+  spec_authority_root: .nimi/spec/realm-world-studio/canonical
 admission_truth: platform-owned-after-review

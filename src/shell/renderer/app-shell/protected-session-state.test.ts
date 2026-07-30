@@ -3,9 +3,10 @@ import { classifyStudioProtectedSessionFailure } from './protected-session-state
 
 describe('Realm World Studio protected-session failure classifier', () => {
   it.each([
-    ['account-authentication-required', 'login-required'],
+    ['account-authentication-required', 'action-required'],
     ['runtime-service-unavailable', 'runtime-unavailable'],
     ['local-app-permission-denied', 'permission-denied'],
+    ['local-app-permission-revoked', 'revoked'],
     ['protected-carrier-required', 'repair-required'],
     ['world-studio-protected-operation-set-not-admitted', 'capability-unavailable'],
   ] as const)('maps %s to %s', (reasonCode, state) => {
@@ -18,6 +19,19 @@ describe('Realm World Studio protected-session failure classifier', () => {
       actionHint: `act-${reasonCode}`,
       message: reasonCode,
     });
+  });
+
+  it('does not synthesize a universal reason code or retry action', () => {
+    const failure = classifyStudioProtectedSessionFailure(
+      new Error('Protected World Studio operation unavailable'),
+    );
+
+    expect(failure).toEqual({
+      state: 'capability-unavailable',
+      message: 'Protected World Studio operation unavailable',
+    });
+    expect(failure).not.toHaveProperty('reasonCode');
+    expect(failure).not.toHaveProperty('actionHint');
   });
 
   it('extracts structured native failures without interpreting text as success', () => {

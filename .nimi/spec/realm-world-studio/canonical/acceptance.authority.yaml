@@ -1,0 +1,145 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.acceptance
+units:
+  - id: definition.realm-world-studio.acceptance.studio-app
+    kind: definition
+    title: Studio app
+    meaning: "The Realm World Studio installed app identity: package, Tauri identifier, and app_id nimi.realm-world-studio with creator Realm World Studio product copy."
+  - id: definition.realm-world-studio.acceptance.electron-active-path-redesign
+    kind: definition
+    title: Electron active-path redesign
+    meaning: "The approved host acceptance redesign: the real Electron shell is the active development path, while the Tauri packaging identity remains outside active-path product proof."
+  - id: rule.realm-world-studio.acceptance.r001
+    kind: rule
+    title: Stable app identity
+    modality: must
+    statement: Package, Tauri identifier, and app_id remain nimi.realm-world-studio, while active product copy presents creator Realm World Studio semantics.
+    condition: Always.
+    failure: Reject acceptance when app identity diverges or product copy does not present creator Realm World Studio semantics.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.acceptance.studio-app
+  - id: rule.realm-world-studio.acceptance.r002
+    kind: rule
+    title: Realm core world reads
+    modality: must
+    statement: Creator world reads use WorldCoreController Realm core surfaces rather than WorldPublicController public showcase surfaces.
+    condition: When Realm World Studio reads creator worlds.
+    failure: Render the creator world read as unavailable when Realm core surfaces cannot return typed data.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.acceptance.r003
+    kind: rule
+    title: Realm core creator writes
+    modality: must
+    statement: Creator writes use typed Realm core create or replace endpoints and treat returned DTOs as post-write authority.
+    condition: When a creator submits a world or world-character write.
+    failure: Preserve the creator draft and withhold write success when a typed returned DTO is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.acceptance.r004
+    kind: rule
+    title: Runtime-owned authentication
+    modality: must
+    statement: Authentication uses kit or Runtime account surfaces with no renderer-owned access or refresh token custody.
+    condition: When account authentication is required.
+    failure: Keep account and Realm operations unavailable when an admitted Runtime account surface is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.acceptance.r005
+    kind: rule
+    title: Kit-owned shared substrate
+    modality: must
+    statement: Shared UI primitives and model configuration use kit surfaces, while Realm World Studio app CSS remains product-layout scoped.
+    condition: When shared UI, model configuration, or app styling is implemented.
+    failure: Reject acceptance when shared substrate is reimplemented or app CSS exceeds product layout scope.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.acceptance.r006
+    kind: rule
+    title: Admitted generation pipeline
+    modality: must
+    statement: AI execution uses admitted public SDK operations, source materialization uses only an admitted Runtime-owned CharacterSourceRef operation, and AI output remains candidate material until creator review.
+    condition: When Realm World Studio executes AI or materializes source.
+    failure: Preserve AI output as candidate material and render the operation as unavailable when an admitted surface fails.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.acceptance.r007
+    kind: rule
+    title: Absent anti-targets
+    modality: must_not
+    statement: WorldPublicController, World Atlas pages, owner persona portfolio routes, Forge curation, or source-connection anti-targets appear in current success paths.
+    condition: Always.
+    failure: Reject acceptance and keep the anti-target surface unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.acceptance.r008
+    kind: rule
+    title: Explicit fail-closed states
+    modality: must
+    statement: Failure states are explicit and fail closed.
+    condition: When any governed operation fails.
+    failure: Render the typed failure explicitly and withhold operation success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.failure.failure-state
+  - id: rule.realm-world-studio.acceptance.r009
+    kind: rule
+    title: Acceptance gate set
+    modality: must
+    statement: pnpm run spec:authority:check, typecheck, test, validate, local-audit, build, and check must pass before acceptance.
+    condition: Before product acceptance.
+    failure: Withhold acceptance when any required gate does not pass.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.acceptance.studio-app
+  - id: rule.realm-world-studio.acceptance.r010
+    kind: rule
+    title: Downstream thin-layer work
+    modality: must
+    statement: Downstream work extends Realm World Studio creator workbench modules without restoring public showcase routes or app-local substrate replacements.
+    condition: When downstream work extends the product.
+    failure: Reject acceptance when downstream work restores a public showcase route or app-local substrate replacement.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.acceptance.r011
+    kind: rule
+    lifecycle: removed
+    title: Legacy dual-shell proof
+    reason: Superseded by rule.realm-world-studio.acceptance.r013 after approval of the Electron-only active development path.
+  - id: rule.realm-world-studio.acceptance.r012
+    kind: rule
+    title: Interaction and negative proof
+    modality: must
+    statement: Acceptance includes desktop and 390px narrow-shell interaction and visual proof plus negative proof that a direct renderer, ordinary localhost gRPC caller, environment or argument launch binding, and unadmitted native command cannot obtain a positive World Studio operation result; platform support is admitted independently, and unsupported platforms remain fail-closed and are not reported as complete.
+    condition: Before product acceptance.
+    failure: Withhold acceptance when required interaction, visual, negative, or platform-independent proof is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.acceptance.studio-app
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
+  - id: rule.realm-world-studio.acceptance.r013
+    kind: rule
+    title: Desktop-supervised Electron proof
+    modality: must
+    statement: The real active Electron shell exposes only the Desktop-supervised protected standard bridge, renders typed protected-session failures, registers no generic Runtime or Realm proxy, and excludes Tauri from the active development path and active-path acceptance proof.
+    condition: Before Realm World Studio acceptance.
+    failure: Reject acceptance when Electron exposes an app-owned bootstrap, identity or credential material, generic Runtime or Realm transport, or an unadmitted command path, or when dormant Tauri packaging is reported as active-path proof.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.acceptance.electron-active-path-redesign
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
+      - type: supersedes
+        target: rule.realm-world-studio.acceptance.r011

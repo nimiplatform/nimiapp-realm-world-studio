@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { AuthProvider } from './auth-provider.js';
 import { useAppStore } from './app-store.js';
 
@@ -39,13 +39,18 @@ describe('Realm World Studio protected-session UI', () => {
     expect(screen.getByText(/world-studio-protected-operation-set-not-admitted/)).toBeTruthy();
   });
 
-  it('retries the protected bootstrap without enabling the locked operation button', () => {
+  it('does not require a reason code or expose a universal retry action', () => {
+    useAppStore.setState({
+      bootstrapFailure: {
+        state: 'action-required',
+        message: 'Account action is required in Nimi Desktop',
+      },
+    });
+
     render(<AuthProvider><div /></AuthProvider>);
     expect(runStudioBootstrapMock).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(screen.getByTestId('world-studio-protected-session-retry'));
-
-    expect(runStudioBootstrapMock).toHaveBeenLastCalledWith({ force: true });
+    expect(screen.queryByTestId('world-studio-protected-session-retry')).toBeNull();
+    expect(screen.queryByText(/Reason code:/)).toBeNull();
     expect((screen.getByTestId('world-studio-protected-operations-locked') as HTMLButtonElement).disabled).toBe(true);
   });
 });

@@ -1,0 +1,166 @@
+format: nimicoding.authority/v2
+owner: team.realm-world-studio
+scope: realm-world-studio.core
+units:
+  - id: definition.realm-world-studio.core.world-core
+    kind: definition
+    title: World core
+    meaning: "A creator-owned Realm world record: typed WorldCoreDto whose creator-visible fields live in core or typed top-level fields."
+  - id: definition.realm-world-studio.core.world-character-core
+    kind: definition
+    title: World-character core
+    meaning: "A world-owned character record: typed WorldCharacterCoreDto whose parent world is proven by worldId together with the selected WorldCoreDto.id."
+  - id: definition.realm-world-studio.core.realm-core-surfaces
+    kind: definition
+    title: Realm core surfaces
+    meaning: "The admitted WorldCoreController surfaces: listWorldCores, getWorldCore, createWorldCore, replaceWorldCore, listWorldCharacters, getWorldCharacter, createWorldCharacter, replaceWorldCharacter, and the creator inspection surfaces listWorldEntities, getWorldEntity, listWorldRelationships, and getWorldRelationship."
+  - id: definition.realm-world-studio.core.thin-product-layer
+    kind: definition
+    title: Thin product layer
+    meaning: Realm World Studio owns creator product composition (navigation, workbench layout, form drafts, review affordances, typed DTO projection, explicit failure presentation) and does not own Nimi account custody, design-system primitives, model or provider configuration authority, Runtime AI execution, Runtime private state, Realm transport, or Realm canonical source truth.
+  - id: definition.realm-world-studio.core.local-candidate
+    kind: definition
+    title: Local candidate
+    meaning: App-local drafts, generated candidates, review notes, screenshots, tests, and local audit output pending creator review; never canonical Realm source truth.
+  - id: definition.realm-world-studio.core.non-current-surfaces
+    kind: definition
+    title: Non-current surfaces
+    meaning: "Non-current success paths: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent private runtime state, generic public catalog fallback, resource direct-publication and upload, economic settlement, and team collaboration."
+  - id: definition.realm-world-studio.core.protected-operation-carrier
+    kind: definition
+    title: Protected operation carrier
+    meaning: The Desktop-supervised local-app protected standard bridge used by the active Electron shell; Desktop owns admission, start, identity, authorization, and protected session posture while Tauri remains a dormant packaging identity.
+  - id: rule.realm-world-studio.core.r001
+    kind: rule
+    title: Single app authority
+    modality: must
+    statement: .nimi/spec/** is the only current app authority for Realm World Studio creator workflows.
+    condition: Always.
+    failure: Treat any competing app authority as non-current and do not admit product success from it.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.core.r002
+    kind: rule
+    title: Product success sources
+    modality: must
+    statement: Product success state comes from typed Realm core DTOs, Runtime account state, SDK results, kit-owned UI or model-config contracts, or admitted Tauri or Electron desktop shell host results.
+    condition: Always.
+    failure: Render the affected source as unavailable and do not present a product success state.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.core.r003
+    kind: rule
+    title: Thin-layer ownership
+    modality: must
+    statement: Realm World Studio composes creator workflows as a thin product layer without reimplementing auth custody, Realm transport, model configuration, AI execution, or canonical Realm source state.
+    condition: Always.
+    failure: Keep the affected workflow unavailable until the required platform substrate is present.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.core.r004
+    kind: rule
+    title: Creator data authority
+    modality: must
+    statement: Creator-visible world data authority comes from admitted Realm WorldCoreController world, world-character, entity, and relationship surfaces; source materialization remains a separate Runtime-owned operation.
+    condition: Always.
+    failure: Render creator-visible world data as unavailable instead of sourcing it outside the admitted Realm authority.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.core.r005
+    kind: rule
+    title: Candidate evidence boundary
+    modality: must
+    statement: App-local drafts, generated candidates, screenshots, tests, and local audit output remain noncanonical candidate evidence.
+    condition: Always.
+    failure: Keep the material labeled as draft or candidate and do not present it as Realm source truth.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.core.r006
+    kind: rule
+    title: Missing inputs fail closed
+    modality: must
+    statement: A missing source, permission, capability, content hash, SDK method, kit contract, or typed response produces an explicit fail-closed state.
+    condition: When a required source, permission, capability, content hash, SDK method, kit contract, or typed response is missing.
+    failure: Keep the affected operation unavailable and render an explicit failure state.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.core.r007
+    kind: rule
+    title: Non-current success paths
+    modality: must_not
+    statement: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent private runtime state, or generic public catalog fallback serve as current success paths.
+    condition: Always.
+    failure: Reject the attempted success path and render the corresponding capability as unavailable.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.non-current-surfaces
+  - id: rule.realm-world-studio.core.r008
+    kind: rule
+    title: Canonical write success
+    modality: must
+    statement: A creator write succeeds only after the corresponding typed Realm core endpoint returns canonical DTO data.
+    condition: When a creator submits a Realm world or world-character write.
+    failure: Preserve the draft and render the write as failed when canonical DTO data is not returned.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+  - id: rule.realm-world-studio.core.r009
+    kind: rule
+    title: Session state boundary
+    modality: must
+    statement: App session UI state may track the selected world, selected character, tabs, drawers, and draft fields while remaining outside canonical Realm source truth.
+    condition: When app session UI state is stored or projected.
+    failure: Reset or render unavailable session UI state without promoting it to canonical source truth.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.core.r010
+    kind: rule
+    title: Product terminology
+    modality: must
+    statement: User-facing copy uses creator, workbench, and world-character terminology, while implementation types use Realm world, world-character, and source terminology rather than public showcase terminology.
+    condition: When product copy or implementation types are introduced or changed.
+    failure: Treat mismatched terminology as an incomplete product or implementation state.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.core.r011
+    kind: rule
+    title: Synchronized behavior changes
+    modality: must
+    statement: Authority changes and implementation changes for the same behavior land together.
+    condition: When governed product behavior changes.
+    failure: Do not accept the behavior change while its authority and implementation are inconsistent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.core.r012
+    kind: rule
+    title: Contract violations stay visible
+    modality: must_not
+    statement: A contract violation is hidden behind fallback logic, fake return data, pseudo-success metrics, or compatibility shims.
+    condition: When a contract violation occurs.
+    failure: Render the explicit contract failure and withhold product success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.core.r013
+    kind: rule
+    title: Operation admission boundary
+    modality: must
+    statement: Every positive product operation uses an admitted bounded public SDK or Kit operation delivered through the Desktop-supervised protected standard bridge; executable status or app-owned metadata alone does not admit account, Realm, AI, publication, lifecycle, storage, or local-asset authority.
+    condition: When an account, Realm, AI, publication, lifecycle, storage, or local-asset operation is requested.
+    failure: Keep the operation fail-closed when its admitted Desktop-supervised protected operation is absent.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.protected-operation-carrier
