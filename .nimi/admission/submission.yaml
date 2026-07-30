@@ -6,7 +6,7 @@ publish_readiness:
   install_command: pnpm install
   dev_command: pnpm dev
   dev_renderer_command: pnpm dev:renderer
-  dev_shell_command: pnpm dev:shell -- --shell tauri
+  dev_shell_command: pnpm dev:shell -- --shell electron
   typecheck_command: pnpm typecheck
   lint_command: pnpm lint
   test_command: pnpm test

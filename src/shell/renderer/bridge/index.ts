@@ -5,17 +5,16 @@
 export {
   BridgeError,
   confirmDialog,
-  createInstalledNimiAppStandardShellSurface,
+  createNimiLocalAppStandardShellSurface,
   focusMainWindow,
   startWindowDrag,
   hasElectronRuntime,
   hasNimiShellRuntime,
-  hasTauriRuntime,
 } from '@nimiplatform/kit/shell/renderer/bridge';
 export type {
-  InstalledNimiAppStandardShellSurface,
-  InstalledNimiAppStorageRemoveJsonResult,
   JsonValue,
   JsonObject,
   JsonPrimitive,
+  NimiLocalAppStandardShellSurface,
+  NimiLocalAppStorageRemoveResult,
 } from '@nimiplatform/kit/shell/renderer/bridge';

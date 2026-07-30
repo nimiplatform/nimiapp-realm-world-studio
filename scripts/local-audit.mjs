@@ -41,8 +41,8 @@ if (!admission.includes('Reviewer Boundary')) {
 if (!admission.includes('not an approval')) {
   throw new Error('ADMISSION.md must explicitly disclaim approval semantics');
 }
-if (!security.includes('refresh-token custody lives in Runtime')) {
-  throw new Error('SECURITY.md must declare refresh-token custody boundary');
+if (!security.includes('Desktop owns admission, authorization, protected session binding, and account custody')) {
+  throw new Error('SECURITY.md must declare Desktop-owned local-app custody boundary');
 }
 
 console.log('[realm-world-studio] local-audit pre-submission self-check passed');

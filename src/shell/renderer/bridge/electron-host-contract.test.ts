@@ -7,7 +7,7 @@ function read(relativePath: string): string {
 }
 
 describe('Realm World Studio Electron host contract', () => {
-  it('adds an Electron shell beside the Tauri shell using Kit host primitives', () => {
+  it('uses Electron as the active Desktop-supervised development shell', () => {
     for (const relativePath of [
       'src-electron/main.ts',
       'src-electron/preload.cts',
@@ -23,7 +23,7 @@ describe('Realm World Studio Electron host contract', () => {
       scripts: Record<string, string>;
       devDependencies: Record<string, string>;
     };
-    expect(packageJson.scripts.dev).toBe('nimi-app dev --shell tauri');
+    expect(packageJson.scripts.dev).toBe('nimi-app dev --shell electron');
     expect(packageJson.scripts['dev:shell']).toBe('nimi-app dev');
     expect(packageJson.scripts['dev:electron']).toBe('nimi-app dev --shell electron');
     expect(packageJson.scripts['build:electron'] || '').toContain('tsconfig.electron.json');
@@ -38,6 +38,7 @@ describe('Realm World Studio Electron host contract', () => {
     const preloadSource = read('src-electron/preload.cts');
     expect(mainSource).toContain('@nimiplatform/kit/shell/electron/main');
     expect(mainSource).toContain('registerNimiElectronAppBridge');
+    expect(mainSource).toContain('onProtectedSessionFailure: () => app.quit()');
     expect(mainSource).not.toContain('registerNimiElectronRuntimeBridge');
     expect(mainSource).not.toContain('createNimiElectronInstalledHost');
     expect(mainSource).not.toContain('NIMI_INSTALLED_NIMI_APP_STANDARD_SHELL_CAPABILITY_SET_ID');

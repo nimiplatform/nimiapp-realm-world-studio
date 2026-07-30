@@ -1,14 +1,17 @@
-import type { WorldCharacterCoreDto, WorldCoreDto } from '@nimiplatform/sdk/realm/generated';
+import type { RealmModel } from '@nimiplatform/sdk/realm/generated';
+
+type WorldCore = RealmModel<'WorldCoreDto'>;
+type WorldCharacterCore = RealmModel<'WorldCharacterCoreDto'>;
 
 export type CreatorWorldSummary = {
   id: string;
   name: string | null;
   summary: string | null;
-  visibility: WorldCoreDto['visibility'];
+  visibility: WorldCore['visibility'];
   schemaVersion: string;
   contentHash: string;
   contentRevision: number;
-  originKind: WorldCoreDto['origin']['kind'];
+  originKind: WorldCore['origin']['kind'];
   creatorId: string | null;
   updatedAt: string;
   entityKinds: string[];
@@ -27,7 +30,7 @@ export type CreatorWorldCharacterSummary = {
   schemaVersion: string;
   contentHash: string;
   contentRevision: number;
-  originKind: WorldCharacterCoreDto['origin']['kind'];
+  originKind: WorldCharacterCore['origin']['kind'];
   updatedAt: string;
   tags: string[];
 };
@@ -39,7 +42,7 @@ export type CreatorWorldWorkbench = {
 
 export type CreatorWorldCharacterDetail = {
   character: CreatorWorldCharacterSummary;
-  rawCore: Record<string, unknown>;
+  rawProfile: WorldCharacterCore['profile'];
 };
 
 type Path = readonly string[];
@@ -60,8 +63,7 @@ const WORLD_SUMMARY_PATHS: readonly Path[] = [
 ];
 
 const CHARACTER_NAME_PATHS: readonly Path[] = [
-  ['profile', 'displayName'],
-  ['profile', 'name'],
+  ['presentation', 'displayName'],
   ['identity', 'name'],
   ['displayName'],
   ['name'],
@@ -69,20 +71,20 @@ const CHARACTER_NAME_PATHS: readonly Path[] = [
 ];
 
 const CHARACTER_ROLE_PATHS: readonly Path[] = [
-  ['profile', 'role'],
-  ['identity', 'role'],
+  ['narrative', 'archetype'],
   ['role'],
   ['archetype'],
 ];
 
 const CHARACTER_SUMMARY_PATHS: readonly Path[] = [
-  ['profile', 'summary'],
   ['identity', 'summary'],
+  ['narrative', 'summary'],
+  ['presentation', 'shortBio'],
   ['summary'],
   ['description'],
 ];
 
-export function toCreatorWorldSummary(world: WorldCoreDto): CreatorWorldSummary {
+export function toCreatorWorldSummary(world: WorldCore): CreatorWorldSummary {
   const core = requireRecord(world.core, 'WorldCoreDto.core');
   return {
     id: requireText(world.id, 'WorldCoreDto.id'),
@@ -102,27 +104,27 @@ export function toCreatorWorldSummary(world: WorldCoreDto): CreatorWorldSummary 
   };
 }
 
-export function toCreatorWorldCharacterSummary(character: WorldCharacterCoreDto): CreatorWorldCharacterSummary {
-  const core = requireRecord(character.core, 'WorldCharacterCoreDto.core');
+export function toCreatorWorldCharacterSummary(character: WorldCharacterCore): CreatorWorldCharacterSummary {
+  const profile = requireRecord(character.profile, 'WorldCharacterCoreDto.profile');
   return {
     id: requireText(character.id, 'WorldCharacterCoreDto.id'),
     worldId: requireText(character.worldId, 'WorldCharacterCoreDto.worldId'),
-    entityId: requireText(character.entityId, 'WorldCharacterCoreDto.entityId'),
-    name: firstString(core, CHARACTER_NAME_PATHS) || null,
-    role: firstString(core, CHARACTER_ROLE_PATHS) || null,
-    summary: firstString(core, CHARACTER_SUMMARY_PATHS) || null,
+    entityId: requireText(character.worldEntityRef.entityId, 'WorldCharacterCoreDto.worldEntityRef.entityId'),
+    name: firstString(profile, CHARACTER_NAME_PATHS) || null,
+    role: firstString(profile, CHARACTER_ROLE_PATHS) || null,
+    summary: firstString(profile, CHARACTER_SUMMARY_PATHS) || null,
     schemaVersion: requireText(character.schemaVersion, 'WorldCharacterCoreDto.schemaVersion'),
     contentHash: requireText(character.contentHash, 'WorldCharacterCoreDto.contentHash'),
     contentRevision: character.contentRevision,
     originKind: requireOriginKind(character.origin, 'WorldCharacterCoreDto.origin.kind'),
     updatedAt: requireText(character.updatedAt, 'WorldCharacterCoreDto.updatedAt'),
-    tags: firstStringArray(core, [['profile', 'tags'], ['tags']]),
+    tags: [],
   };
 }
 
 export function toCreatorWorldWorkbench(
-  world: WorldCoreDto,
-  characters: readonly WorldCharacterCoreDto[],
+  world: WorldCore,
+  characters: readonly WorldCharacterCore[],
 ): CreatorWorldWorkbench {
   const worldSummary = toCreatorWorldSummary(world);
   return {
@@ -141,15 +143,16 @@ export function toCreatorWorldWorkbench(
 
 export function toCreatorWorldCharacterDetail(
   worldId: string,
-  character: WorldCharacterCoreDto,
+  character: WorldCharacterCore,
 ): CreatorWorldCharacterDetail {
   const normalizedWorldId = requireText(worldId, 'worldId');
   if (character.worldId !== normalizedWorldId) {
     throw new Error(`WorldCharacterCore parent mismatch: ${character.id}`);
   }
+  requireRecord(character.profile, 'WorldCharacterCoreDto.profile');
   return {
     character: toCreatorWorldCharacterSummary(character),
-    rawCore: requireRecord(character.core, 'WorldCharacterCoreDto.core'),
+    rawProfile: character.profile,
   };
 }
 
@@ -160,9 +163,9 @@ function requireRecord(value: unknown, fieldName: string): Record<string, unknow
   return value as Record<string, unknown>;
 }
 
-function requireOriginKind(value: unknown, fieldName: string): WorldCoreDto['origin']['kind'] {
+function requireOriginKind(value: unknown, fieldName: string): WorldCore['origin']['kind'] {
   const origin = requireRecord(value, fieldName.replace(/\.kind$/, ''));
-  return requireText(origin.kind, fieldName) as WorldCoreDto['origin']['kind'];
+  return requireText(origin.kind, fieldName) as WorldCore['origin']['kind'];
 }
 
 function normalizeText(value: unknown): string {

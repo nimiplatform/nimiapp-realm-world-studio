@@ -1,8 +1,9 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Boxes, ChevronLeft, RefreshCw, Users } from 'lucide-react';
+import type { RealmModel } from '@nimiplatform/sdk/realm/generated';
 import {
   Button,
   EmptyState,
@@ -38,19 +39,52 @@ function worldCharacterQueryKey(worldId: string, characterId: string) {
 
 const WRITABLE_WORLD_VISIBILITIES = ['private', 'unlisted', 'public'] as const;
 const CREATE_WORLD_ORIGIN_KINDS = ['manual'] as const;
-const CREATE_WORLD_CORE_TEMPLATE = JSON.stringify({
-  identity: {
-    name: '',
-    summary: '',
-  },
-  profile: {
-    tags: [],
-  },
-  ontology: {
-    entityKinds: [],
-    relationshipTypes: [],
-  },
-}, null, 2);
+
+export function createWorldCoreDraft(
+  now = new Date(),
+): RealmModel<'WorldCoreDto'>['core'] {
+  const nowIso = now.toISOString();
+  return {
+    assets: {
+      intents: [],
+      resourceRefs: [],
+    },
+    authoring: {
+      source: 'realm-world-studio',
+    },
+    entities: [],
+    identity: {
+      name: 'Untitled World',
+      summary: 'New creator world draft.',
+    },
+    ontology: {
+      entityKinds: [],
+      relationshipTypes: [],
+    },
+    presentation: {
+      displayName: 'Untitled World',
+    },
+    relationships: [],
+    scenes: [],
+    systems: [],
+    timeModel: {
+      anchor: {
+        realStartedAt: nowIso,
+        worldStartedAt: nowIso,
+        worldStartedAtDisplay: nowIso,
+      },
+      calendar: null,
+      displayFormat: null,
+      flowRatio: 1,
+      isPaused: true,
+      mode: 'static',
+      pausedWorldTime: nowIso,
+    },
+    timeline: {
+      events: [],
+    },
+  };
+}
 
 type WorldVisibility = typeof WRITABLE_WORLD_VISIBILITIES[number];
 type OriginKind = typeof CREATE_WORLD_ORIGIN_KINDS[number];
@@ -211,6 +245,15 @@ function WorldCard({ world }: { world: CreatorWorldSummary }) {
 
 export function CreatorWorldListPage() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const createdWorldId = (
+    location.state
+    && typeof location.state === 'object'
+    && 'createdWorldId' in location.state
+    && typeof location.state.createdWorldId === 'string'
+  )
+    ? location.state.createdWorldId
+    : '';
   const query = useQuery({
     queryKey: worldListQueryKey(),
     queryFn: listCreatorWorlds,
@@ -259,6 +302,11 @@ export function CreatorWorldListPage() {
           </>
         }
       />
+      {createdWorldId ? (
+        <InlineAlert tone="success">
+          {t('worlds.createSucceeded', { id: createdWorldId })}
+        </InlineAlert>
+      ) : null}
       {worlds.length === 0 ? (
         <EmptyState
           icon={<Boxes size={20} />}
@@ -429,7 +477,7 @@ export function CreatorWorldCharacterDetailPage() {
   }
 
   const character = query.data.character;
-  const rawCorePreview = JSON.stringify(query.data.rawCore, null, 2);
+  const rawProfilePreview = JSON.stringify(query.data.rawProfile, null, 2);
 
   return (
     <div className="rws-page">
@@ -461,8 +509,8 @@ export function CreatorWorldCharacterDetailPage() {
           <div><dt>{t('worlds.origin')}</dt><dd>{character.originKind}</dd></div>
         </dl>
         <details className="rws-technical-details">
-          <summary>{t('worlds.rawCorePreview')}</summary>
-          <pre>{rawCorePreview}</pre>
+          <summary>{t('worlds.rawProfilePreview')}</summary>
+          <pre>{rawProfilePreview}</pre>
         </details>
       </Surface>
     </div>
@@ -478,7 +526,11 @@ export function CreatorWorldCreatePage() {
     mutationFn: (input: Parameters<typeof createCreatorWorldCore>[0]) => createCreatorWorldCore(input),
     onSuccess: (world) => {
       void queryClient.invalidateQueries({ queryKey: worldListQueryKey() });
-      navigate(`/worlds/${world.id}`);
+      navigate('/worlds', {
+        state: {
+          createdWorldId: world.id,
+        },
+      });
     },
   });
 
@@ -540,7 +592,12 @@ export function CreatorWorldCreatePage() {
             </FormField>
           </div>
           <FormField label={t('worlds.formCoreJson')} hint={t('worlds.formCoreJsonHint')}>
-            <textarea name="core" rows={16} spellCheck={false} defaultValue={CREATE_WORLD_CORE_TEMPLATE} />
+            <textarea
+              name="core"
+              rows={16}
+              spellCheck={false}
+              defaultValue={JSON.stringify(createWorldCoreDraft(), null, 2)}
+            />
           </FormField>
           <div className="rws-form-actions">
             <Button tone="ghost" onClick={() => navigate('/worlds')}>{t('common.cancel')}</Button>
@@ -723,20 +780,20 @@ export function CreatorWorldCharacterEditPage() {
     }
     const form = new FormData(event.currentTarget);
     try {
-      const core = parseCoreJson(
-        getFormText(form, 'core'),
-        t('worlds.coreJsonInvalid'),
-        t('worlds.coreJsonObjectRequired'),
+      const profile = parseCoreJson(
+        getFormText(form, 'profile'),
+        t('worlds.profileJsonInvalid'),
+        t('worlds.profileJsonObjectRequired'),
       );
       mutation.mutate({
         id: character.id,
         baseContentHash: character.contentHash,
-        core,
+        profile,
         entityId: getFormText(form, 'entityId'),
         origin: character.origin,
       });
     } catch (error) {
-      setDraftError(mutationErrorMessage(error, t('worlds.coreJsonInvalid')));
+      setDraftError(mutationErrorMessage(error, t('worlds.profileJsonInvalid')));
     }
   }
 
@@ -765,12 +822,12 @@ export function CreatorWorldCharacterEditPage() {
           </div>
           <div className="rws-form-grid">
             <FormField label={t('worlds.formEntityId')} hint={t('worlds.formEntityIdHint')}>
-              <input name="entityId" autoComplete="off" defaultValue={character.entityId} required />
+              <input name="entityId" autoComplete="off" defaultValue={character.worldEntityRef.entityId} required />
             </FormField>
             <FieldValue label={t('worlds.formOriginKind')} value={character.origin.kind} />
           </div>
-          <FormField label={t('worlds.formCoreJson')} hint={t('worlds.formCoreJsonHint')}>
-            <textarea name="core" rows={18} spellCheck={false} defaultValue={JSON.stringify(character.core, null, 2)} />
+          <FormField label={t('worlds.formProfileJson')} hint={t('worlds.formProfileJsonHint')}>
+            <textarea name="profile" rows={18} spellCheck={false} defaultValue={JSON.stringify(character.profile, null, 2)} />
           </FormField>
           <div className="rws-form-actions">
             <Button tone="ghost" onClick={() => navigate(`/worlds/${normalizedWorldId}/characters/${character.id}`)}>{t('common.cancel')}</Button>

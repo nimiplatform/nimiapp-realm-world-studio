@@ -1,6 +1,6 @@
-import type { WorldCharacterCoreDto, WorldCoreDto } from '@nimiplatform/sdk/realm/generated';
+import type { RealmModel } from '@nimiplatform/sdk/realm/generated';
 
-export const TEST_WORLD_CORE: WorldCoreDto = {
+export const TEST_WORLD_CORE: RealmModel<'WorldCoreDto'> = {
   id: 'world-yuan-academy',
   creatorId: 'creator-1',
   visibility: 'private',
@@ -44,24 +44,65 @@ export const TEST_WORLD_CORE: WorldCoreDto = {
   },
 };
 
-export const TEST_WORLD_CHARACTER_CORE: WorldCharacterCoreDto = {
+export const TEST_WORLD_CHARACTER_CORE: RealmModel<'WorldCharacterCoreDto'> = {
   id: 'yao-sui',
   worldId: 'world-yuan-academy',
-  entityId: 'entity-yao-sui',
   creatorId: 'creator-1',
   visibility: 'private',
   schemaVersion: 'realm.world-character-core/v1',
   contentHash: 'hash-character-1',
   contentRevision: 3,
+  sourceHash: 'source-hash-character-1',
   createdAt: '2026-07-09T00:10:00.000Z',
   updatedAt: '2026-07-09T01:10:00.000Z',
   origin: { kind: 'manual' },
-  core: {
-    profile: {
-      displayName: '姚燧',
-      role: '元代文人',
-      summary: '世界拥有的人物源。',
-      tags: ['文人'],
+  materializationReadiness: {
+    status: 'ready',
+    blockers: [],
+  },
+  validity: {
+    status: 'valid',
+    issues: [],
+  },
+  worldEntityRef: {
+    kind: 'worldEntity',
+    worldId: 'world-yuan-academy',
+    entityId: 'entity-yao-sui',
+  },
+  profile: {
+    assets: {
+      intents: [],
+      resourceRefs: [],
     },
+    authoring: {
+      source: 'realm-world-studio-test',
+    },
+    identity: {
+      name: '姚燧',
+      summary: '世界拥有的人物源。',
+    },
+    interactionProfile: {
+      interactionModes: [],
+    },
+    narrative: {
+      archetype: '元代文人',
+      summary: '世界拥有的人物源。',
+      traits: ['文人'],
+    },
+    presentation: {
+      displayName: '姚燧',
+    },
+    profileCoverage: {
+      aggregateStatus: 'complete',
+      diagnostics: [],
+      manifestSchemaVersion: 'realm.character-profile-coverage/v1',
+      optionalRefs: [],
+      optionalSections: [],
+      profileCoverageHash: 'profile-coverage-hash-character-1',
+      requiredRefs: [],
+      requiredSections: [],
+    },
+    profileHash: 'profile-hash-character-1',
+    profileSchemaVersion: 'realm.character-profile-core/v1',
   },
 };

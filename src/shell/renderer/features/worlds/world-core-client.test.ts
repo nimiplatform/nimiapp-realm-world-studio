@@ -30,9 +30,29 @@ const characterCore = {
   ...TEST_WORLD_CHARACTER_CORE,
   id: 'character-1',
   worldId: 'world-1',
-  entityId: 'entity-1',
+  worldEntityRef: {
+    kind: 'worldEntity' as const,
+    worldId: 'world-1',
+    entityId: 'entity-1',
+  },
   contentRevision: 1,
-  core: { profile: { displayName: 'Character 1' } },
+  profile: {
+    ...TEST_WORLD_CHARACTER_CORE.profile,
+    presentation: {
+      ...TEST_WORLD_CHARACTER_CORE.profile.presentation,
+      displayName: 'Character 1',
+    },
+  },
+};
+
+const characterProfileInput = {
+  assets: {},
+  authoring: {},
+  identity: { name: 'Updated Character', summary: '' },
+  interactionProfile: {},
+  narrative: {},
+  presentation: { displayName: 'Updated Character' },
+  profileSchemaVersion: 'realm.character-profile-core/v1' as const,
 };
 
 function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface, ReturnType<typeof vi.fn>>> = {}) {
@@ -49,7 +69,6 @@ function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface,
     worldCoreControllerGetWorldEntity: vi.fn(),
     worldCoreControllerListWorldRelationships: vi.fn(),
     worldCoreControllerGetWorldRelationship: vi.fn(),
-    worldCoreControllerCreateSourceMaterializationPacket: vi.fn(),
     ...overrides,
   } satisfies Record<keyof StudioRealmSurface, ReturnType<typeof vi.fn>>;
   vi.mocked(createStudioRealmClient).mockReturnValue(realm as unknown as StudioRealmSurface);
@@ -151,7 +170,7 @@ describe('Realm World Studio world-core client writes', () => {
     await expect(replaceCreatorWorldCharacterCore('world-1', 'character-1', {
       id: 'character-1',
       baseContentHash: 'hash-character-1',
-      core: { profile: { displayName: 'Updated Character' } },
+      profile: characterProfileInput,
       entityId: 'entity-1',
       origin: { kind: 'manual' },
     })).rejects.toThrow(/parent mismatch/);

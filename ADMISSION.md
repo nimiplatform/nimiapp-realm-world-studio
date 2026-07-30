@@ -15,14 +15,13 @@ For protected local development through the Desktop-owned supervisor:
 ```bash
 pnpm dev
 pnpm dev:shell -- --shell electron
-pnpm dev:shell -- --shell tauri
 ```
 
 `pnpm dev:renderer` starts only the unprivileged renderer and cannot perform protected operations.
 
 ## Submission Inputs
 
-- `nimi.app.yaml` declares app identity and requested Nimi API scopes.
+- `nimi.app.yaml` declares app identity, an empty permission set, and the exact local Electron renderer origin.
 - `.nimi/admission/submission.yaml` records publish-readiness commands and review inputs.
 - `.nimi/admission/build-profile.yaml` records install, build, and lockfile policy.
 - `.nimi/spec/project/kernel/**` is the canonical Realm World Studio creator product/app authority surface (kernel-style, with the enumerated `R-RWS-<DOMAIN>-NNN` rule catalog at `tables/rule-catalog.yaml`).

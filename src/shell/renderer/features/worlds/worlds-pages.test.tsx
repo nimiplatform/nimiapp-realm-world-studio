@@ -22,6 +22,7 @@ import {
   CreatorWorldDetailPage,
   CreatorWorldEditPage,
   CreatorWorldListPage,
+  createWorldCoreDraft,
 } from './worlds-pages.js';
 import { TEST_WORLD_CHARACTER_CORE, TEST_WORLD_CORE } from './world-core-test-fixtures.js';
 
@@ -76,8 +77,6 @@ const worldCore = {
 
 const characterCore = {
   ...TEST_WORLD_CHARACTER_CORE,
-  ...characterSummary,
-  core: TEST_WORLD_CHARACTER_CORE.core,
 };
 
 function renderWithRouter(initialEntry: string, element: ReactNode) {
@@ -115,7 +114,7 @@ describe('Realm World Studio worlds pages', () => {
     vi.mocked(getCreatorWorldCharacterCore).mockResolvedValue(characterCore);
     vi.mocked(getCreatorWorldCharacterDetail).mockResolvedValue({
       character: characterSummary,
-      rawCore: { profile: { displayName: '姚燧' } },
+      rawProfile: TEST_WORLD_CHARACTER_CORE.profile,
     });
     vi.mocked(createCreatorWorldCore).mockResolvedValue(worldCore);
     vi.mocked(replaceCreatorWorldCore).mockResolvedValue({
@@ -133,6 +132,38 @@ describe('Realm World Studio worlds pages', () => {
   afterEach(async () => {
     vi.clearAllMocks();
     await setStudioLocale('en');
+  });
+
+  it('builds a current minimal WorldCore draft with all canonical required sections', () => {
+    const now = new Date('2026-07-30T12:00:00.000Z');
+    const core = createWorldCoreDraft(now);
+
+    expect(Object.keys(core).sort()).toEqual([
+      'assets',
+      'authoring',
+      'entities',
+      'identity',
+      'ontology',
+      'presentation',
+      'relationships',
+      'scenes',
+      'systems',
+      'timeModel',
+      'timeline',
+    ]);
+    expect(core.identity).toMatchObject({
+      name: 'Untitled World',
+      summary: 'New creator world draft.',
+    });
+    expect(core.timeModel).toMatchObject({
+      mode: 'static',
+      pausedWorldTime: '2026-07-30T12:00:00.000Z',
+      anchor: {
+        realStartedAt: '2026-07-30T12:00:00.000Z',
+        worldStartedAt: '2026-07-30T12:00:00.000Z',
+      },
+    });
+    expect('profile' in core).toBe(false);
   });
 
   it('renders creator WorldCore inventory without public-atlas vocabulary', async () => {
@@ -166,7 +197,7 @@ describe('Realm World Studio worlds pages', () => {
     expect(await screen.findByRole('heading', { name: '姚燧', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('entity-yao-sui')).toBeInTheDocument();
     expect(screen.getByText('hash-character-1')).toBeInTheDocument();
-    expect(screen.getByText('原始 core payload 预览')).toBeInTheDocument();
+    expect(screen.getByText('原始人物 profile 预览')).toBeInTheDocument();
   });
 
   it('submits world creation only through typed CreateWorldCoreDto input', async () => {
@@ -209,8 +240,8 @@ describe('Realm World Studio worlds pages', () => {
     renderWithRouter('/worlds/world-yuan-academy/characters/yao-sui/edit', <CreatorWorldCharacterEditPage />);
 
     expect(await screen.findByRole('heading', { name: '替换 WorldCharacterCore', level: 1 })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/Core JSON/), {
-      target: { value: JSON.stringify({ profile: { displayName: '姚燧更新' } }) },
+    fireEvent.change(screen.getByLabelText(/人物 Profile JSON/), {
+      target: { value: JSON.stringify({ presentation: { displayName: '姚燧更新' } }) },
     });
     fireEvent.click(screen.getByRole('button', { name: '保存 WorldCharacterCore' }));
 
@@ -220,7 +251,7 @@ describe('Realm World Studio worlds pages', () => {
       {
         id: 'yao-sui',
         baseContentHash: 'hash-character-1',
-        core: { profile: { displayName: '姚燧更新' } },
+        profile: { presentation: { displayName: '姚燧更新' } },
         entityId: 'entity-yao-sui',
         origin: { kind: 'manual' },
       },

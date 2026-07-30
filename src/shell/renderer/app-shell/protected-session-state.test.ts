@@ -5,7 +5,7 @@ describe('Realm World Studio protected-session failure classifier', () => {
   it.each([
     ['account-authentication-required', 'login-required'],
     ['runtime-service-unavailable', 'runtime-unavailable'],
-    ['installed-artifact-forbidden', 'permission-denied'],
+    ['local-app-permission-denied', 'permission-denied'],
     ['protected-carrier-required', 'repair-required'],
     ['world-studio-protected-operation-set-not-admitted', 'capability-unavailable'],
   ] as const)('maps %s to %s', (reasonCode, state) => {

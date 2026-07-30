@@ -1,7 +1,7 @@
-import { useState, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
+import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Boxes, ChevronDown, LogOut, PlusCircle, User } from 'lucide-react';
+import { Boxes, ChevronDown, PlusCircle, User } from 'lucide-react';
 import {
   AmbientBackground,
   Avatar,
@@ -11,10 +11,7 @@ import {
   PopoverTrigger,
   Tooltip,
 } from '@nimiplatform/kit/ui';
-import { useAppStore } from './app-store.js';
 import { startStudioWindowDrag } from '../bridge/window-drag.js';
-import { logoutStudioRuntimeAccount } from '../features/auth/studio-auth-adapter.js';
-import { studioQueryClient } from '../infra/query-client.js';
 import { LanguageSwitcher } from './language-switcher.js';
 
 const MACOS_TRAFFIC_LIGHT_SAFE_ZONE_PX = 84;
@@ -64,47 +61,18 @@ function SidebarItem({
 
 function AccountMenu() {
   const { t } = useTranslation();
-  const authUser = useAppStore((s) => s.auth.user);
-  const clearAuth = useAppStore((s) => s.clearAuthSession);
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [logoutPending, setLogoutPending] = useState(false);
-  const [logoutError, setLogoutError] = useState<string | null>(null);
 
-  const handleLogout = async () => {
-    setLogoutError(null);
-    setLogoutPending(true);
-    try {
-      await logoutStudioRuntimeAccount();
-      studioQueryClient.clear();
-      clearAuth();
-      setOpen(false);
-      navigate('/worlds');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setLogoutError(message || t('shell.account.logoutFailed'));
-    } finally {
-      setLogoutPending(false);
-    }
-  };
-
-  const displayName = authUser?.displayName || t('shell.account.fallbackDisplayName');
-  const avatarUrl = authUser?.avatarUrl ?? null;
+  const displayName = t('shell.account.fallbackDisplayName');
+  const avatarUrl = null;
   const initial = displayName.charAt(0).toUpperCase() || 'O';
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (nextOpen) setLogoutError(null);
-      }}
-    >
+    <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
           data-titlebar-interactive="true"
-          aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={t('shell.account.openMenu')}
           className="ras-avatar-trigger"
@@ -136,7 +104,7 @@ function AccountMenu() {
             />
             <div style={{ minWidth: 0, flex: 1 }}>
               <p className="ras-avatar-menu__name">{displayName}</p>
-              <p className="ras-avatar-menu__email">{authUser?.email || t('shell.account.emailFallback')}</p>
+              <p className="ras-avatar-menu__email">{t('shell.account.emailFallback')}</p>
             </div>
           </div>
           <div className="ras-avatar-menu__actions">
@@ -148,30 +116,12 @@ function AccountMenu() {
               className="ras-avatar-menu__action"
               leadingIcon={<User size={16} strokeWidth={1.8} />}
               onClick={() => {
-                setOpen(false);
                 navigate('/worlds');
               }}
             >
               {t('shell.account.worlds')}
             </Button>
-            <Button
-              tone="danger"
-              size="sm"
-              fullWidth
-              role="menuitem"
-              className="ras-avatar-menu__action"
-              loading={logoutPending}
-              leadingIcon={<LogOut size={16} strokeWidth={1.8} />}
-              onClick={() => void handleLogout()}
-            >
-              {t('shell.account.signOut')}
-            </Button>
           </div>
-          {logoutError ? (
-            <p className="ras-avatar-menu__error" role="alert">
-              {logoutError}
-            </p>
-          ) : null}
         </div>
       </PopoverContent>
     </Popover>

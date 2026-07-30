@@ -1,7 +1,35 @@
-import { describe, expect, it } from 'vitest';
-import { STUDIO_REALM_SURFACE_METHODS } from './realm-client.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { getStudioLocalAppClientMock } = vi.hoisted(() => ({
+  getStudioLocalAppClientMock: vi.fn(),
+}));
+
+vi.mock('@renderer/app-shell/studio-platform.js', () => ({
+  getStudioLocalAppClient: getStudioLocalAppClientMock,
+  requireStudioProtectedOperation: (operation: string) => {
+    throw Object.assign(new Error(`${operation} is not admitted.`), {
+      reasonCode: 'world-studio-protected-operation-set-not-admitted',
+      actionHint: 'wait_for_world_studio_protected_operation_admission',
+    });
+  },
+}));
+
+import {
+  createStudioRealmClient,
+  STUDIO_REALM_SURFACE_METHODS,
+} from './realm-client.js';
 
 describe('studio Realm facade boundary', () => {
+  const list = vi.fn();
+  const create = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getStudioLocalAppClientMock.mockReturnValue({
+      realm: { worldCore: { list, create } },
+    });
+  });
+
   it('exposes only the admitted Studio Realm core surface methods', () => {
     expect([...STUDIO_REALM_SURFACE_METHODS]).toEqual([
       'worldCoreControllerListWorldCores',
@@ -16,7 +44,43 @@ describe('studio Realm facade boundary', () => {
       'worldCoreControllerGetWorldEntity',
       'worldCoreControllerListWorldRelationships',
       'worldCoreControllerGetWorldRelationship',
-      'worldCoreControllerCreateSourceMaterializationPacket',
     ]);
+  });
+
+  it('maps only world list and create onto the exact local-app Realm carrier', async () => {
+    list.mockResolvedValue([]);
+    create.mockResolvedValue({ id: 'world-1' });
+    const realm = createStudioRealmClient();
+
+    await realm.worldCoreControllerListWorldCores({
+      path: {},
+      query: { take: 5, visibility: 'private' },
+    });
+    await realm.worldCoreControllerCreateWorldCore({
+      path: {},
+      body: {
+        id: 'world-1',
+        core: {},
+        origin: { kind: 'manual' },
+        visibility: 'private',
+      },
+    });
+
+    expect(list).toHaveBeenCalledWith({ take: 5, visibility: 'private' });
+    expect(create).toHaveBeenCalledWith({
+      id: 'world-1',
+      core: {},
+      origin: { kind: 'manual' },
+      visibility: 'private',
+    });
+  });
+
+  it('keeps unadmitted exact Realm operations unavailable instead of proxying them', () => {
+    const realm = createStudioRealmClient();
+    expect(() => realm.worldCoreControllerGetWorldCore({
+      path: { worldId: 'world-1' },
+    })).toThrow(/Realm world detail is not admitted/);
+    expect(list).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
   });
 });

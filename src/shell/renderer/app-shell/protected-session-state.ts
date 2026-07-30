@@ -15,30 +15,30 @@ export type StudioProtectedSessionFailure = {
 const LOGIN_REQUIRED_REASONS = new Set([
   'account-authentication-required',
   'runtime-account-authentication-required',
-  'installed-app-account-authentication-required',
+  'runtime-unauthenticated',
 ]);
 
 const RUNTIME_UNAVAILABLE_REASONS = new Set([
   'runtime-service-unavailable',
   'runtime-service-not-running',
   'runtime-connection-unavailable',
-  'installed-artifact-runtime-unavailable',
+  'runtime-restarted',
 ]);
 
 const PERMISSION_DENIED_REASONS = new Set([
   'runtime-permission-denied',
-  'installed-app-permission-denied',
-  'installed-artifact-forbidden',
+  'local-app-permission-denied',
+  'local-app-permission-revoked',
 ]);
 
 const REPAIR_REQUIRED_REASONS = new Set([
   'protected-carrier-required',
-  'SDK_INSTALLED_APP_PROTECTED_CARRIER_REQUIRED',
   'runtime-service-repair-required',
   'runtime-service-untrusted',
   'protected-peer-untrusted',
-  'installed-app-release-untrusted',
-  'installed-artifact-runtime-untrusted',
+  'process-replaced',
+  'account-changed',
+  'local-development-project-changed',
 ]);
 
 export function classifyStudioProtectedSessionFailure(
@@ -78,7 +78,7 @@ function actionHintFor(reasonCode: string): string {
   const state = stateFor(reasonCode);
   if (state === 'login-required') return 'sign_in_with_nimi_desktop';
   if (state === 'runtime-unavailable') return 'start_verified_runtime_service';
-  if (state === 'permission-denied') return 'review_installed_app_permissions';
+  if (state === 'permission-denied') return 'review_local_app_authorization';
   if (state === 'repair-required') return 'repair_verified_runtime_service';
   return 'wait_for_world_studio_protected_operation_admission';
 }

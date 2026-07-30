@@ -9,7 +9,7 @@
     "pnpm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "nimi-app dev --shell tauri",
+    "dev": "nimi-app dev --shell electron",
     "dev:renderer": "vite --host 127.0.0.1 --port 1451 --strictPort",
     "dev:electron": "nimi-app dev --shell electron",
     "dev:shell": "nimi-app dev",
@@ -21,8 +21,8 @@
     "typecheck:renderer": "tsc --noEmit",
     "typecheck:electron": "tsc -p tsconfig.electron.json --noEmit",
     "typecheck": "pnpm run typecheck:renderer && pnpm run typecheck:electron",
-    "build": "pnpm run typecheck && pnpm run build:renderer && (cd src-tauri && cargo check)",
-    "lint": "pnpm run typecheck && eslint . --max-warnings 0 && (cd src-tauri && cargo check)",
+    "build": "pnpm run typecheck && pnpm run build:renderer && pnpm run build:electron",
+    "lint": "pnpm run typecheck && eslint . --max-warnings 0",
     "check:spec-consistency": "npx tsx scripts/check-realm-world-studio-spec.ts",
     "i18n:check": "npx tsx scripts/check-realm-world-studio-i18n.ts",
     "i18n:audit": "node scripts/i18n-audit.mjs",

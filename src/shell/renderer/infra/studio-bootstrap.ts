@@ -1,6 +1,9 @@
 import { useAppStore } from '../app-shell/app-store.js';
 import { classifyStudioProtectedSessionFailure } from '../app-shell/protected-session-state.js';
-import { requireStudioProtectedOperationSet } from '../app-shell/studio-platform.js';
+import {
+  createStudioProtectedOperationUnavailableError,
+  getStudioLocalAppClient,
+} from '../app-shell/studio-platform.js';
 import { describeError, logRendererEvent } from './telemetry/renderer-log.js';
 
 let bootstrapPromise: Promise<void> | null = null;
@@ -35,12 +38,8 @@ export async function ensureStudioBootstrapReady(): Promise<void> {
 }
 
 export async function ensureStudioRuntimeClientReady(): Promise<never> {
-  await runStudioBootstrap({ force: true });
-  const failure = useAppStore.getState().bootstrapFailure;
-  throw new Error(
-    failure?.message
-    || 'The protected Realm World Studio operation set is not admitted; generic Runtime access is forbidden.',
-  );
+  await ensureStudioBootstrapReady();
+  throw createStudioProtectedOperationUnavailableError('Runtime client access');
 }
 
 async function doRunStudioBootstrap(): Promise<void> {
@@ -53,7 +52,19 @@ async function doRunStudioBootstrap(): Promise<void> {
   store.clearAuthSession();
 
   try {
-    requireStudioProtectedOperationSet();
+    const session = await getStudioLocalAppClient().auth.status();
+    if (!session.sessionBound) {
+      throw Object.assign(
+        new Error('Realm World Studio Desktop-supervised local-app session is not bound.'),
+        {
+          reasonCode: session.reasonCode,
+          actionHint: session.actionHint,
+          source: 'sdk',
+        },
+      );
+    }
+    store.setProtectedSessionBound();
+    store.setBootstrapReady(true);
   } catch (error) {
     const failure = classifyStudioProtectedSessionFailure(error);
     logRendererEvent({

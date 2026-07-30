@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const createInstalledNimiAppBootstrapMock = vi.fn();
-const createInstalledNimiAppStandardShellSurfaceMock = vi.fn();
+const authStatusMock = vi.fn();
+const createNimiClientMock = vi.fn();
+const createNimiLocalAppStandardShellSurfaceMock = vi.fn();
 
-vi.mock('@nimiplatform/sdk/app', () => ({
-  createInstalledNimiAppBootstrap: createInstalledNimiAppBootstrapMock,
+vi.mock('@nimiplatform/sdk', () => ({
+  createNimiClient: createNimiClientMock,
 }));
 
 vi.mock('@nimiplatform/sdk/types', () => ({
@@ -17,55 +18,59 @@ vi.mock('@nimiplatform/sdk/types', () => ({
 }));
 
 vi.mock('../bridge/index.js', () => ({
-  createInstalledNimiAppStandardShellSurface: createInstalledNimiAppStandardShellSurfaceMock,
+  createNimiLocalAppStandardShellSurface: createNimiLocalAppStandardShellSurfaceMock,
 }));
 
 let useAppStore: typeof import('../app-shell/app-store.js').useAppStore;
 let runStudioBootstrap: typeof import('./studio-bootstrap.js').runStudioBootstrap;
 let ensureStudioRuntimeClientReady: typeof import('./studio-bootstrap.js').ensureStudioRuntimeClientReady;
 
-describe('Realm World Studio installed bootstrap hardcut', () => {
+describe('Realm World Studio Desktop-supervised bootstrap hardcut', () => {
   beforeEach(async () => {
     vi.resetModules();
-    createInstalledNimiAppBootstrapMock.mockReset();
-    createInstalledNimiAppStandardShellSurfaceMock.mockReset();
-    const standardShell = {
-      artifacts: { readRuntimeBytes: vi.fn() },
-    };
-    createInstalledNimiAppStandardShellSurfaceMock.mockReturnValue(standardShell);
-    createInstalledNimiAppBootstrapMock.mockReturnValue({ artifacts: standardShell.artifacts });
+    authStatusMock.mockReset();
+    createNimiClientMock.mockReset();
+    createNimiLocalAppStandardShellSurfaceMock.mockReset();
+    const standardShell = { session: { status: vi.fn() } };
+    createNimiLocalAppStandardShellSurfaceMock.mockReturnValue(standardShell);
+    createNimiClientMock.mockReturnValue({ auth: { status: authStatusMock } });
+    authStatusMock.mockResolvedValue({
+      state: 'session-bound',
+      sessionBound: true,
+      reasonCode: 'local-app-session-bound',
+      actionHint: 'none',
+    });
 
     ({ useAppStore } = await import('../app-shell/app-store.js'));
     ({ runStudioBootstrap, ensureStudioRuntimeClientReady } = await import('./studio-bootstrap.js'));
     useAppStore.setState({
-      auth: { status: 'bootstrapping', user: null },
+      auth: { status: 'bootstrapping' },
       bootstrapReady: false,
       bootstrapError: null,
       bootstrapFailure: null,
     });
   });
 
-  it('constructs only the artifact bootstrap and then fails the unadmitted operation set closed', async () => {
+  it('binds only through the Desktop-supervised local-app standard shell', async () => {
     await runStudioBootstrap();
 
-    expect(createInstalledNimiAppStandardShellSurfaceMock).toHaveBeenCalledTimes(1);
-    expect(createInstalledNimiAppBootstrapMock).toHaveBeenCalledWith({
-      standardShell: expect.objectContaining({ artifacts: expect.any(Object) }),
+    expect(createNimiLocalAppStandardShellSurfaceMock).toHaveBeenCalledTimes(1);
+    expect(createNimiClientMock).toHaveBeenCalledWith({
+      localApp: {
+        standardShell: expect.objectContaining({ session: expect.any(Object) }),
+      },
     });
-    expect(useAppStore.getState().bootstrapReady).toBe(false);
-    expect(useAppStore.getState().bootstrapFailure).toMatchObject({
-      state: 'capability-unavailable',
-      reasonCode: 'world-studio-protected-operation-set-not-admitted',
-    });
-    expect(useAppStore.getState().auth.status).toBe('unauthenticated');
+    expect(useAppStore.getState().bootstrapReady).toBe(true);
+    expect(useAppStore.getState().bootstrapFailure).toBeNull();
+    expect(useAppStore.getState().auth.status).toBe('authenticated');
   });
 
-  it('preserves protected native carrier failures as typed repair states', async () => {
-    createInstalledNimiAppBootstrapMock.mockImplementationOnce(() => {
-      throw Object.assign(new Error('Protected carrier required'), {
-        reasonCode: 'protected-carrier-required',
-        actionHint: 'repair_verified_runtime_service',
-      });
+  it('preserves local-app carrier failures as typed repair states', async () => {
+    authStatusMock.mockResolvedValueOnce({
+      state: 'action-required',
+      sessionBound: false,
+      reasonCode: 'protected-carrier-required',
+      actionHint: 'repair_verified_runtime_service',
     });
 
     await runStudioBootstrap({ force: true });
@@ -74,12 +79,14 @@ describe('Realm World Studio installed bootstrap hardcut', () => {
       state: 'repair-required',
       reasonCode: 'protected-carrier-required',
       actionHint: 'repair_verified_runtime_service',
-      message: 'Protected carrier required',
+      message: 'Realm World Studio Desktop-supervised local-app session is not bound.',
     });
   });
 
-  it('never retries through a generic Runtime client', async () => {
-    await expect(ensureStudioRuntimeClientReady()).rejects.toThrow(/protected installed session/i);
-    expect(createInstalledNimiAppBootstrapMock).toHaveBeenCalledTimes(1);
+  it('keeps generic Runtime client access explicitly unavailable after session binding', async () => {
+    await expect(ensureStudioRuntimeClientReady()).rejects.toThrow(
+      /Runtime client access require an admitted Desktop-supervised protected operation/,
+    );
+    expect(authStatusMock).toHaveBeenCalledTimes(1);
   });
 });

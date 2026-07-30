@@ -15,7 +15,7 @@ describe('Realm World Studio protected-session UI', () => {
   beforeEach(() => {
     runStudioBootstrapMock.mockReset();
     useAppStore.setState({
-      auth: { status: 'unauthenticated', user: null },
+      auth: { status: 'unauthenticated' },
       bootstrapReady: false,
       bootstrapError: 'Protected operation unavailable',
       bootstrapFailure: {

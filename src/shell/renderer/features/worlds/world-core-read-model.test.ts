@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { WorldCharacterCoreDto, WorldCoreDto } from '@nimiplatform/sdk/realm/generated';
+import type { RealmModel } from '@nimiplatform/sdk/realm/generated';
 import {
   toCreatorWorldCharacterDetail,
   toCreatorWorldSummary,
@@ -39,7 +39,7 @@ describe('Realm World Studio creator read model', () => {
   });
 
   it('does not synthesize display names from Realm ids when source names are blank', () => {
-    const unnamedWorld: WorldCoreDto = {
+    const unnamedWorld: RealmModel<'WorldCoreDto'> = {
       ...TEST_WORLD_CORE,
       core: {
         ...TEST_WORLD_CORE.core,
@@ -50,9 +50,19 @@ describe('Realm World Studio creator read model', () => {
         },
       },
     };
-    const unnamedCharacter: WorldCharacterCoreDto = {
+    const unnamedCharacter: RealmModel<'WorldCharacterCoreDto'> = {
       ...TEST_WORLD_CHARACTER_CORE,
-      core: { profile: { summary: 'No character name here.' } },
+      profile: {
+        ...TEST_WORLD_CHARACTER_CORE.profile,
+        identity: {
+          ...TEST_WORLD_CHARACTER_CORE.profile.identity,
+          name: '',
+        },
+        presentation: {
+          ...TEST_WORLD_CHARACTER_CORE.profile.presentation,
+          displayName: '',
+        },
+      },
     };
 
     expect(toCreatorWorldSummary(unnamedWorld).name).toBeNull();
@@ -63,15 +73,15 @@ describe('Realm World Studio creator read model', () => {
     const malformedWorld = {
       ...TEST_WORLD_CORE,
       core: null,
-    } as unknown as WorldCoreDto;
+    } as unknown as RealmModel<'WorldCoreDto'>;
     const malformedCharacter = {
       ...TEST_WORLD_CHARACTER_CORE,
-      core: [],
-    } as unknown as WorldCharacterCoreDto;
+      profile: [],
+    } as unknown as RealmModel<'WorldCharacterCoreDto'>;
 
     expect(() => toCreatorWorldSummary(malformedWorld)).toThrow(/WorldCoreDto\.core must be an object/);
     expect(() => toCreatorWorldCharacterDetail('world-yuan-academy', malformedCharacter)).toThrow(
-      /WorldCharacterCoreDto\.core must be an object/,
+      /WorldCharacterCoreDto\.profile must be an object/,
     );
   });
 });
