@@ -1,5 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle, Boxes, ChevronLeft, RefreshCw, Users } from 'lucide-react';
@@ -9,6 +9,7 @@ import {
   EmptyState,
   InlineAlert,
   LoadingSkeleton,
+  nimiToast,
   Statistic,
   StatisticGroup,
   StatusBadge,
@@ -245,15 +246,6 @@ function WorldCard({ world }: { world: CreatorWorldSummary }) {
 
 export function CreatorWorldListPage() {
   const { t } = useTranslation();
-  const location = useLocation();
-  const createdWorldId = (
-    location.state
-    && typeof location.state === 'object'
-    && 'createdWorldId' in location.state
-    && typeof location.state.createdWorldId === 'string'
-  )
-    ? location.state.createdWorldId
-    : '';
   const query = useQuery({
     queryKey: worldListQueryKey(),
     queryFn: listCreatorWorlds,
@@ -302,11 +294,6 @@ export function CreatorWorldListPage() {
           </>
         }
       />
-      {createdWorldId ? (
-        <InlineAlert tone="success">
-          {t('worlds.createSucceeded', { id: createdWorldId })}
-        </InlineAlert>
-      ) : null}
       {worlds.length === 0 ? (
         <EmptyState
           icon={<Boxes size={20} />}
@@ -526,11 +513,11 @@ export function CreatorWorldCreatePage() {
     mutationFn: (input: Parameters<typeof createCreatorWorldCore>[0]) => createCreatorWorldCore(input),
     onSuccess: (world) => {
       void queryClient.invalidateQueries({ queryKey: worldListQueryKey() });
-      navigate('/worlds', {
-        state: {
-          createdWorldId: world.id,
-        },
-      });
+      nimiToast.success(t('worlds.createSucceeded', { id: world.id }));
+      navigate('/worlds');
+    },
+    onError: (mutationError) => {
+      nimiToast.danger(mutationErrorMessage(mutationError, t('worlds.writeRejectedDetail')));
     },
   });
 
@@ -555,7 +542,7 @@ export function CreatorWorldCreatePage() {
     }
   }
 
-  const error = draftError ?? (mutation.isError ? mutationErrorMessage(mutation.error, t('worlds.writeRejectedDetail')) : null);
+  const error = draftError;
 
   return (
     <div className="rws-page">
@@ -628,7 +615,11 @@ export function CreatorWorldEditPage() {
     onSuccess: (world) => {
       void queryClient.invalidateQueries({ queryKey: worldListQueryKey() });
       void queryClient.invalidateQueries({ queryKey: worldWorkbenchQueryKey(world.id) });
+      nimiToast.success(t('worlds.updateSucceeded', { id: world.id }));
       navigate(`/worlds/${world.id}`);
+    },
+    onError: (mutationError) => {
+      nimiToast.danger(mutationErrorMessage(mutationError, t('worlds.writeRejectedDetail')));
     },
   });
 
@@ -675,7 +666,7 @@ export function CreatorWorldEditPage() {
     }
   }
 
-  const error = draftError ?? (mutation.isError ? mutationErrorMessage(mutation.error, t('worlds.writeRejectedDetail')) : null);
+  const error = draftError;
 
   return (
     <div className="rws-page">
@@ -750,7 +741,11 @@ export function CreatorWorldCharacterEditPage() {
     onSuccess: (character) => {
       void queryClient.invalidateQueries({ queryKey: worldWorkbenchQueryKey(character.worldId) });
       void queryClient.invalidateQueries({ queryKey: worldCharacterQueryKey(character.worldId, character.id) });
+      nimiToast.success(t('worlds.characterUpdateSucceeded', { id: character.id }));
       navigate(`/worlds/${character.worldId}/characters/${character.id}`);
+    },
+    onError: (mutationError) => {
+      nimiToast.danger(mutationErrorMessage(mutationError, t('worlds.writeRejectedDetail')));
     },
   });
 
@@ -797,7 +792,7 @@ export function CreatorWorldCharacterEditPage() {
     }
   }
 
-  const error = draftError ?? (mutation.isError ? mutationErrorMessage(mutation.error, t('worlds.writeRejectedDetail')) : null);
+  const error = draftError;
 
   return (
     <div className="rws-page">

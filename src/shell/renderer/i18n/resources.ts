@@ -120,7 +120,9 @@ const enTranslations = {
   'worlds.submitCreateWorld': 'Create WorldCore',
   'worlds.createSucceeded': 'World {{id}} was created and is now visible through the admitted world list.',
   'worlds.submitReplaceWorld': 'Save WorldCore',
+  'worlds.updateSucceeded': 'World {{id}} was updated and the latest revision is now visible through the admitted world list.',
   'worlds.submitReplaceCharacter': 'Save WorldCharacterCore',
+  'worlds.characterUpdateSucceeded': 'Character {{id}} was updated and the latest revision is now visible through the parent world workbench.',
 
   'auth.bootstrap.failedTitle': 'Runtime bootstrap failed',
   'auth.protectedSession.eyebrow': 'Protected installed session',
@@ -310,7 +312,9 @@ export const zhCNTranslations: Record<StudioTranslationKey, string> = {
   'worlds.submitCreateWorld': '创建 WorldCore',
   'worlds.createSucceeded': '世界 {{id}} 已创建，并已通过当前准入的世界列表显示。',
   'worlds.submitReplaceWorld': '保存 WorldCore',
+  'worlds.updateSucceeded': '世界 {{id}} 已更新，最新修订已通过当前准入的世界列表显示。',
   'worlds.submitReplaceCharacter': '保存 WorldCharacterCore',
+  'worlds.characterUpdateSucceeded': '人物 {{id}} 已更新，最新修订已通过父世界工作台显示。',
 
   'auth.bootstrap.failedTitle': 'Runtime 启动失败',
   'auth.protectedSession.eyebrow': '受保护的已安装应用会话',
