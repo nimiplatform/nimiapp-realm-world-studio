@@ -29,7 +29,7 @@ describe('studio platform runtime auth boundary', () => {
     expect(studioPlatformSource).toContain('createNimiClient({');
     expect(studioPlatformSource).toContain('createNimiLocalAppStandardShellSurface');
     expect(appIdentitySource).toContain("'nimi.realm-world-studio'");
-    expect(studioPlatformSource).toContain('world-studio-protected-operation-set-not-admitted');
+    expect(studioPlatformSource).toContain('world-studio-operation-not-in-app-access');
     expect(studioPlatformSource).not.toContain('readInstalledNimiAppLaunchBinding');
     expect(studioPlatformSource).not.toContain('createStudioRealmBridgeOptions');
     expect(studioPlatformSource).not.toContain('realmBaseUrl');

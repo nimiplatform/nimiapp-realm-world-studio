@@ -1,6 +1,6 @@
 # Realm World Studio Nimi Listing Request
 
-This document is a developer-submitted listing request. It is not an approval, release descriptor, permission grant, or install truth.
+This document is a developer-submitted listing request. It is not an approval, release descriptor, or install truth.
 
 ## Developer Runbook
 
@@ -21,7 +21,7 @@ pnpm dev:shell -- --shell electron
 
 ## Submission Inputs
 
-- `nimi.app.yaml` declares app identity, an empty permission set, and the exact local Electron renderer origin.
+- `nimi.app.yaml` declares app identity, its App Access domain set (`realm.data` only), and the exact local Electron renderer origin.
 - `.nimi/admission/submission.yaml` records publish-readiness commands and review inputs.
 - `.nimi/admission/build-profile.yaml` records install, build, and lockfile policy.
 - `.nimi/spec/realm-world-studio/**` is the canonical Realm World Studio creator product/app authority surface.
@@ -29,7 +29,7 @@ pnpm dev:shell -- --shell electron
 
 ## Reviewer Boundary
 
-Nimi Platform review owns final admission, release descriptors, ordinary-user visibility, install availability, and permission grants. Nothing in this repository or in `dist/nimi-app-submission.json` constitutes an install grant, a permission grant, or a public release descriptor.
+Nimi Platform review owns final admission, release descriptors, ordinary-user visibility, and install availability. Nothing in this repository or in `dist/nimi-app-submission.json` constitutes an install authorization or a public release descriptor. App Access domains are declared in `nimi.app.yaml` and apply exactly as declared; there is no separate grant or approval step.
 
 ## Pre-submission self-check
 

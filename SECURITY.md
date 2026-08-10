@@ -11,10 +11,10 @@
 - Use the app-scoped local-app `NimiClient` constructed in `src/shell/renderer/app-shell/studio-platform.ts`.
 - Do not introduce a generic Runtime or Realm proxy, direct gRPC/HTTP path, renderer-owned identity, or parallel client construction path.
 
-## Permission posture
+## App Access posture
 
-- `nimi.app.yaml` declares no product permissions. Do not invent a permission to compensate for a missing exact carrier.
-- Do not synthesize success on a typed contract gap. Unadmitted Realm operations fail closed with an operation-specific capability-unavailable error.
+- `nimi.app.yaml` declares only the `realm.data` App Access domain. Do not invent an undeclared domain or a side channel to compensate for a missing exact carrier.
+- Do not synthesize success on a typed contract gap. Operations outside the declared App Access set fail closed with an operation-specific capability-unavailable error.
 
 ## Reporting a vulnerability
 

@@ -56,9 +56,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <InlineAlert tone="warning" role="alert" icon={<LockKeyhole size={17} aria-hidden="true" />}>
               <div className="ras-protected-session__alert-copy">
                 <strong>{t('auth.protectedSession.operationsLocked')}</strong>
-                {bootstrapFailure.reasonCode
-                  ? <span>{t('auth.protectedSession.reasonCode')}: {bootstrapFailure.reasonCode}</span>
-                  : null}
               </div>
             </InlineAlert>
 
@@ -67,7 +64,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               <span>{t(`auth.protectedSession.states.${bootstrapFailure.state}.action`)}</span>
             </div>
 
+            {bootstrapFailure.reasonCode || bootstrapFailure.actionHint ? (
+              <details className="rws-technical-details">
+                <summary>{t('auth.protectedSession.technicalDetails')}</summary>
+                <dl className="rws-definition-grid">
+                  {bootstrapFailure.reasonCode ? (
+                    <div>
+                      <dt>{t('auth.protectedSession.reasonCode')}</dt>
+                      <dd>{bootstrapFailure.reasonCode}</dd>
+                    </div>
+                  ) : null}
+                  {bootstrapFailure.actionHint ? (
+                    <div>
+                      <dt>{t('auth.protectedSession.actionHint')}</dt>
+                      <dd>{bootstrapFailure.actionHint}</dd>
+                    </div>
+                  ) : null}
+                </dl>
+              </details>
+            ) : null}
+
             <div className="ras-protected-session__actions">
+              <Button
+                data-testid="world-studio-protected-session-retry"
+                tone="secondary"
+                onClick={retryBootstrap}
+              >
+                {t('auth.protectedSession.recheck')}
+              </Button>
               <Button
                 data-testid="world-studio-protected-operations-locked"
                 disabled

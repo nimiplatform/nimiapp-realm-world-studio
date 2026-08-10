@@ -6,9 +6,9 @@ import { createNimiLocalAppStandardShellSurface } from '../bridge/index.js';
 
 export const STUDIO_RUNTIME_APP_ID = REALM_WORLD_STUDIO_APP_ID;
 export const STUDIO_CAPABILITY_UNAVAILABLE_REASON =
-  'world-studio-protected-operation-set-not-admitted';
+  'world-studio-operation-not-in-app-access';
 export const STUDIO_CAPABILITY_UNAVAILABLE_ACTION =
-  'wait_for_world_studio_protected_operation_admission';
+  'wait_for_platform_app_surface';
 
 let studioLocalAppClient: NimiLocalAppClient | null = null;
 
@@ -29,7 +29,7 @@ export function createStudioProtectedOperationUnavailableError(
   operation = 'Realm World Studio account, Realm, AI, and publication operations',
 ): Error {
   return createNimiError({
-    message: `${operation} require an admitted Desktop-supervised protected operation.`,
+    message: `${operation} is not covered by the Nimi App Access operation set available to this app.`,
     reasonCode: STUDIO_CAPABILITY_UNAVAILABLE_REASON,
     actionHint: STUDIO_CAPABILITY_UNAVAILABLE_ACTION,
     source: 'sdk',

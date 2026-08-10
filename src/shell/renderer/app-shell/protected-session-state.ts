@@ -1,8 +1,8 @@
 export type StudioProtectedSessionState =
   | 'action-required'
   | 'runtime-unavailable'
-  | 'permission-denied'
-  | 'revoked'
+  | 'access-denied'
+  | 'session-ended'
   | 'repair-required'
   | 'capability-unavailable';
 
@@ -17,6 +17,7 @@ const ACTION_REQUIRED_REASONS = new Set([
   'account-authentication-required',
   'runtime-account-authentication-required',
   'runtime-unauthenticated',
+  'local-app-owner-unavailable',
 ]);
 
 const RUNTIME_UNAVAILABLE_REASONS = new Set([
@@ -24,15 +25,23 @@ const RUNTIME_UNAVAILABLE_REASONS = new Set([
   'runtime-service-not-running',
   'runtime-connection-unavailable',
   'runtime-restarted',
+  'presence-expired',
 ]);
 
-const PERMISSION_DENIED_REASONS = new Set([
-  'runtime-permission-denied',
-  'local-app-permission-denied',
+const ACCESS_DENIED_REASONS = new Set([
+  'local-app-access-denied',
+  'runtime-access-denied',
+  'local-app-operation-unavailable',
+  'local-app-operation-unsupported',
+  'local-app-snapshot-unavailable',
 ]);
 
-const REVOKED_REASONS = new Set([
-  'local-app-permission-revoked',
+const SESSION_ENDED_REASONS = new Set([
+  'revoked',
+  'account-changed',
+  'project-changed',
+  'local-development-project-changed',
+  'process-replaced',
 ]);
 
 const REPAIR_REQUIRED_REASONS = new Set([
@@ -40,9 +49,6 @@ const REPAIR_REQUIRED_REASONS = new Set([
   'runtime-service-repair-required',
   'runtime-service-untrusted',
   'protected-peer-untrusted',
-  'process-replaced',
-  'account-changed',
-  'local-development-project-changed',
 ]);
 
 export function classifyStudioProtectedSessionFailure(
@@ -73,8 +79,8 @@ export function classifyStudioProtectedSessionFailure(
 function stateFor(reasonCode: string): StudioProtectedSessionState {
   if (ACTION_REQUIRED_REASONS.has(reasonCode)) return 'action-required';
   if (RUNTIME_UNAVAILABLE_REASONS.has(reasonCode)) return 'runtime-unavailable';
-  if (REVOKED_REASONS.has(reasonCode)) return 'revoked';
-  if (PERMISSION_DENIED_REASONS.has(reasonCode)) return 'permission-denied';
+  if (ACCESS_DENIED_REASONS.has(reasonCode)) return 'access-denied';
+  if (SESSION_ENDED_REASONS.has(reasonCode)) return 'session-ended';
   if (REPAIR_REQUIRED_REASONS.has(reasonCode)) return 'repair-required';
   return 'capability-unavailable';
 }

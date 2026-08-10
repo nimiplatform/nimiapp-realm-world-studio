@@ -36,7 +36,10 @@ describe('Realm World Studio Electron host contract', () => {
     const preloadSource = read('src-electron/preload.cts');
     expect(mainSource).toContain('@nimiplatform/kit/shell/electron/main');
     expect(mainSource).toContain('registerNimiElectronAppBridge');
-    expect(mainSource).toContain('onProtectedSessionFailure: () => app.quit()');
+    // Session unavailability must not tear down the Host: the bridge stays
+    // registered and the renderer re-checks posture on the same Host.
+    expect(mainSource).not.toContain('onProtectedSessionFailure');
+    expect(mainSource).not.toContain('supervised-host-reopen');
     expect(mainSource).not.toContain('registerNimiElectronRuntimeBridge');
     expect(mainSource).not.toContain('createNimiElectronInstalledHost');
     expect(mainSource).not.toContain('NIMI_INSTALLED_NIMI_APP_STANDARD_SHELL_CAPABILITY_SET_ID');

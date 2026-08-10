@@ -10,6 +10,12 @@ if (!manifest.includes('manifest_role: submitted-input')) {
 if (!manifest.includes('app_id: nimi.realm-world-studio')) {
   throw new Error('manifest app_id must be nimi.realm-world-studio');
 }
+if (!manifest.includes('app_access:') || !manifest.includes('- realm.data')) {
+  throw new Error('manifest must declare the app_access domain set (realm.data)');
+}
+if (/^permissions:/m.test(manifest)) {
+  throw new Error('manifest must not carry retired permission-platform fields; use app_access');
+}
 if (!submission.includes('submission_role: developer-submitted-input')) {
   throw new Error('developer submission role marker missing in submission.yaml');
 }

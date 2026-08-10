@@ -14,14 +14,20 @@
 
 | Layer | Technology | Location |
 |-------|-----------|----------|
-| Desktop shell | Tauri 2 + Electron 42 dev shell | `src-tauri/`, `src-electron/` |
+| Desktop shell | Electron 42 dev shell (active); Tauri 2 shell frozen | `src-electron/`; `src-tauri/` (frozen) |
 | Renderer | React 19 + Vite 7 + Tailwind 4 | `src/shell/renderer/` |
 | Routing | react-router-dom 7 | `src/shell/renderer/app-shell/routes.tsx` |
 | Auth & runtime bridge | Desktop-supervised protected standard bridge | `src-electron/` |
-| UI components | `@nimiplatform/kit` (npm) | renderer-wide |
-| Platform client | `@nimiplatform/sdk` (npm) | `app-shell/studio-platform.ts` |
+| UI components | `@nimiplatform/kit` (`link:../../nimi/kit`) | renderer-wide |
+| Platform client | `@nimiplatform/sdk` (`link:../../nimi/sdks/typescript`) | `app-shell/studio-platform.ts` |
 | State | Zustand | `app-shell/app-store.ts` |
 | Dev port | 1451 | `vite.config.ts` |
+
+The linked platform packages resolve through their `dist/` exports for `tsc`
+and the Electron main build, while Vite/Vitest alias to platform sources.
+Run `pnpm prepare:workspace-surfaces` (already chained into `typecheck`,
+`build:electron`) to build sdk/kit dist in the sibling `../../nimi` checkout
+when it is missing or stale.
 
 ## Spec Authority & Sync
 
@@ -63,7 +69,7 @@ creatorId.
 
 ### Auth boundary
 - Studio does **not** own access or refresh tokens (mirrors parentos PO-SHELL-008 / K-ACCSVC-008).
-- The active development path is Desktop-supervised Electron; account, Realm, AI, and publication operations remain fail-closed until their exact protected operation is admitted.
+- The active development path is Desktop-supervised Electron; account, Realm, AI, and publication operations remain fail-closed unless their exact operation is covered by a declared `app_access` domain.
 - Account projection flows through the Desktop-supervised protected local-app session. Studio must not add embedded login, a generic Runtime bridge, direct Realm transport, environment/argument launch identity, or app-owned release/session material.
 
 ## Development Principles
@@ -77,7 +83,7 @@ creatorId.
 
 ### Fail-close
 - Missing platform client → fail-close, show capability unavailable in product copy.
-- Realm API failure → show typed failure category (`realm-unavailable`, `permission-missing`, etc.), not silent retry.
+- Realm API failure → show typed failure category (`realm-unavailable`, `access-denied`, etc.), not silent retry.
 - AI generation failure → preserve owner draft, never invent placeholder text.
 - Schedule due time arrives but post draft missing → fail, do not publish stale draft.
 
@@ -92,18 +98,20 @@ their own role:
 - `.nimi/admission/build-profile.yaml` → `profile_role: developer-workflow-input`
 
 Reviewer boundary: Nimi Platform review owns final admission, release
-descriptors, ordinary-user visibility, install availability, and permission
-grants. Do not promote any local file or `dist/nimi-app-submission.json`
-field into a release/permission claim.
+descriptors, ordinary-user visibility, and install availability. App Access
+is declared in `nimi.app.yaml` (`app_access`) and applies exactly as
+declared — there is no permission/request/approval/grant surface. Do not
+promote any local file or `dist/nimi-app-submission.json` field into a
+release or access claim.
 
 When editing admission inputs:
 
 - Keep `app_id: nimi.realm-world-studio` identical across the manifest,
   `submission.yaml`, `scripts/pack.mjs`, Runtime/SDK callers, and the Tauri
   identifier. Do not introduce a second OS-bundle-only app identity.
-- New scope declarations in `nimi.app.yaml` must carry an explicit
-  `purpose:` and a real product justification — they are review transparency,
-  not grants.
+- Keep the `app_access` domain set in `nimi.app.yaml` minimal — declare only
+  domains the product actually consumes (currently `realm.data` only).
+  Unknown entries are inert; do not declare speculative domains.
 - Never add fields that claim grant/approval semantics
   (`permission_grant: granted`, `public_admission_truth: true`, etc.); the
   `scripts/local-audit.mjs` self-check rejects them.
@@ -112,6 +120,7 @@ When editing admission inputs:
 
 ```bash
 # Code layer
+pnpm prepare:workspace-surfaces   # build sdk/kit dist in ../../nimi when stale (chained into typecheck/build:electron)
 pnpm typecheck
 pnpm test
 pnpm lint

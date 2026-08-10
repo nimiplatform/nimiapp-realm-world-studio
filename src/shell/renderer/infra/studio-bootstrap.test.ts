@@ -85,7 +85,7 @@ describe('Realm World Studio Desktop-supervised bootstrap hardcut', () => {
 
   it('keeps generic Runtime client access explicitly unavailable after session binding', async () => {
     await expect(ensureStudioRuntimeClientReady()).rejects.toThrow(
-      /Runtime client access require an admitted Desktop-supervised protected operation/,
+      /Runtime client access is not covered by the Nimi App Access operation set/,
     );
     expect(authStatusMock).toHaveBeenCalledTimes(1);
   });

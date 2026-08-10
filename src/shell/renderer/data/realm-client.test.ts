@@ -7,9 +7,9 @@ const { getStudioLocalAppClientMock } = vi.hoisted(() => ({
 vi.mock('@renderer/app-shell/studio-platform.js', () => ({
   getStudioLocalAppClient: getStudioLocalAppClientMock,
   requireStudioProtectedOperation: (operation: string) => {
-    throw Object.assign(new Error(`${operation} is not admitted.`), {
-      reasonCode: 'world-studio-protected-operation-set-not-admitted',
-      actionHint: 'wait_for_world_studio_protected_operation_admission',
+    throw Object.assign(new Error(`${operation} is not covered by the Nimi App Access operation set available to this app.`), {
+      reasonCode: 'world-studio-operation-not-in-app-access',
+      actionHint: 'wait_for_platform_app_surface',
     });
   },
 }));
@@ -30,7 +30,7 @@ describe('studio Realm facade boundary', () => {
     });
   });
 
-  it('exposes only the admitted Studio Realm core surface methods', () => {
+  it('exposes only the declared Studio Realm core surface methods', () => {
     expect([...STUDIO_REALM_SURFACE_METHODS]).toEqual([
       'worldCoreControllerListWorldCores',
       'worldCoreControllerGetWorldCore',
@@ -75,11 +75,11 @@ describe('studio Realm facade boundary', () => {
     });
   });
 
-  it('keeps unadmitted exact Realm operations unavailable instead of proxying them', () => {
+  it('keeps uncovered exact Realm operations unavailable instead of proxying them', () => {
     const realm = createStudioRealmClient();
     expect(() => realm.worldCoreControllerGetWorldCore({
       path: { worldId: 'world-1' },
-    })).toThrow(/Realm world detail is not admitted/);
+    })).toThrow(/Realm world detail is not covered by the Nimi App Access operation set/);
     expect(list).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
   });

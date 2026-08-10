@@ -5,10 +5,14 @@ describe('Realm World Studio protected-session failure classifier', () => {
   it.each([
     ['account-authentication-required', 'action-required'],
     ['runtime-service-unavailable', 'runtime-unavailable'],
-    ['local-app-permission-denied', 'permission-denied'],
-    ['local-app-permission-revoked', 'revoked'],
+    ['runtime-restarted', 'runtime-unavailable'],
+    ['local-app-access-denied', 'access-denied'],
+    ['local-app-operation-unavailable', 'access-denied'],
+    ['revoked', 'session-ended'],
+    ['account-changed', 'session-ended'],
+    ['process-replaced', 'session-ended'],
     ['protected-carrier-required', 'repair-required'],
-    ['world-studio-protected-operation-set-not-admitted', 'capability-unavailable'],
+    ['world-studio-operation-not-in-app-access', 'capability-unavailable'],
   ] as const)('maps %s to %s', (reasonCode, state) => {
     expect(classifyStudioProtectedSessionFailure(Object.assign(new Error(reasonCode), {
       reasonCode,

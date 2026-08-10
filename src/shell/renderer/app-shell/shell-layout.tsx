@@ -1,5 +1,6 @@
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Boxes, ChevronDown, PlusCircle, User } from 'lucide-react';
 import {
@@ -12,6 +13,7 @@ import {
   Tooltip,
 } from '@nimiplatform/kit/ui';
 import { startStudioWindowDrag } from '../bridge/window-drag.js';
+import { getStudioCurrentUser } from './current-user.js';
 import { LanguageSwitcher } from './language-switcher.js';
 
 const MACOS_TRAFFIC_LIGHT_SAFE_ZONE_PX = 84;
@@ -62,9 +64,18 @@ function SidebarItem({
 function AccountMenu() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const currentUserQuery = useQuery({
+    queryKey: ['realm-world-studio', 'current-user'] as const,
+    queryFn: getStudioCurrentUser,
+    staleTime: 300_000,
+    retry: false,
+  });
 
-  const displayName = t('shell.account.fallbackDisplayName');
-  const avatarUrl = null;
+  // currentUser is a display-fact-only Base surface; when it is unavailable
+  // the menu falls back to neutral copy instead of failing the shell.
+  const displayName = currentUserQuery.data?.displayName.trim()
+    || t('shell.account.fallbackDisplayName');
+  const avatarUrl = currentUserQuery.data?.avatarUrl ?? null;
   const initial = displayName.charAt(0).toUpperCase() || 'O';
 
   return (
@@ -104,7 +115,9 @@ function AccountMenu() {
             />
             <div style={{ minWidth: 0, flex: 1 }}>
               <p className="ras-avatar-menu__name">{displayName}</p>
-              <p className="ras-avatar-menu__email">{t('shell.account.emailFallback')}</p>
+              <p className="ras-avatar-menu__email">
+                {currentUserQuery.data?.handle ?? t('shell.account.emailFallback')}
+              </p>
             </div>
           </div>
           <div className="ras-avatar-menu__actions">
