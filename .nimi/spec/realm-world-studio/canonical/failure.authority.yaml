@@ -38,6 +38,10 @@ units:
     kind: definition
     title: Typed DTO payload invalid
     meaning: A typed failure condition indicating that a typed DTO payload is invalid.
+  - id: definition.realm-world-studio.failure.lorebook-declaration-invalid
+    kind: definition
+    title: Lorebook declaration invalid
+    meaning: A typed failure condition indicating that a required CharacterLorebookDeclarationV1 or WorldLorebookDeclarationV1 container or field is missing, a declared reference is invalid, or a Unicode-scalar, row-count, or total bound is exceeded.
   - id: definition.realm-world-studio.failure.kit-capability-unavailable
     kind: definition
     title: Kit capability unavailable
@@ -93,3 +97,15 @@ units:
         target: definition.realm-world-studio.failure.installed-session-failure-surface
       - type: supersedes
         target: rule.realm-world-studio.failure.r002
+  - id: rule.realm-world-studio.failure.r004
+    kind: rule
+    title: Lorebook declaration failure preserves the draft
+    modality: must
+    statement: Missing, invalid, unresolved-reference, or over-bound CharacterLorebookDeclarationV1 or WorldLorebookDeclarationV1 content remains a typed source-write failure and never becomes an explicit-empty required field, generated default, long-field inference, local canonical object, or LocalAgent-ready claim.
+    condition: Whenever WorldCore or WorldCharacterCore create or replace validation rejects a lorebook declaration.
+    failure: Preserve the creator-reviewed draft, render the typed declaration failure, and report no Realm save success.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.failure.failure-state
+      - type: applies_to
+        target: definition.realm-world-studio.failure.lorebook-declaration-invalid

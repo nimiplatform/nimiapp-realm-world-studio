@@ -36,7 +36,7 @@ units:
     kind: rule
     title: "Story: Create world"
     modality: must
-    statement: World creation drafts remain local until createWorldCore returns canonical data.
+    statement: World creation drafts include one creator-reviewed WorldLorebookDeclarationV1 and remain local until createWorldCore returns canonical data containing that declaration.
     condition: When a creator drafts a world creation.
     failure: Preserve the local draft and withhold creation success when canonical data is not returned.
     relations:
@@ -48,7 +48,7 @@ units:
     kind: rule
     title: "Story: Update world"
     modality: must
-    statement: World updates require baseContentHash and render returned WorldCoreDto after replaceWorldCore.
+    statement: World updates require baseContentHash and a complete creator-reviewed WorldLorebookDeclarationV1 and render the canonical returned declaration and WorldCoreDto after replaceWorldCore.
     condition: When a creator updates a world.
     failure: Preserve the draft and render the update as failed when baseContentHash is absent or no WorldCoreDto is returned.
     relations:
@@ -60,9 +60,9 @@ units:
     kind: rule
     title: "Story: Edit world character"
     modality: must
-    statement: Character edits require parent world context, baseContentHash, and returned WorldCharacterCoreDto.
-    condition: When a creator edits a world character.
-    failure: Preserve the draft and render the edit as failed when parent context, baseContentHash, or returned WorldCharacterCoreDto is absent.
+    statement: Character create or edit requires parent world context, baseContentHash for replacement, a complete creator-reviewed CharacterLorebookDeclarationV1, and a canonical returned WorldCharacterCoreDto containing that declaration.
+    condition: When a creator creates or edits or replaces a world character.
+    failure: Preserve the draft and render the create or edit as failed when parent context or the required declaration is absent, when replacement lacks baseContentHash, or when no canonical WorldCharacterCoreDto is returned.
     relations:
       - type: applies_to
         target: definition.realm-world-studio.core.world-character-core

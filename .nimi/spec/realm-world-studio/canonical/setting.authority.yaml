@@ -5,11 +5,15 @@ units:
   - id: definition.realm-world-studio.setting.world-field-map
     kind: definition
     title: World field map
-    meaning: "The admitted world field surface: world identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, media references, and provenance present in WorldCoreDto.core or typed top-level WorldCoreDto fields."
+    meaning: "The admitted world field surface: world identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, required WorldLorebookDeclarationV1 identity and base setting plus optional world rules and role placements, media references, and provenance present in WorldCoreDto.core or typed top-level WorldCoreDto fields."
   - id: definition.realm-world-studio.setting.character-field-map
     kind: definition
     title: Character field map
-    meaning: "The admitted world-character field surface: settings, profile media, voice settings, behavior settings, source references, and provenance present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields."
+    meaning: "The admitted world-character field surface: settings, profile media, voice settings, behavior settings, required CharacterLorebookDeclarationV1 identity, behavior, speaking, immutable boundaries and optional relationship postures, source references, and provenance present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields."
+  - id: definition.realm-world-studio.setting.lorebook-declaration-field-map
+    kind: definition
+    title: World and Character lorebook declaration field map
+    meaning: Realm World Studio exposes Realm-owned WorldLorebookDeclarationV1 on WorldCore create and replace and CharacterLorebookDeclarationV1 on WorldCharacterCore create and replace; Realm exclusively owns canonical source persistence and Packet issuance, Forge owns the unique executable schema, bounds and reference validation, normalization, hash, readiness, and Packet contract behavior, and Studio owns neither authority.
   - id: definition.realm-world-studio.setting.authority-metadata
     kind: definition
     title: Authority metadata
@@ -18,7 +22,7 @@ units:
     kind: rule
     title: Admitted world fields
     modality: must
-    statement: World identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, media references, and provenance are admitted only when present in WorldCoreDto.core or typed top-level WorldCoreDto fields.
+    statement: World identity, summary, visibility, type, tags, ontology, time model, systems, rules, scenes, timeline, complete WorldLorebookDeclarationV1, media references, and provenance are admitted only when present in WorldCoreDto.core or typed top-level WorldCoreDto fields.
     condition: When Realm World Studio reads or writes creator-visible world fields.
     failure: Render a missing field as unavailable instead of admitting a value outside the typed WorldCoreDto surface.
     relations:
@@ -28,7 +32,7 @@ units:
     kind: rule
     title: Admitted character fields
     modality: must
-    statement: World-character settings, profile media, voice settings, behavior settings, source references, and provenance are admitted only when present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields.
+    statement: World-character settings, profile media, voice settings, behavior settings, complete CharacterLorebookDeclarationV1, source references, and provenance are admitted only when present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields.
     condition: When Realm World Studio reads or writes creator-visible world-character fields.
     failure: Render a missing field as unavailable instead of admitting a value outside the typed WorldCharacterCoreDto surface.
     relations:
@@ -110,3 +114,23 @@ units:
         target: definition.realm-world-studio.setting.character-field-map
       - type: applies_to
         target: definition.realm-world-studio.setting.world-field-map
+  - id: rule.realm-world-studio.setting.r010
+    kind: rule
+    title: Lorebook declaration authoring is bounded
+    modality: must
+    statement: Realm World Studio requires WorldLorebookDeclarationV1 compact identity and base setting, permits explicit empty world-rule and role-placement lists, requires CharacterLorebookDeclarationV1 compact identity plus behavior, speaking, and immutable-boundary rows, permits explicit empty relationship-posture rows, validates all declared references, and enforces the Realm-owned Unicode-scalar, row-count, and total declaration bounds.
+    condition: Whenever a creator creates, reviews, clears, or replaces a WorldCore or WorldCharacterCore lorebook declaration.
+    failure: Preserve the creator draft and reject create or replace before the Realm call when a required container or field is missing, a declared reference is unresolved, or a bound is exceeded; never infer a long source field or inject a default.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.lorebook-declaration-field-map
+  - id: rule.realm-world-studio.setting.r011
+    kind: rule
+    title: Canonical save confirms lorebook declarations
+    modality: must
+    statement: Realm World Studio reports lorebook declaration save success only from the canonical WorldCoreDto or WorldCharacterCoreDto returned by the existing Realm create or replace operation and reprojects the returned declaration without owning LocalAgent materialization, Cognition, prompt, or post-birth source adoption.
+    condition: Whenever a world or world-character create or replace includes a lorebook declaration.
+    failure: Preserve the creator draft and present the typed Realm validation, conflict, unavailable, or missing-canonical-object failure without local success or fallback.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.setting.lorebook-declaration-field-map
