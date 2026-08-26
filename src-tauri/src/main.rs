@@ -2,10 +2,10 @@
 
 use nimi_shell_tauri::capabilities::session_logging;
 
-fn install_app_runtime_host(app: &tauri::App<tauri::Wry>) {
+fn install_local_app_runtime_host(app: &tauri::App<tauri::Wry>) {
     use tauri::Manager;
     app.manage(
-        nimi_shell_tauri::capabilities::runtime::RuntimeBridgeAppHost::platform_default(),
+        nimi_shell_tauri::capabilities::runtime::RuntimeBridgeLocalAppHost::platform_default(),
     );
 }
 
@@ -16,10 +16,10 @@ fn main() {
 
     tauri::Builder::default()
         .setup(|app| {
-            install_app_runtime_host(app);
+            install_local_app_runtime_host(app);
             Ok(())
         })
-        .invoke_handler(nimi_shell_tauri::nimi_shell_tauri_installed_app_standard_shell_handler![])
+        .invoke_handler(nimi_shell_tauri::nimi_shell_tauri_local_app_standard_shell_handler![])
         .run(tauri::generate_context!())
         .expect("failed to run Realm World Studio");
 }
