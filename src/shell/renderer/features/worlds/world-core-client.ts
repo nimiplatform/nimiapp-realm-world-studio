@@ -32,6 +32,7 @@ type WorldCharacterProfileInput = ReplaceWorldCharacterBody['profile'];
 export type CreatorWorldCreateInput = {
   id?: string;
   core: Record<string, unknown>;
+  lorebookDeclaration: Record<string, unknown>;
   origin: RealmCoreOrigin;
   visibility?: CreateWorldCoreBody['visibility'];
 };
@@ -40,6 +41,7 @@ export type CreatorWorldReplaceInput = {
   id?: string;
   baseContentHash: string;
   core: Record<string, unknown>;
+  lorebookDeclaration: Record<string, unknown>;
   origin: RealmCoreOrigin;
   visibility?: ReplaceWorldCoreBody['visibility'];
 };
@@ -48,6 +50,7 @@ export type CreatorWorldCharacterReplaceInput = {
   id?: string;
   baseContentHash: string;
   profile: Record<string, unknown>;
+  lorebookDeclaration: Record<string, unknown>;
   entityId: string;
   origin: RealmCoreOrigin;
 };
@@ -118,7 +121,8 @@ export async function createCreatorWorldCore(input: CreatorWorldCreateInput): Pr
   const realm = createStudioRealmClient();
   const id = optionalText(input.id);
   const body: CreateWorldCoreBody = {
-    core: requireCore(input.core),
+    core: requireCore(input.core) as unknown as CreateWorldCoreBody['core'],
+    lorebookDeclaration: requireLorebookDeclaration(input.lorebookDeclaration) as unknown as CreateWorldCoreBody['lorebookDeclaration'],
     origin: requireOrigin(input.origin),
     ...(id ? { id } : {}),
     ...(input.visibility ? { visibility: input.visibility } : {}),
@@ -141,7 +145,8 @@ export async function replaceCreatorWorldCore(
   const id = optionalText(input.id);
   const body: ReplaceWorldCoreBody = {
     baseContentHash: requireRouteId(input.baseContentHash, 'baseContentHash'),
-    core: requireCore(input.core),
+    core: requireCore(input.core) as unknown as ReplaceWorldCoreBody['core'],
+    lorebookDeclaration: requireLorebookDeclaration(input.lorebookDeclaration) as unknown as ReplaceWorldCoreBody['lorebookDeclaration'],
     origin: requireOrigin(input.origin),
     ...(id ? { id } : {}),
     ...(input.visibility ? { visibility: input.visibility } : {}),
@@ -167,6 +172,7 @@ export async function replaceCreatorWorldCharacterCore(
   const body: ReplaceWorldCharacterBody = {
     baseContentHash: requireRouteId(input.baseContentHash, 'baseContentHash'),
     profile: requireProfile(input.profile),
+    lorebookDeclaration: requireLorebookDeclaration(input.lorebookDeclaration) as unknown as ReplaceWorldCharacterBody['lorebookDeclaration'],
     origin: requireOrigin(input.origin),
     worldEntityRef: {
       kind: 'worldEntity',
@@ -189,6 +195,7 @@ function assertWorldCoreContract(world: WorldCore): void {
   requireRouteId(world.id, 'WorldCoreDto.id');
   requireRouteId(world.contentHash, 'WorldCoreDto.contentHash');
   requireCore(world.core);
+  requireLorebookDeclaration(world.lorebookDeclaration);
   requireOrigin(world.origin);
 }
 
@@ -198,6 +205,7 @@ function assertWorldCharacterCoreContract(character: WorldCharacterCore): void {
   requireRouteId(character.worldEntityRef.entityId, 'WorldCharacterCoreDto.worldEntityRef.entityId');
   requireRouteId(character.worldEntityRef.worldId, 'WorldCharacterCoreDto.worldEntityRef.worldId');
   requireRouteId(character.contentHash, 'WorldCharacterCoreDto.contentHash');
+  requireLorebookDeclaration(character.lorebookDeclaration);
   requireProfile(character.profile);
   requireOrigin(character.origin);
 }
@@ -223,6 +231,13 @@ function assertCharacterParent(worldId: string, character: WorldCharacterCore): 
 function requireCore(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     throw new Error('Realm core payload must be an object before submitting a typed write.');
+  }
+  return value as Record<string, unknown>;
+}
+
+function requireLorebookDeclaration(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('Realm lorebook declaration must be an object before submitting or accepting a typed source.');
   }
   return value as Record<string, unknown>;
 }

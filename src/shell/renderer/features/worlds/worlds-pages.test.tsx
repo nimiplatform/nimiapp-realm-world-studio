@@ -201,10 +201,18 @@ describe('Realm World Studio worlds pages', () => {
   });
 
   it('submits world creation only through typed CreateWorldCoreDto input', async () => {
+    const lorebookDeclaration = {
+      identityBaseSetting: '草稿世界设定。',
+      worldRules: [],
+      rolePlacements: [],
+    };
     renderWithRouter('/worlds/new', <CreatorWorldCreatePage />);
 
     expect(await screen.findByRole('heading', { name: '创建 WorldCore', level: 1 })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/世界 id/), { target: { value: 'world-draft-1' } });
+    fireEvent.change(screen.getByLabelText(/Lorebook Declaration JSON/), {
+      target: { value: JSON.stringify(lorebookDeclaration) },
+    });
     fireEvent.change(screen.getByLabelText(/Core JSON/), {
       target: { value: JSON.stringify({ identity: { name: '草稿世界' } }) },
     });
@@ -213,6 +221,7 @@ describe('Realm World Studio worlds pages', () => {
     await waitFor(() => expect(createCreatorWorldCore).toHaveBeenCalledWith({
       id: 'world-draft-1',
       core: { identity: { name: '草稿世界' } },
+      lorebookDeclaration,
       origin: { kind: 'manual' },
       visibility: 'private',
     }));
@@ -231,6 +240,7 @@ describe('Realm World Studio worlds pages', () => {
       id: 'world-yuan-academy',
       baseContentHash: 'hash-world-1',
       core: { identity: { name: '更新世界' } },
+      lorebookDeclaration: TEST_WORLD_CORE.lorebookDeclaration,
       origin: { kind: 'manual' },
       visibility: 'private',
     }));
@@ -252,6 +262,7 @@ describe('Realm World Studio worlds pages', () => {
         id: 'yao-sui',
         baseContentHash: 'hash-character-1',
         profile: { presentation: { displayName: '姚燧更新' } },
+        lorebookDeclaration: TEST_WORLD_CHARACTER_CORE.lorebookDeclaration,
         entityId: 'entity-yao-sui',
         origin: { kind: 'manual' },
       },

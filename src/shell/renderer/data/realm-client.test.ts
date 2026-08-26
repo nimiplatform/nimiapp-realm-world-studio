@@ -60,7 +60,12 @@ describe('studio Realm facade boundary', () => {
       path: {},
       body: {
         id: 'world-1',
-        core: {},
+        core: {} as never,
+        lorebookDeclaration: {
+          identityBaseSetting: 'Test world.',
+          worldRules: [],
+          rolePlacements: [],
+        },
         origin: { kind: 'manual' },
         visibility: 'private',
       },
@@ -69,6 +74,11 @@ describe('studio Realm facade boundary', () => {
     expect(list).toHaveBeenCalledWith({ take: 5, visibility: 'private' });
     expect(create).toHaveBeenCalledWith({
       id: 'world-1',
+      lorebookDeclaration: {
+        identityBaseSetting: 'Test world.',
+        worldRules: [],
+        rolePlacements: [],
+      },
       core: {},
       origin: { kind: 'manual' },
       visibility: 'private',

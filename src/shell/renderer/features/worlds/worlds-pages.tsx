@@ -399,7 +399,7 @@ export function CreatorWorldDetailPage() {
         }
       />
       <StatisticGroup>
-        <Statistic label={t('worlds.statCharacters')} value={characters.length} tone="brand" />
+        <Statistic label={t('worlds.statCharacters')} value={characters.length} tone="primary" />
         <Statistic label={t('worlds.statEntityKinds')} value={entityCount} tone="neutral" />
         <Statistic label={t('worlds.statRelationshipTypes')} value={relationshipTypeCount} tone="neutral" />
         <Statistic label={t('worlds.statRevision')} value={world.contentRevision} tone="info" />
@@ -531,9 +531,15 @@ export function CreatorWorldCreatePage() {
         t('worlds.coreJsonInvalid'),
         t('worlds.coreJsonObjectRequired'),
       );
+      const lorebookDeclaration = parseCoreJson(
+        getFormText(form, 'lorebookDeclaration'),
+        'Lorebook declaration JSON is invalid.',
+        'Lorebook declaration must be a JSON object.',
+      );
       mutation.mutate({
         id: getFormText(form, 'worldId') || undefined,
         core,
+        lorebookDeclaration,
         origin: { kind: readOriginKind(getFormText(form, 'originKind'), t('worlds.originKindInvalid')) },
         visibility: readVisibility(getFormText(form, 'visibility'), t('worlds.visibilityInvalid')),
       });
@@ -578,6 +584,9 @@ export function CreatorWorldCreatePage() {
               </select>
             </FormField>
           </div>
+          <FormField label={t('worlds.formLorebookJson')} hint={t('worlds.formLorebookJsonHint')}>
+            <textarea name="lorebookDeclaration" rows={10} spellCheck={false} required />
+          </FormField>
           <FormField label={t('worlds.formCoreJson')} hint={t('worlds.formCoreJsonHint')}>
             <textarea
               name="core"
@@ -658,6 +667,11 @@ export function CreatorWorldEditPage() {
         id: world.id,
         baseContentHash: world.contentHash,
         core,
+        lorebookDeclaration: parseCoreJson(
+          getFormText(form, 'lorebookDeclaration'),
+          'Lorebook declaration JSON is invalid.',
+          'Lorebook declaration must be a JSON object.',
+        ),
         origin: world.origin,
         visibility: readVisibility(getFormText(form, 'visibility'), t('worlds.visibilityInvalid')),
       });
@@ -701,6 +715,15 @@ export function CreatorWorldEditPage() {
             </FormField>
             <FieldValue label={t('worlds.formOriginKind')} value={world.origin.kind} />
           </div>
+          <FormField label={t('worlds.formLorebookJson')} hint={t('worlds.formLorebookJsonHint')}>
+            <textarea
+              name="lorebookDeclaration"
+              rows={10}
+              spellCheck={false}
+              defaultValue={world.lorebookDeclaration ? JSON.stringify(world.lorebookDeclaration, null, 2) : ''}
+              required
+            />
+          </FormField>
           <FormField label={t('worlds.formCoreJson')} hint={t('worlds.formCoreJsonHint')}>
             <textarea name="core" rows={18} spellCheck={false} defaultValue={JSON.stringify(world.core, null, 2)} />
           </FormField>
@@ -784,6 +807,11 @@ export function CreatorWorldCharacterEditPage() {
         id: character.id,
         baseContentHash: character.contentHash,
         profile,
+        lorebookDeclaration: parseCoreJson(
+          getFormText(form, 'lorebookDeclaration'),
+          'Lorebook declaration JSON is invalid.',
+          'Lorebook declaration must be a JSON object.',
+        ),
         entityId: getFormText(form, 'entityId'),
         origin: character.origin,
       });
@@ -821,6 +849,15 @@ export function CreatorWorldCharacterEditPage() {
             </FormField>
             <FieldValue label={t('worlds.formOriginKind')} value={character.origin.kind} />
           </div>
+          <FormField label={t('worlds.formLorebookJson')} hint={t('worlds.formLorebookJsonHint')}>
+            <textarea
+              name="lorebookDeclaration"
+              rows={10}
+              spellCheck={false}
+              defaultValue={character.lorebookDeclaration ? JSON.stringify(character.lorebookDeclaration, null, 2) : ''}
+              required
+            />
+          </FormField>
           <FormField label={t('worlds.formProfileJson')} hint={t('worlds.formProfileJsonHint')}>
             <textarea name="profile" rows={18} spellCheck={false} defaultValue={JSON.stringify(character.profile, null, 2)} />
           </FormField>

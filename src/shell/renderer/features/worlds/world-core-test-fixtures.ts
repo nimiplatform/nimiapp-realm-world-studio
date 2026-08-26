@@ -10,6 +10,11 @@ export const TEST_WORLD_CORE: RealmModel<'WorldCoreDto'> = {
   createdAt: '2026-07-09T00:00:00.000Z',
   updatedAt: '2026-07-09T01:00:00.000Z',
   origin: { kind: 'manual' },
+  lorebookDeclaration: {
+    identityBaseSetting: '元代文人书院世界是创作者维护的历史世界源。',
+    worldRules: [],
+    rolePlacements: [],
+  },
   core: {
     assets: { intents: [], resourceRefs: [] },
     authoring: { source: 'realm-world-studio-test' },
@@ -56,6 +61,13 @@ export const TEST_WORLD_CHARACTER_CORE: RealmModel<'WorldCharacterCoreDto'> = {
   createdAt: '2026-07-09T00:10:00.000Z',
   updatedAt: '2026-07-09T01:10:00.000Z',
   origin: { kind: 'manual' },
+  lorebookDeclaration: {
+    identity: '姚燧是元代文人书院世界中的人物。',
+    behavior: ['遵循史料来源并保持文人身份。'],
+    speaking: ['措辞清晰而符合元代文人语境。'],
+    immutableBoundaries: ['不得自称模型或助手。'],
+    relationshipPostures: [],
+  },
   materializationReadiness: {
     status: 'ready',
     blockers: [],

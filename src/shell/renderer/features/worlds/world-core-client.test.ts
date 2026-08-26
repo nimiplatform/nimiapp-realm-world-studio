@@ -6,6 +6,20 @@ import {
   replaceCreatorWorldCharacterCore,
   replaceCreatorWorldCore,
 } from './world-core-client.js';
+
+const worldLorebookDeclaration = {
+  identityBaseSetting: 'A source-grounded test world.',
+  worldRules: [],
+  rolePlacements: [],
+};
+
+const characterLorebookDeclaration = {
+  identity: 'A source-grounded test character.',
+  behavior: ['Remain consistent with source.'],
+  speaking: ['Speak clearly in character.'],
+  immutableBoundaries: ['Never claim to be a model.'],
+  relationshipPostures: [],
+};
 import { TEST_WORLD_CHARACTER_CORE, TEST_WORLD_CORE } from './world-core-test-fixtures.js';
 
 vi.mock('@renderer/data/realm-client.js', () => ({
@@ -86,6 +100,7 @@ describe('Realm World Studio world-core client writes', () => {
     });
 
     await createCreatorWorldCore({
+      lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       core: { identity: { name: 'World 1' } },
       origin: { kind: 'manual' },
@@ -97,6 +112,7 @@ describe('Realm World Studio world-core client writes', () => {
       body: {
         id: 'world-1',
         core: { identity: { name: 'World 1' } },
+        lorebookDeclaration: worldLorebookDeclaration,
         origin: { kind: 'manual' },
         visibility: 'private',
       },
@@ -112,6 +128,7 @@ describe('Realm World Studio world-core client writes', () => {
     });
 
     await replaceCreatorWorldCore('world-1', {
+      lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       baseContentHash: 'hash-world-1',
       core: { identity: { name: 'Updated World' } },
@@ -125,6 +142,7 @@ describe('Realm World Studio world-core client writes', () => {
         id: 'world-1',
         baseContentHash: 'hash-world-1',
         core: { identity: { name: 'Updated World' } },
+        lorebookDeclaration: worldLorebookDeclaration,
         origin: { kind: 'manual' },
         visibility: 'unlisted',
       },
@@ -152,6 +170,7 @@ describe('Realm World Studio world-core client writes', () => {
     });
 
     await expect(createCreatorWorldCore({
+      lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       core: { identity: { name: 'World 1' } },
       origin: { kind: 'manual' },
@@ -168,6 +187,7 @@ describe('Realm World Studio world-core client writes', () => {
     });
 
     await expect(replaceCreatorWorldCharacterCore('world-1', 'character-1', {
+      lorebookDeclaration: characterLorebookDeclaration,
       id: 'character-1',
       baseContentHash: 'hash-character-1',
       profile: characterProfileInput,
