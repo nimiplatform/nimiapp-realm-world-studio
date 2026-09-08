@@ -54,16 +54,12 @@ describe('studio platform runtime auth boundary', () => {
     expect(combined).not.toContain('resolveStudioRealmBaseUrl');
     expect(bootstrapSource).not.toContain('getStudioRuntimeDefaults');
     expect(bootstrapSource).not.toContain('runtimeDefaults.realm?.realmBaseUrl');
-    expect(viteConfigSource).toContain("find: /^@nimiplatform\\/sdk\\/runtime$/");
-    expect(viteConfigSource).toContain("replacement: path.resolve(nimiSdkSourceRoot, 'runtime/index.ts')");
-    expect(viteConfigSource).toContain("find: /^@nimiplatform\\/kit\\/shell\\/renderer\\/bootstrap$/");
-    expect(viteConfigSource).toContain("replacement: path.resolve(nimiKitSourceRoot, 'shell/renderer/src/bootstrap/index.ts')");
+    expect(viteConfigSource).not.toMatch(/nimiSdkSourceRoot|nimiKitSourceRoot|nimiRepoRoot/);
     expect(viteConfigSource).toContain('exclude: [');
     expect(viteConfigSource).toContain("'@nimiplatform/sdk/runtime'");
     expect(viteConfigSource).toContain("'@nimiplatform/kit/shell/renderer/bootstrap'");
     expect(viteConfigSource).not.toMatch(/include:\s*\[[^\]]*'@nimiplatform\/sdk\/runtime'/);
     expect(viteConfigSource).not.toMatch(/include:\s*\[[^\]]*'@nimiplatform\/kit\/shell\/renderer\/bootstrap'/);
-    expect(stylesSource).toContain('@source "../../../../../nimi/kit/**/*.{ts,tsx}";');
-    expect(stylesSource).not.toContain('@nimiplatform/kit/dist');
+    expect(stylesSource).toContain('@source "../../../node_modules/@nimiplatform/kit/dist/**/*.{js,mjs}";');
   });
 });

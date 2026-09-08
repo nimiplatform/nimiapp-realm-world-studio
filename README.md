@@ -36,6 +36,3 @@ pnpm lint
 pnpm dev                              # Desktop-supervised Electron
 pnpm dev:shell -- --shell electron    # explicit active shell
 ```
-
-The Tauri identifier remains only as dormant packaging identity; it is not an
-active development or compatibility path.

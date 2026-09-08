@@ -113,7 +113,7 @@ units:
     kind: rule
     title: Native host trust
     modality: must
-    statement: The active Electron host uses registerNimiElectronAppBridge and the Desktop-supervised protected local-app carrier; renderer metadata, environment variables, command-line arguments, app-local files, and ordinary localhost gRPC convey no identity, release trust, authorization, or protected operation access, and Tauri remains outside the active development path.
+    statement: The active Electron host uses registerNimiElectronAppBridge and the Desktop-supervised protected local-app carrier; renderer metadata, environment variables, command-line arguments, app-local files, and ordinary localhost gRPC convey no identity, release trust, authorization, or protected operation access, and no legacy Tauri entry is retained.
     condition: When the active development host establishes identity, authorization, or protected operation access.
     failure: Exit or remain explicitly fail-closed when the Desktop-supervised protected carrier is absent or revoked.
     relations:

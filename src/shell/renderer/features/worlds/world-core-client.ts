@@ -195,7 +195,7 @@ function assertWorldCoreContract(world: WorldCore): void {
   requireRouteId(world.id, 'WorldCoreDto.id');
   requireRouteId(world.contentHash, 'WorldCoreDto.contentHash');
   requireCore(world.core);
-  requireLorebookDeclaration(world.lorebookDeclaration);
+  if (world.lorebookDeclaration !== null) requireLorebookDeclaration(world.lorebookDeclaration);
   requireOrigin(world.origin);
 }
 

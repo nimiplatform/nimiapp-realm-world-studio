@@ -1,0 +1,8 @@
+app_id: nimi.realm-world-studio
+display_name: Realm World Studio
+version: 0.1.0
+npm_package_name: nimiapp-realm-world-studio
+cargo_package_name: nimiapp-realm-world-studio-shell
+tauri_identifier: ai.nimi.apps.nimi.realm-world-studio
+package_author: null
+identity_role: scaffold-generated-authoring-input

@@ -29,7 +29,7 @@ units:
   - id: definition.realm-world-studio.core.protected-operation-carrier
     kind: definition
     title: Protected operation carrier
-    meaning: The Desktop-supervised local-app protected standard bridge used by the active Electron shell; Desktop owns admission, start, identity, authorization, and protected session posture while Tauri remains a dormant packaging identity.
+    meaning: The Desktop-supervised local-app protected standard bridge used by the active Electron shell; Desktop owns admission, start, identity, authorization, and protected session posture.
   - id: rule.realm-world-studio.core.r001
     kind: rule
     title: Single app authority
@@ -44,7 +44,7 @@ units:
     kind: rule
     title: Product success sources
     modality: must
-    statement: Product success state comes from typed Realm core DTOs, Runtime account state, SDK results, kit-owned UI or model-config contracts, or admitted Tauri or Electron desktop shell host results.
+    statement: Product success state comes from typed Realm core DTOs, Runtime account state, SDK results, kit-owned UI or model-config contracts, or admitted Electron desktop shell host results.
     condition: Always.
     failure: Render the affected source as unavailable and do not present a product success state.
     relations:

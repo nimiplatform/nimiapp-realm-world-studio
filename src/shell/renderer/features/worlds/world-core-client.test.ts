@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createStudioRealmClient, type StudioRealmSurface } from '@renderer/data/realm-client.js';
 import {
   createCreatorWorldCore,
+  listCreatorWorlds,
   getCreatorWorldWorkbench,
   replaceCreatorWorldCharacterCore,
   replaceCreatorWorldCore,
@@ -92,6 +93,15 @@ function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface,
 describe('Realm World Studio world-core client writes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('lists existing worlds with a nullable lorebook declaration', async () => {
+    installRealmSurface({
+      worldCoreControllerListWorldCores: vi.fn().mockResolvedValue([{ ...worldCore, lorebookDeclaration: null }]),
+    });
+    const worlds = await listCreatorWorlds();
+    expect(worlds).toHaveLength(1);
+    expect(worlds[0]?.id).toBe('world-1');
   });
 
   it('creates worlds through WorldCoreController.createWorldCore only', async () => {

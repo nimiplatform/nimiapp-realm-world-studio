@@ -6,7 +6,7 @@
 
 - **App name (English)**: Realm World Studio
 - **Canonical Nimi app_id**: `nimi.realm-world-studio`
-- **Tauri identifier**: `nimi.realm-world-studio`
+- **Electron App Access id**: `nimi.realm-world-studio`
 - **One-line**: Creator-facing world and world-character operation desktop app for creator-owned Realm worlds.
 - **Status**: Pre-Alpha, not yet launched.
 
@@ -14,20 +14,16 @@
 
 | Layer | Technology | Location |
 |-------|-----------|----------|
-| Desktop shell | Electron 42 dev shell (active); Tauri 2 shell frozen | `src-electron/`; `src-tauri/` (frozen) |
+| Desktop shell | Desktop-supervised Electron 42 | `src-electron/` |
 | Renderer | React 19 + Vite 7 + Tailwind 4 | `src/shell/renderer/` |
 | Routing | react-router-dom 7 | `src/shell/renderer/app-shell/routes.tsx` |
 | Auth & runtime bridge | Desktop-supervised protected standard bridge | `src-electron/` |
-| UI components | `@nimiplatform/kit` (`link:../../nimi/kit`) | renderer-wide |
-| Platform client | `@nimiplatform/sdk` (`link:../../nimi/sdks/typescript`) | `app-shell/studio-platform.ts` |
+| UI components | `@nimiplatform/kit` (npm) | renderer-wide |
+| Platform client | `@nimiplatform/sdk` (npm) | `app-shell/studio-platform.ts` |
 | State | Zustand | `app-shell/app-store.ts` |
 | Dev port | 1451 | `vite.config.ts` |
 
-The linked platform packages resolve through their `dist/` exports for `tsc`
-and the Electron main build, while Vite/Vitest alias to platform sources.
-Run `pnpm prepare:workspace-surfaces` (already chained into `typecheck`,
-`build:electron`) to build sdk/kit dist in the sibling `../../nimi` checkout
-when it is missing or stale.
+The platform packages consume the public versions selected by app-tools sync through their built exports.
 
 ## Spec Authority & Sync
 
@@ -113,50 +109,25 @@ When editing admission inputs:
   domains the product actually consumes (currently `realm.data` only).
   Unknown entries are inert; do not declare speculative domains.
 - Never add fields that claim grant/approval semantics
-  (`permission_grant: granted`, `public_admission_truth: true`, etc.); the
-  `scripts/local-audit.mjs` self-check rejects them.
+  (`permission_grant: granted`, `public_admission_truth: true`, etc.).
 
 ## Verification
 
 ```bash
-# Code layer
-pnpm prepare:workspace-surfaces   # build sdk/kit dist in ../../nimi when stale (chained into typecheck/build:electron)
-pnpm typecheck
+pnpm validate                  # published app-tools configuration check
+pnpm build                     # renderer and Electron build
 pnpm test
 pnpm lint
-pnpm run build:electron
-
-# Rust layer
-(cd src-tauri && cargo check)
-(cd src-tauri && cargo test)
-
-# Spec layer
 pnpm check:spec-consistency
-
-# Pre-submission self-check (local-only; does not establish admission truth)
-pnpm run validate       # manifest/submission/build-profile role markers
-pnpm run local-audit    # admission inputs must defer truth to platform
-pnpm run pack           # builds renderer + produces dist/nimi-app-submission.json
-pnpm run check          # aggregate: validate + local-audit + spec-consistency + typecheck + lint + test
 ```
 
 ## CI
 
-`.github/workflows/ci.yml` runs three jobs:
-
-- `spec-and-typescript` — nimicoding doctor, spec consistency, typecheck,
-  lint, vitest, Electron build, renderer build (uploads `renderer-dist` artifact).
-- `pre-submission-self-check` — needs `spec-and-typescript`, runs `validate`
-  + `local-audit`, then re-packs the submission packet from the renderer
-  artifact and uploads `nimi-app-submission`.
-- `rust-quality` — cargo fmt/check/clippy/test on `src-tauri/`.
-
-The self-check is pre-submission only. CI green does not constitute an
-admission decision.
+`.github/workflows/ci.yml` runs the App configuration, spec, i18n, typecheck, lint, tests, renderer build, and Electron build. CI success does not establish platform admission.
 
 ## Retrieval Defaults
 
-Start with: `.nimi/spec/realm-world-studio/canonical/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/worlds/`, `src-tauri/src/`, `src-electron/`.
+Start with: `.nimi/spec/realm-world-studio/canonical/`, `src/shell/renderer/app-shell/`, `src/shell/renderer/features/worlds/`, `src-electron/`.
 
 Skip: `node_modules/`, `dist/`, `dist-electron/`, `src-tauri/target/`, `src-tauri/gen/`, lockfiles.
 
@@ -165,18 +136,24 @@ Skip: `node_modules/`, `dist/`, `dist-electron/`, `src-tauri/target/`, `src-taur
 - ULID for new app-level IDs.
 - ISO 8601 for date/time fields.
 - ESM imports use `.js` extension even for `.ts` files.
-- Tauri host glue is consumed from `nimi-shell-tauri` (`crates.io` 0.1.0) and renderer bridge APIs from `@nimiplatform/kit/shell/renderer/bridge` (npm).
 - Electron host glue is consumed from `@nimiplatform/kit/shell/electron/*`; renderer Runtime transport selects `electron-ipc` only when the kit Electron preload is present.
 
 <!-- nimicoding:managed:agents:start -->
 # Nimi Coding Managed Block
 
+- From the repository root, invoke the pinned project-local CLI as `pnpm exec nimicoding`; do not probe or rely on a global `nimicoding` binary in `PATH`.
 - Product authority lives under `.nimi/spec/**`.
 - For canonical authority authoring, read only `.nimi/methodology/authority-authoring.yaml`, the affected authority files or bounded task context, and CLI diagnostics.
-- Use `nimicoding authority context <path> <id> --max-units <n> --max-bytes <n> --json` only for the complete declared outgoing interpretation closure; it is not complete task context, and failure never permits guessed or partial context.
-- Use `nimicoding authority diff` and `authority impact` with explicit `--max-bytes`; impact reports declared review obligations and does not prove implementation, consumers, or tests are synchronized.
+- Use `pnpm exec nimicoding authority context <path> <id> --max-units <n> --max-bytes <n> --json` only for the complete declared outgoing interpretation closure; it is not complete task context, and failure never permits guessed or partial context.
+- Use `pnpm exec nimicoding authority diff` and `pnpm exec nimicoding authority impact` with explicit `--max-bytes`; impact reports declared review obligations and does not prove implementation, consumers, or tests are synchronized.
+- Use `pnpm exec nimicoding authority change-candidates` only with explicit channels and budgets; its complete union is recall input, never conflict, retirement, absence, authority, or conformance judgment.
+- For implementation audits with an exact authority ID, use `pnpm exec nimicoding code authority --repo <root> --authority <id> --max-files <n> --max-bytes <n>` to locate annotated code, and use `--source <path>` for code-to-authority lookup. Results cover only explicit markers and authority lifecycle; they do not prove implementation conformance or evaluate unannotated code.
+- For a new or changed authority-governed feature, add the reserved standalone physical line `// @nimi-authority: <exact-id>` in TypeScript/TSX, Go, or Rust, and `# @nimi-authority: <exact-id>` in Python. The scanner does not prove language comment context, so use this reserved form only for intentional links at a few key semantic owners.
+- Use `// @nimi-deprecated: <exact-id>`, or `# @nimi-deprecated: <exact-id>` in Python, only after direct authority evidence or a real product failure confirms obsolete semantics; find it with `pnpm exec nimicoding code authority --repo <root> --audit --max-files <n> --max-bytes <n>` and remove it with the hard cut.
+- After selecting an explicit TypeScript or TSX consumer, use `pnpm exec nimicoding code context <path> --repo <root> --symbol <identifier> --tsconfig <path> --max-bytes <n>` for bounded root-direct static dependencies; it is not inbound impact, runtime dispatch, or complete task context.
+- Use `pnpm exec nimicoding sync --check` to diagnose drift in package-owned managed projections, `pnpm exec nimicoding sync --apply` to restore them, and `pnpm exec nimicoding doctor` to diagnose package/managed compatibility. These commands do not validate product authority, implementation conformance, or task readiness.
 - Under `.nimi/spec/**`, author only closed multi-unit `*.authority.yaml` containers or single-unit `*.authority.md`; historical document formats are unsupported and never inferred.
-- Run `nimicoding authority fmt` on each changed file, then `nimicoding authority check` on the complete authority input set.
-- Never bypass a failure with inferred or fallback semantics; choose repair values only from product/task authority.
-- Keep derived and verification evidence under `.nimi/local/**`; it is never product authority.
+- Run `pnpm exec nimicoding authority fmt` on each changed file, then `pnpm exec nimicoding authority check` on the complete authority input set.
+- A failed project-local `pnpm exec nimicoding ...` invocation blocks only the requested CLI product and never permits guessed, partial, corpus-wide, or fallback context; choose repair values only from product/task authority.
+- Keep derived and local verification output under `.nimi/local/**`; it is never product authority.
 <!-- nimicoding:managed:agents:end -->

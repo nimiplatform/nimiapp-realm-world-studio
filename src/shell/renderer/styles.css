@@ -5,7 +5,7 @@
 @import "@nimiplatform/kit/auth/styles.css";
 @import "tailwindcss";
 
-@source "../../../../../nimi/kit/**/*.{ts,tsx}";
+@source "../../../node_modules/@nimiplatform/kit/dist/**/*.{js,mjs}";
 @source "../../../node_modules/.pnpm";
 
 :root {

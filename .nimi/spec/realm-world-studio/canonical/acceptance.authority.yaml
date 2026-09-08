@@ -5,16 +5,16 @@ units:
   - id: definition.realm-world-studio.acceptance.studio-app
     kind: definition
     title: Studio app
-    meaning: "The Realm World Studio installed app identity: package, Tauri identifier, and app_id nimi.realm-world-studio with creator Realm World Studio product copy."
+    meaning: "The Realm World Studio installed app identity: package, Electron App Access identity, and app_id nimi.realm-world-studio with creator Realm World Studio product copy."
   - id: definition.realm-world-studio.acceptance.electron-active-path-redesign
     kind: definition
     title: Electron active-path redesign
-    meaning: "The approved host acceptance redesign: the real Electron shell is the active development path, while the Tauri packaging identity remains outside active-path product proof."
+    meaning: "The approved host acceptance redesign: the real Electron shell is the sole development path and the legacy Tauri entry is removed."
   - id: rule.realm-world-studio.acceptance.r001
     kind: rule
     title: Stable app identity
     modality: must
-    statement: Package, Tauri identifier, and app_id remain nimi.realm-world-studio, while active product copy presents creator Realm World Studio semantics.
+    statement: Package, Electron App Access identity, and app_id remain nimi.realm-world-studio, while active product copy presents creator Realm World Studio semantics.
     condition: Always.
     failure: Reject acceptance when app identity diverges or product copy does not present creator Realm World Studio semantics.
     relations:
@@ -96,7 +96,7 @@ units:
     kind: rule
     title: Acceptance gate set
     modality: must
-    statement: pnpm run spec:authority:check, typecheck, test, validate, local-audit, build, and check must pass before acceptance.
+    statement: pnpm run spec:authority:check, typecheck, test, validate, build, and lint must pass before acceptance.
     condition: Before product acceptance.
     failure: Withhold acceptance when any required gate does not pass.
     relations:
@@ -133,9 +133,9 @@ units:
     kind: rule
     title: Desktop-supervised Electron proof
     modality: must
-    statement: The real active Electron shell exposes only the Desktop-supervised protected standard bridge, renders typed protected-session failures, registers no generic Runtime or Realm proxy, and excludes Tauri from the active development path and active-path acceptance proof.
+    statement: The real active Electron shell exposes only the Desktop-supervised protected standard bridge, renders typed protected-session failures, registers no generic Runtime or Realm proxy, and contains no legacy Tauri entry.
     condition: Before Realm World Studio acceptance.
-    failure: Reject acceptance when Electron exposes an app-owned bootstrap, identity or credential material, generic Runtime or Realm transport, or an unadmitted command path, or when dormant Tauri packaging is reported as active-path proof.
+    failure: Reject acceptance when Electron exposes an app-owned bootstrap, identity or credential material, generic Runtime or Realm transport, or an unadmitted command path, or when a legacy Tauri entry is restored.
     relations:
       - type: applies_to
         target: definition.realm-world-studio.acceptance.electron-active-path-redesign
