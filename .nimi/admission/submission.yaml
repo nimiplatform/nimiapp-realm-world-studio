@@ -5,12 +5,16 @@ profile: standalone
 npm_package_name: nimiapp-realm-world-studio
 cargo_package_name: nimiapp-realm-world-studio-shell
 tauri_identifier: ai.nimi.apps.nimi.realm-world-studio
-package_author: null
+package_author: Nimi Team
 submission_role: developer-submitted-input
 capability_contract_refs: []
 required_standardized_feature_refs: []
 storage_policy:
-  kind: nimi-mediated-default
+  kind: app-owned-os-storage
+  os_storage_disclosure:
+    - path_pattern: <Electron userData>/Local Storage/**
+      purpose: Language preference only; world and character records remain Realm-owned. Retained after Nimi uninstall.
+      expected_size_band: A small preference record; browser storage overhead varies.
 support_manifest:
   diagnostics_bundle_fields:
     - app_version
@@ -20,7 +24,7 @@ support_manifest:
   user_visible_issue_categories:
     - startup
     - runtime
-  escalation_path: README.md#support
+  escalation_path: https://github.com/nimiplatform/nimiapp-realm-world-studio/issues
   kill_switch_visibility: visible
   recovery_instructions: Restart the App from Nimi. If the problem persists, reinstall the current admitted release.
 review_inputs:

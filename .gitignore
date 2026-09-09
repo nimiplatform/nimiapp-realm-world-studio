@@ -25,3 +25,6 @@ src-tauri/gen/schemas/
 .claude/
 docs/superpowers/
 docs/design-mocks/
+
+# Windows production package
+dist-electron-package/
