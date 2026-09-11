@@ -1,6 +1,6 @@
 app_id: nimi.realm-world-studio
 display_name: Realm World Studio
-version: 0.1.3
+version: 0.1.4
 profile: standalone
 npm_package_name: nimiapp-realm-world-studio
 cargo_package_name: nimiapp-realm-world-studio-shell
@@ -12,9 +12,9 @@ required_standardized_feature_refs: []
 storage_policy:
   kind: app-owned-os-storage
   os_storage_disclosure:
-    - path_pattern: <Electron userData>/Local Storage/**
-      purpose: Language preference only; world and character records remain Realm-owned. Retained after Nimi uninstall.
-      expected_size_band: A small preference record; browser storage overhead varies.
+    - path_pattern: <Electron userData>/**
+      purpose: 保存语言偏好及 Electron/Chromium 运行所需的本地设置与缓存；世界和角色资料以 Realm 为准。从 Nimi 卸载应用后，这些本地文件仍会保留。
+      expected_size_band: 语言偏好为少量文本；其余占用随 Chromium 缓存和使用情况变化，应用未设置缓存大小上限。
 support_manifest:
   diagnostics_bundle_fields:
     - app_version
