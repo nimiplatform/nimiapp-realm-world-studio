@@ -25,6 +25,11 @@
 
 The platform packages consume the public versions selected by app-tools sync through their built exports.
 
+For the user-authorized local world/character closure iteration, SDK, Kit and the
+native carrier may consume the matching built artifacts from `D:\nimi-realm\nimi`.
+Keep that development dependency staging under `.nimi/local/`; it does not establish
+public package availability or authorize a direct Realm transport.
+
 ## Spec Authority & Sync
 
 Closed v2 containers under `.nimi/spec/realm-world-studio/canonical/**` are
@@ -37,12 +42,12 @@ containers or bounded authority context; do not create parallel authority roots
 guide; refresh with `pnpm exec nimicoding sync --apply` after bumping the
 package.
 
-Studio canonical world surfaces are `Realm WorldCoreController.listWorldCores`,
+Studio canonical world surfaces are `Realm WorldCoreController.getWorldCreationEligibility`,
+`listWorldCores`,
 `getWorldCore`, `createWorldCore`, `replaceWorldCore`,
 `listWorldCharacters`, `getWorldCharacter`, `createWorldCharacter`,
-`replaceWorldCharacter`, `listWorldEntities`, `getWorldEntity`,
-`listWorldRelationships`, `getWorldRelationship`, and typed source
-materialization surfaces when admitted. RealmPersona portfolio surfaces belong
+`replaceWorldCharacter`, `listWorldEntities`, `getWorldEntity`, `createWorldEntity`,
+`listWorldRelationships`, and `getWorldRelationship`. RealmPersona portfolio surfaces belong
 to Realm Persona Studio and must not be used as world-character authority.
 `WorldPublicController.*`, `/api/agent/forge-imported-system/**`,
 `/api/creator/characters/**`, resource upload/direct-publication APIs, and
@@ -55,12 +60,12 @@ creatorId.
 ## Hard Boundaries
 
 ### Scope boundary
-- **In scope:** WorldCore records, WorldCharacterCore detail, creator world creation/update, world-character settings, profile media references, voice/source settings, and typed source materialization readiness through Realm core authority when admitted.
-- **Out of scope:** RealmPersona owner portfolio, LocalAgent private runtime / memory / emotion state, owner-authored post scheduling, fallback from world reads to owner-persona reads, gift/economic settlement, team collaboration.
+- **In scope:** WorldCore records, WorldCharacterCore detail, creator world creation/update, world-character settings, profile media references, voice/source settings, canonical World / WorldCharacter setting creation and maintenance through Realm core authority.
+- **Out of scope:** RealmPersona owner portfolio, LocalAgent materialization / trials / configuration / conversation / private runtime / memory / emotion state, owner-authored post scheduling, fallback from world reads to owner-persona reads, gift/economic settlement, team collaboration.
 
 ### Failure mode
 - Fail-closed on every typed contract or source-availability gap. No pseudo-success, no synthesized placeholders, no zero-fill metrics, no parallel app-local shadow truth.
-- Creator/world writes only succeed after the corresponding Realm core endpoint returns canonical data.
+- Creator/world writes only succeed after the corresponding Realm core endpoint returns canonical data. WorldCharacter is a source-setting template; materialization readiness is not a Studio completion condition.
 - AI generation output is candidate material until creator human review.
 
 ### Auth boundary
@@ -106,7 +111,7 @@ When editing admission inputs:
   `submission.yaml`, `scripts/pack.mjs`, Runtime/SDK callers, and the Tauri
   identifier. Do not introduce a second OS-bundle-only app identity.
 - Keep the `app_access` domain set in `nimi.app.yaml` minimal — declare only
-  domains the product actually consumes (currently `realm.data` only).
+  domains the product actually consumes (currently `realm.data` and `runtime.consume`).
   Unknown entries are inert; do not declare speculative domains.
 - Never add fields that claim grant/approval semantics
   (`permission_grant: granted`, `public_admission_truth: true`, etc.).

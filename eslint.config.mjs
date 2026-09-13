@@ -13,6 +13,7 @@ export default defineConfig([
     'src-tauri/target/**',
     'src-tauri/gen/**',
     'node_modules/**',
+    '.nimi/local/**',
     '*.config.ts',
     '*.config.mjs',
   ]),

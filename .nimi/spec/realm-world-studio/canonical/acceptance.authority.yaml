@@ -66,9 +66,9 @@ units:
     kind: rule
     title: Admitted generation pipeline
     modality: must
-    statement: AI execution uses admitted public SDK operations, source materialization uses only an admitted Runtime-owned CharacterSourceRef operation, and AI output remains candidate material until creator review.
-    condition: When Realm World Studio executes AI or materializes source.
-    failure: Preserve AI output as candidate material and render the operation as unavailable when an admitted surface fails.
+    statement: AI execution uses admitted public SDK operations and produces candidates for explicit creator review; world and character-setting acceptance requires canonical Realm save and readback, not source materialization, LocalAgent existence, Agent model configuration or conversation.
+    condition: When Realm World Studio executes AI or accepts a creator source workflow.
+    failure: Preserve AI output as candidate material and withhold only the affected generation or Realm source-write success; do not add a LocalAgent acceptance step.
     relations:
       - type: applies_to
         target: definition.realm-world-studio.core.local-candidate

@@ -4,23 +4,25 @@ import { useTranslation } from 'react-i18next';
 import { Surface } from '@nimiplatform/kit/ui';
 
 const CreatorWorldListPage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldListPage })),
+  import('../features/worlds/world-library.js').then((m) => ({ default: m.CreatorWorldListPage })),
 );
 const CreatorWorldDetailPage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldDetailPage })),
+  import('../features/worlds/world-notebook.js').then((m) => ({ default: m.CreatorWorldDetailPage })),
 );
 const CreatorWorldCharacterDetailPage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCharacterDetailPage })),
+  import('../features/worlds/world-character-page.js').then((m) => ({ default: m.WorldCharacterDetailPage })),
 );
 const CreatorWorldCreatePage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCreatePage })),
+  import('../features/worlds/world-library.js').then((m) => ({ default: m.CreatorWorldCreatePage })),
 );
 const CreatorWorldEditPage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldEditPage })),
+  import('../features/worlds/world-notebook.js').then((m) => ({ default: m.CreatorWorldEditPage })),
 );
 const CreatorWorldCharacterEditPage = lazy(() =>
-  import('../features/worlds/worlds-pages.js').then((m) => ({ default: m.CreatorWorldCharacterEditPage })),
+  import('../features/worlds/world-character-page.js').then((m) => ({ default: m.WorldCharacterEditorPage })),
 );
+const WorldDraftPage = lazy(() => import('../features/worlds/world-notebook.js').then(m => ({ default: m.WorldDraftPage })));
+const WorldModelsPage = lazy(() => import('../features/worlds/world-models.js').then(m => ({ default: m.WorldModelsPage })));
 
 function PageFallback() {
   const { t } = useTranslation();
@@ -37,9 +39,12 @@ export function AppRoutes() {
     <Suspense fallback={<PageFallback />}>
       <Routes>
         <Route path="/worlds" element={<CreatorWorldListPage />} />
+        <Route path="/drafts/:draftId" element={<WorldDraftPage />} />
+        <Route path="/settings/ai" element={<WorldModelsPage />} />
         <Route path="/worlds/new" element={<CreatorWorldCreatePage />} />
         <Route path="/worlds/:worldId" element={<CreatorWorldDetailPage />} />
         <Route path="/worlds/:worldId/edit" element={<CreatorWorldEditPage />} />
+        <Route path="/worlds/:worldId/characters/new" element={<CreatorWorldCharacterEditPage />} />
         <Route path="/worlds/:worldId/characters/:characterId" element={<CreatorWorldCharacterDetailPage />} />
         <Route path="/worlds/:worldId/characters/:characterId/edit" element={<CreatorWorldCharacterEditPage />} />
         <Route path="*" element={<Navigate to="/worlds" replace />} />

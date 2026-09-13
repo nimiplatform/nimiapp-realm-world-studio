@@ -70,7 +70,7 @@ units:
     kind: rule
     title: Explicit extension admission
     modality: must
-    statement: Entity, relationship, scene, timeline, source-materialization, and AI-assisted generation modules become creator workbench success paths only after explicit canonical authority rules admit them.
+    statement: Entity, relationship, scene, timeline, and AI-assisted generation modules become creator workbench success paths only after explicit canonical authority rules admit them.
     condition: When an incremental creator workbench extension is proposed.
     failure: Keep the extension unavailable until explicit canonical authority admits its success path.
     relations:
@@ -80,7 +80,7 @@ units:
     kind: rule
     title: Out-of-scope products
     modality: must_not
-    statement: RealmPersona owner portfolio, public World Atlas browsing, Forge curation, post scheduling, gift or economic settlement, team collaboration, or LocalAgent private runtime become Realm World Studio product scope.
+    statement: RealmPersona owner portfolio, public World Atlas browsing, Forge curation, post scheduling, gift or economic settlement, team collaboration, or LocalAgent materialization, trials, configuration, conversation or private runtime become Realm World Studio product scope.
     condition: Always.
     failure: Reject the scope expansion and keep the surface unavailable.
     relations:
@@ -126,3 +126,49 @@ units:
     relations:
       - type: applies_to
         target: definition.realm-world-studio.core.thin-product-layer
+  - id: rule.realm-world-studio.scope.r013
+    kind: rule
+    title: World notebook workflow
+    modality: must
+    statement: The creator notebook provides ordinary-language identity, explicit base setting, world rules, scene descriptions and local character concepts, followed by human review and typed world creation or replacement; character concepts remain draft material until a separately reviewed typed world-character creation returns a canonical WorldCharacterCore record.
+    condition: When a creator develops a world notebook.
+    failure: Keep unreviewed or incomplete material as a draft and show any unavailable world or world-character write before submission.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r014
+    kind: rule
+    title: Admitted world inventory detail
+    modality: must
+    statement: The world notebook loads the selected world through worldCore.get and submits reviewed maintenance through worldCore.replace with the source baseContentHash. It preserves canonical fields outside the edited notebook sections, keeps drafts on failure and shows the latest source on a version conflict; the creator explicitly chooses to rebase and reviews again before resubmission. Character lists use bounded pagination and never present a partial page as the whole population.
+    condition: When a creator opens or drafts changes to an existing world with the current bounded local-app operation set.
+    failure: Show the world as unavailable when its exact DTO is absent and never fall back to public worlds, persona records or fabricated canonical data.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r015
+    kind: rule
+    title: Realm creation eligibility
+    modality: must
+    statement: The creation submission reads current-account world creation eligibility from Realm and enables submission only for canCreateWorld true; drafts remain usable without that permission, existing-world maintenance does not depend on it, and Realm create-time authorization remains final.
+    condition: When a creator prepares a new world for Realm.
+    failure: Preserve the draft and explain unavailable or denied eligibility without deriving permission from subscription, role, handle or existing worlds.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-core
+  - id: rule.realm-world-studio.scope.r016
+    kind: rule
+    title: Reviewed world-character operation
+    modality: must
+    statement: A creator can turn a concept into a world character by reviewing its profile and explicit identity, behavior, speaking and immutable-boundary declaration. AI may propose these fields separately for human adoption. Character creation first creates or reuses its exact canonical same-world entity and then creates the character; a partial operation preserves its identifiers and draft for retry without claiming a character exists. Character detail and replacement load canonical profiles, preserve unedited fields, retain baseContentHash and keep drafts through errors and conflicts.
+    condition: When a creator creates or maintains a world character.
+    failure: Withhold success on missing declarations, wrong entity or world identity, unavailable canonical data or a rejected write; never substitute a Persona portfolio record or overwrite a conflicting source automatically.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.realm-core-surfaces
+      - type: applies_to
+        target: definition.realm-world-studio.core.world-character-core

@@ -1,8 +1,8 @@
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Boxes, ChevronDown, PlusCircle, User } from 'lucide-react';
+import { BookOpen, ChevronDown, FilePenLine, PlusCircle, Settings2, User } from 'lucide-react';
 import {
   AmbientBackground,
   Avatar,
@@ -10,7 +10,6 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-  Tooltip,
 } from '@nimiplatform/kit/ui';
 import { startStudioWindowDrag } from '../bridge/window-drag.js';
 import { getStudioCurrentUser } from './current-user.js';
@@ -29,35 +28,33 @@ const TITLEBAR_INTERACTIVE_SELECTOR = [
 ].join(',');
 
 const navItems = [
-  { to: '/worlds', labelKey: 'shell.nav.worlds', Icon: Boxes, end: true },
-  { to: '/worlds/new', labelKey: 'shell.nav.newWorld', Icon: PlusCircle, end: true },
+  { to: '/worlds', labelKey: 'studio.library', Icon: BookOpen, end: true },
+  { to: '/worlds?tab=drafts', labelKey: 'studio.drafts', Icon: FilePenLine, end: true },
+  { to: '/worlds/new', labelKey: 'studio.new', Icon: PlusCircle, end: true },
 ] as const;
 
 function SidebarItem({
   to,
   label,
-  end,
   children,
 }: {
   to: string;
   label: string;
-  end: boolean;
   children: ReactNode;
 }) {
+  const location = useLocation();
+  const isCurrent = to.includes('?') ? location.search.includes('tab=drafts') || location.pathname.startsWith('/drafts/') : to === '/worlds' ? location.pathname === '/worlds' && !location.search.includes('tab=drafts') : location.pathname === to;
   return (
-    <Tooltip content={label}>
-      <NavLink
+      <Link
         to={to}
-        end={end}
+        aria-current={isCurrent ? 'page' : undefined}
         data-titlebar-interactive="true"
         aria-label={label}
-        className={({ isActive }) =>
-          isActive ? 'ras-sidebar__item ras-sidebar__item--active' : 'ras-sidebar__item'
-        }
+        className={isCurrent ? 'ras-sidebar__item ras-sidebar__item--active' : 'ras-sidebar__item'}
       >
         {children}
-      </NavLink>
-    </Tooltip>
+        <span>{label}</span>
+      </Link>
   );
 }
 
@@ -155,11 +152,11 @@ export function ShellLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AmbientBackground variant="mesh" className="ras-shell">
+    <AmbientBackground variant="minimal" className="ras-shell">
       <div className="ras-topbar" onMouseDown={handleTitlebarMouseDown}>
         <div className="ras-topbar__inner">
           <h1 className="ras-topbar__title">{t('app.name')}</h1>
-          <span className="ras-topbar__chip">{t('shell.creatorBadge')}</span>
+          <span className="ras-topbar__chip">{t('studio.notebook')}</span>
           <div className="ras-topbar__right">
             <LanguageSwitcher />
             <AccountMenu />
@@ -171,19 +168,21 @@ export function ShellLayout({ children }: { children: ReactNode }) {
         <aside className="ras-sidebar">
           <div className="ras-sidebar__logo">
             <div className="ras-sidebar__logo-mark" aria-label={t('app.name')}>
-              RWS
+              <BookOpen size={24} strokeWidth={1.5} />
             </div>
+            <div className="ras-sidebar__brand"><strong>{t('studio.brand')}</strong><span>{t('studio.byNimi')}</span></div>
           </div>
           <nav className="ras-sidebar__nav" aria-label={t('shell.navigationAria')}>
             {navItems.map((item) => {
               const label = t(item.labelKey);
               return (
-                <SidebarItem key={item.to} to={item.to} label={label} end={item.end}>
+                <SidebarItem key={item.to} to={item.to} label={label}>
                   <item.Icon size={19} strokeWidth={1.8} />
                 </SidebarItem>
               );
             })}
           </nav>
+          <div className="ras-sidebar__bottom"><SidebarItem to="/settings/ai" label={t('studio.models')}><Settings2 size={18} /></SidebarItem><p><span className="studio-connection-dot" />{t('studio.connected')}</p></div>
         </aside>
 
         <main

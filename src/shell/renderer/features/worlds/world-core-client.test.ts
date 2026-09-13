@@ -72,6 +72,7 @@ const characterProfileInput = {
 
 function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface, ReturnType<typeof vi.fn>>> = {}) {
   const realm = {
+    worldCoreControllerGetWorldCreationEligibility: vi.fn(),
     worldCoreControllerListWorldCores: vi.fn(),
     worldCoreControllerGetWorldCore: vi.fn(),
     worldCoreControllerCreateWorldCore: vi.fn(),
@@ -82,6 +83,7 @@ function installRealmSurface(overrides: Partial<Record<keyof StudioRealmSurface,
     worldCoreControllerReplaceWorldCharacter: vi.fn(),
     worldCoreControllerListWorldEntities: vi.fn(),
     worldCoreControllerGetWorldEntity: vi.fn(),
+    worldCoreControllerCreateWorldEntity: vi.fn(),
     worldCoreControllerListWorldRelationships: vi.fn(),
     worldCoreControllerGetWorldRelationship: vi.fn(),
     ...overrides,

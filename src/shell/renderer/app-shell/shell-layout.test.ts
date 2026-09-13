@@ -19,7 +19,7 @@ describe('Studio shell kit boundary', () => {
     const source = shellLayoutSource();
 
     expect(source).toContain('AmbientBackground');
-    expect(source).toContain('variant="mesh"');
+    expect(source).toContain('variant="minimal"');
     expect(source).toContain('Popover');
     expect(source).toContain('PopoverTrigger');
     expect(source).toContain('PopoverContent');
@@ -65,7 +65,7 @@ describe('Studio shell kit boundary', () => {
     expect(styles).not.toContain('Kit Button tone polyfill');
     expect(styles).not.toContain('Tailwind arbitrary-value polyfills');
     expect(styles).not.toContain('.nimi-action--primary');
-    expect(styles).toContain('.rws-page');
+    expect(styles).toContain('@import "./world-studio.css"');
   });
 
   it('does not use a blank renderer-entry lazy fallback', () => {

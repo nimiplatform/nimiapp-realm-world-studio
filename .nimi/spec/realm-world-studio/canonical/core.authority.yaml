@@ -9,11 +9,11 @@ units:
   - id: definition.realm-world-studio.core.world-character-core
     kind: definition
     title: World-character core
-    meaning: "A world-owned character record: typed WorldCharacterCoreDto whose parent world is proven by worldId together with the selected WorldCoreDto.id."
+    meaning: A world-owned character-setting template represented by WorldCharacterCoreDto.profile and typed top-level fields; its parent world is proven by worldId together with the selected WorldCoreDto.id, and it is not a Runtime LocalAgent.
   - id: definition.realm-world-studio.core.realm-core-surfaces
     kind: definition
     title: Realm core surfaces
-    meaning: "The admitted WorldCoreController surfaces: listWorldCores, getWorldCore, createWorldCore, replaceWorldCore, listWorldCharacters, getWorldCharacter, createWorldCharacter, replaceWorldCharacter, and the creator inspection surfaces listWorldEntities, getWorldEntity, listWorldRelationships, and getWorldRelationship."
+    meaning: "The admitted WorldCoreController surfaces: getWorldCreationEligibility, listWorldCores, getWorldCore, createWorldCore, replaceWorldCore, listWorldCharacters, getWorldCharacter, createWorldCharacter, replaceWorldCharacter, listWorldEntities, getWorldEntity, createWorldEntity, listWorldRelationships, and getWorldRelationship. Entity creation supplies the same-world canonical binding required before world-character creation."
   - id: definition.realm-world-studio.core.thin-product-layer
     kind: definition
     title: Thin product layer
@@ -25,7 +25,7 @@ units:
   - id: definition.realm-world-studio.core.non-current-surfaces
     kind: definition
     title: Non-current surfaces
-    meaning: "Non-current success paths: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent private runtime state, generic public catalog fallback, resource direct-publication and upload, economic settlement, and team collaboration."
+    meaning: "Non-current success paths: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent materialization, trials, configuration, conversation and private runtime state, generic public catalog fallback, resource direct-publication and upload, economic settlement, and team collaboration."
   - id: definition.realm-world-studio.core.protected-operation-carrier
     kind: definition
     title: Protected operation carrier
@@ -64,7 +64,7 @@ units:
     kind: rule
     title: Creator data authority
     modality: must
-    statement: Creator-visible world data authority comes from admitted Realm WorldCoreController world, world-character, entity, and relationship surfaces; source materialization remains a separate Runtime-owned operation.
+    statement: Creator-visible world data authority comes from admitted Realm WorldCoreController world, world-character, entity and relationship surfaces. Studio maintains World and WorldCharacter settings; materialization and LocalAgent operation are independent downstream responsibilities and are not Studio operations or acceptance conditions.
     condition: Always.
     failure: Render creator-visible world data as unavailable instead of sourcing it outside the admitted Realm authority.
     relations:
@@ -98,7 +98,7 @@ units:
     kind: rule
     title: Non-current success paths
     modality: must_not
-    statement: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent private runtime state, or generic public catalog fallback serve as current success paths.
+    statement: WorldPublicController.*, World Atlas public showcase projections, owner RealmPersona portfolio surfaces, Forge curation, LocalAgent materialization, trials, configuration, conversation and private runtime state, or generic public catalog fallback serve as current success paths.
     condition: Always.
     failure: Reject the attempted success path and render the corresponding capability as unavailable.
     relations:

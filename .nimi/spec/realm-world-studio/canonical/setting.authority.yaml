@@ -9,7 +9,7 @@ units:
   - id: definition.realm-world-studio.setting.character-field-map
     kind: definition
     title: Character field map
-    meaning: "The admitted world-character field surface: settings, profile media, voice settings, behavior settings, required CharacterLorebookDeclarationV1 identity, behavior, speaking, immutable boundaries and optional relationship postures, source references, and provenance present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields."
+    meaning: "The admitted world-character field surface: settings, profile media, voice settings, behavior settings, required CharacterLorebookDeclarationV1 identity, behavior, speaking, immutable boundaries and optional relationship postures, source references, and provenance present in WorldCharacterCoreDto.profile or typed top-level WorldCharacterCoreDto fields."
   - id: definition.realm-world-studio.setting.lorebook-declaration-field-map
     kind: definition
     title: World and Character lorebook declaration field map
@@ -32,7 +32,7 @@ units:
     kind: rule
     title: Admitted character fields
     modality: must
-    statement: World-character settings, profile media, voice settings, behavior settings, complete CharacterLorebookDeclarationV1, source references, and provenance are admitted only when present in WorldCharacterCoreDto.core or typed top-level WorldCharacterCoreDto fields.
+    statement: World-character settings, profile media, voice settings, behavior settings, complete CharacterLorebookDeclarationV1, source references, and provenance are admitted only when present in WorldCharacterCoreDto.profile or typed top-level WorldCharacterCoreDto fields.
     condition: When Realm World Studio reads or writes creator-visible world-character fields.
     failure: Render a missing field as unavailable instead of admitting a value outside the typed WorldCharacterCoreDto surface.
     relations:

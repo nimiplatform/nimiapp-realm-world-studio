@@ -15,6 +15,21 @@ import {
 const WORLD_LIST_TAKE = 50;
 const WORLD_CHARACTER_LIST_TAKE = 100;
 
+export const worldRecordKey = (worldId: string) => ['world-studio', 'world', worldId] as const;
+export const worldCharactersKey = (worldId: string) => ['world-studio', 'characters', worldId] as const;
+export const worldCharacterKey = (worldId: string, characterId: string) => ['world-studio', 'character', worldId, characterId] as const;
+export const CREATION_ELIGIBILITY_KEY = ['world-studio', 'creation-eligibility'] as const;
+
+export async function getWorldCreationEligibility(): Promise<{ canCreateWorld: boolean }> {
+  return createStudioRealmClient().worldCoreControllerGetWorldCreationEligibility({ path: {} });
+}
+
+export async function listCreatorWorldCharacters(worldId: string, afterId?: string): Promise<WorldCharacterCore[]> {
+  return [...await createStudioRealmClient().worldCoreControllerListWorldCharacters({
+    path: { worldId }, query: { take: WORLD_CHARACTER_LIST_TAKE, ...(afterId ? { afterId } : {}) },
+  })];
+}
+
 type WorldCore = RealmModel<'WorldCoreDto'>;
 type WorldCharacterCore = RealmModel<'WorldCharacterCoreDto'>;
 type CreateWorldCoreBody = Parameters<
@@ -31,8 +46,8 @@ type WorldCharacterProfileInput = ReplaceWorldCharacterBody['profile'];
 
 export type CreatorWorldCreateInput = {
   id?: string;
-  core: Record<string, unknown>;
-  lorebookDeclaration: Record<string, unknown>;
+  core: Record<string, unknown> | CreateWorldCoreBody['core'];
+  lorebookDeclaration: Record<string, unknown> | CreateWorldCoreBody['lorebookDeclaration'];
   origin: RealmCoreOrigin;
   visibility?: CreateWorldCoreBody['visibility'];
 };
@@ -40,8 +55,8 @@ export type CreatorWorldCreateInput = {
 export type CreatorWorldReplaceInput = {
   id?: string;
   baseContentHash: string;
-  core: Record<string, unknown>;
-  lorebookDeclaration: Record<string, unknown>;
+  core: Record<string, unknown> | ReplaceWorldCoreBody['core'];
+  lorebookDeclaration: Record<string, unknown> | ReplaceWorldCoreBody['lorebookDeclaration'];
   origin: RealmCoreOrigin;
   visibility?: ReplaceWorldCoreBody['visibility'];
 };
@@ -56,13 +71,18 @@ export type CreatorWorldCharacterReplaceInput = {
 };
 
 export async function listCreatorWorlds(): Promise<CreatorWorldSummary[]> {
+  return (await listCreatorWorldRecords()).map(toCreatorWorldSummary);
+}
+
+// @nimi-authority: rule.realm-world-studio.scope.r014
+export async function listCreatorWorldRecords(): Promise<WorldCore[]> {
   const realm = createStudioRealmClient();
   const worlds = await realm.worldCoreControllerListWorldCores({
     path: {},
     query: { take: WORLD_LIST_TAKE },
   });
   worlds.forEach((world) => assertWorldCoreContract(world));
-  return worlds.map(toCreatorWorldSummary);
+  return [...worlds];
 }
 
 export async function getCreatorWorld(worldId: string): Promise<WorldCore> {
@@ -205,7 +225,7 @@ function assertWorldCharacterCoreContract(character: WorldCharacterCore): void {
   requireRouteId(character.worldEntityRef.entityId, 'WorldCharacterCoreDto.worldEntityRef.entityId');
   requireRouteId(character.worldEntityRef.worldId, 'WorldCharacterCoreDto.worldEntityRef.worldId');
   requireRouteId(character.contentHash, 'WorldCharacterCoreDto.contentHash');
-  requireLorebookDeclaration(character.lorebookDeclaration);
+  if (character.lorebookDeclaration !== null) requireLorebookDeclaration(character.lorebookDeclaration);
   requireProfile(character.profile);
   requireOrigin(character.origin);
 }

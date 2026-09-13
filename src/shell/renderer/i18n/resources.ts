@@ -1,4 +1,9 @@
+import { worldStudioEn, worldStudioZh } from './world-studio.js';
+import { worldOperationsEn, worldOperationsZh } from './world-operations.js';
+
 const enTranslations = {
+  ...worldStudioEn,
+  ...worldOperationsEn,
   'app.name': 'Realm World Studio',
   'app.rendererFailedTitle': 'Realm World Studio renderer failed',
   'app.rendererFailedHint': 'Restart Realm World Studio after checking renderer diagnostics.',
@@ -196,6 +201,8 @@ const enTranslations = {
 export type StudioTranslationKey = keyof typeof enTranslations;
 
 export const zhCNTranslations: Record<StudioTranslationKey, string> = {
+  ...worldStudioZh,
+  ...worldOperationsZh,
   'app.name': 'Realm World Studio',
   'app.rendererFailedTitle': 'Realm World Studio 渲染器失败',
   'app.rendererFailedHint': '检查渲染器诊断信息后重启 Realm World Studio。',
@@ -392,5 +399,5 @@ export const zhCNTranslations: Record<StudioTranslationKey, string> = {
 
 export const studioI18nResources = {
   en: { translation: enTranslations },
-  'zh-CN': { translation: zhCNTranslations },
+  'zh-CN': { translation: { ...zhCNTranslations, ...worldStudioZh } },
 } as const;

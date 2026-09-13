@@ -22,16 +22,20 @@ import {
 describe('studio Realm facade boundary', () => {
   const list = vi.fn();
   const create = vi.fn();
+  const get = vi.fn();
+  const replace = vi.fn();
+  const getCreationEligibility = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     getStudioLocalAppClientMock.mockReturnValue({
-      realm: { worldCore: { list, create } },
+      realm: { worldCore: { list, create, get, replace, getCreationEligibility } },
     });
   });
 
   it('exposes only the declared Studio Realm core surface methods', () => {
     expect([...STUDIO_REALM_SURFACE_METHODS]).toEqual([
+      'worldCoreControllerGetWorldCreationEligibility',
       'worldCoreControllerListWorldCores',
       'worldCoreControllerGetWorldCore',
       'worldCoreControllerCreateWorldCore',
@@ -42,12 +46,13 @@ describe('studio Realm facade boundary', () => {
       'worldCoreControllerReplaceWorldCharacter',
       'worldCoreControllerListWorldEntities',
       'worldCoreControllerGetWorldEntity',
+      'worldCoreControllerCreateWorldEntity',
       'worldCoreControllerListWorldRelationships',
       'worldCoreControllerGetWorldRelationship',
     ]);
   });
 
-  it('maps only world list and create onto the exact local-app Realm carrier', async () => {
+  it('maps world list and create onto the exact local-app Realm carrier', async () => {
     list.mockResolvedValue([]);
     create.mockResolvedValue({ id: 'world-1' });
     const realm = createStudioRealmClient();
@@ -85,11 +90,15 @@ describe('studio Realm facade boundary', () => {
     });
   });
 
-  it('keeps uncovered exact Realm operations unavailable instead of proxying them', () => {
+  it('forwards exact detail, eligibility and replacement calls and preserves owner failure', async () => {
     const realm = createStudioRealmClient();
-    expect(() => realm.worldCoreControllerGetWorldCore({
-      path: { worldId: 'world-1' },
-    })).toThrow(/Realm world detail is not covered by the Nimi App Access operation set/);
+    await realm.worldCoreControllerGetWorldCore({ path: { worldId: 'world-1' } });
+    expect(get).toHaveBeenCalledWith('world-1');
+    await realm.worldCoreControllerGetWorldCreationEligibility({ path: {} });
+    expect(getCreationEligibility).toHaveBeenCalledWith();
+    const failure = Object.assign(new Error('denied'), { reasonCode: 'access-denied' });
+    replace.mockRejectedValueOnce(failure);
+    await expect(realm.worldCoreControllerReplaceWorldCore({ path: { worldId: 'world-1' }, body: { baseContentHash: 'a'.repeat(64) } as never })).rejects.toBe(failure);
     expect(list).not.toHaveBeenCalled();
     expect(create).not.toHaveBeenCalled();
   });

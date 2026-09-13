@@ -61,6 +61,11 @@ function resolveAppRoot(electronDir: string): string {
 
 function configureRealmWorldStudioElectronChromiumRuntime(): void {
   app.commandLine.appendSwitch('disable-background-networking');
+  if (developmentRendererUrl) {
+    // A local SDK/Kit rebuild can keep the same package URL. Development must
+    // load the current built contract instead of Chromium's cached module.
+    app.commandLine.appendSwitch('disable-http-cache');
+  }
 }
 
 function installRealmWorldStudioStandardApplicationMenu(): void {

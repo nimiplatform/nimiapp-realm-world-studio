@@ -1,0 +1,742 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T19:13:34.756Z",
+  "title": "Design System: Realm World Studio",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Cornflower",
+        "tonalRamp": [
+          "oklch(15.00% 0.15663 269.55)",
+          "oklch(26.43% 0.15663 269.55)",
+          "oklch(37.86% 0.15663 269.55)",
+          "oklch(49.29% 0.15663 269.55)",
+          "oklch(60.71% 0.15663 269.55)",
+          "oklch(72.14% 0.15663 269.55)",
+          "oklch(83.57% 0.15663 269.55)",
+          "oklch(95.00% 0.15663 269.55)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Deep cornflower",
+        "tonalRamp": [
+          "oklch(15.00% 0.14776 269.35)",
+          "oklch(26.43% 0.14776 269.35)",
+          "oklch(37.86% 0.14776 269.35)",
+          "oklch(49.29% 0.14776 269.35)",
+          "oklch(60.71% 0.14776 269.35)",
+          "oklch(72.14% 0.14776 269.35)",
+          "oklch(83.57% 0.14776 269.35)",
+          "oklch(95.00% 0.14776 269.35)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Pale cornflower",
+        "tonalRamp": [
+          "oklch(15.00% 0.01863 265.98)",
+          "oklch(26.43% 0.01863 265.98)",
+          "oklch(37.86% 0.01863 265.98)",
+          "oklch(49.29% 0.01863 265.98)",
+          "oklch(60.71% 0.01863 265.98)",
+          "oklch(72.14% 0.01863 265.98)",
+          "oklch(83.57% 0.01863 265.98)",
+          "oklch(95.00% 0.01863 265.98)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "tonalRamp": [
+          "oklch(15.00% 0.04125 261.32)",
+          "oklch(26.43% 0.04125 261.32)",
+          "oklch(37.86% 0.04125 261.32)",
+          "oklch(49.29% 0.04125 261.32)",
+          "oklch(60.71% 0.04125 261.32)",
+          "oklch(72.14% 0.04125 261.32)",
+          "oklch(83.57% 0.04125 261.32)",
+          "oklch(95.00% 0.04125 261.32)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.04219 263.41)",
+          "oklch(26.43% 0.04219 263.41)",
+          "oklch(37.86% 0.04219 263.41)",
+          "oklch(49.29% 0.04219 263.41)",
+          "oklch(60.71% 0.04219 263.41)",
+          "oklch(72.14% 0.04219 263.41)",
+          "oklch(83.57% 0.04219 263.41)",
+          "oklch(95.00% 0.04219 263.41)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Cool paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Supporting ground",
+        "tonalRamp": [
+          "oklch(15.00% 0.00574 264.53)",
+          "oklch(26.43% 0.00574 264.53)",
+          "oklch(37.86% 0.00574 264.53)",
+          "oklch(49.29% 0.00574 264.53)",
+          "oklch(60.71% 0.00574 264.53)",
+          "oklch(72.14% 0.00574 264.53)",
+          "oklch(83.57% 0.00574 264.53)",
+          "oklch(95.00% 0.00574 264.53)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Fine rule",
+        "tonalRamp": [
+          "oklch(15.00% 0.01503 260.73)",
+          "oklch(26.43% 0.01503 260.73)",
+          "oklch(37.86% 0.01503 260.73)",
+          "oklch(49.29% 0.01503 260.73)",
+          "oklch(60.71% 0.01503 260.73)",
+          "oklch(72.14% 0.01503 260.73)",
+          "oklch(83.57% 0.01503 260.73)",
+          "oklch(95.00% 0.01503 260.73)"
+        ]
+      },
+      "sidebar": {
+        "role": "neutral",
+        "displayName": "Slate-blue navigation",
+        "tonalRamp": [
+          "oklch(15.00% 0.00863 264.52)",
+          "oklch(26.43% 0.00863 264.52)",
+          "oklch(37.86% 0.00863 264.52)",
+          "oklch(49.29% 0.00863 264.52)",
+          "oklch(60.71% 0.00863 264.52)",
+          "oklch(72.14% 0.00863 264.52)",
+          "oklch(83.57% 0.00863 264.52)",
+          "oklch(95.00% 0.00863 264.52)"
+        ]
+      },
+      "chrome": {
+        "role": "neutral",
+        "displayName": "Quiet chrome",
+        "tonalRamp": [
+          "oklch(15.00% 0.00453 258.32)",
+          "oklch(26.43% 0.00453 258.32)",
+          "oklch(37.86% 0.00453 258.32)",
+          "oklch(49.29% 0.00453 258.32)",
+          "oklch(60.71% 0.00453 258.32)",
+          "oklch(72.14% 0.00453 258.32)",
+          "oklch(83.57% 0.00453 258.32)",
+          "oklch(95.00% 0.00453 258.32)"
+        ]
+      },
+      "coauthor": {
+        "role": "neutral",
+        "displayName": "AI reading rail",
+        "tonalRamp": [
+          "oklch(15.00% 0.00573 264.53)",
+          "oklch(26.43% 0.00573 264.53)",
+          "oklch(37.86% 0.00573 264.53)",
+          "oklch(49.29% 0.00573 264.53)",
+          "oklch(60.71% 0.00573 264.53)",
+          "oklch(72.14% 0.00573 264.53)",
+          "oklch(83.57% 0.00573 264.53)",
+          "oklch(95.00% 0.00573 264.53)"
+        ]
+      },
+      "nav-text": {
+        "role": "neutral",
+        "displayName": "Navigation slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.04386 261.92)",
+          "oklch(26.43% 0.04386 261.92)",
+          "oklch(37.86% 0.04386 261.92)",
+          "oklch(49.29% 0.04386 261.92)",
+          "oklch(60.71% 0.04386 261.92)",
+          "oklch(72.14% 0.04386 261.92)",
+          "oklch(83.57% 0.04386 261.92)",
+          "oklch(95.00% 0.04386 261.92)"
+        ]
+      },
+      "nav-hover": {
+        "role": "neutral",
+        "displayName": "Navigation hover wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.01326 262.38)",
+          "oklch(26.43% 0.01326 262.38)",
+          "oklch(37.86% 0.01326 262.38)",
+          "oklch(49.29% 0.01326 262.38)",
+          "oklch(60.71% 0.01326 262.38)",
+          "oklch(72.14% 0.01326 262.38)",
+          "oklch(83.57% 0.01326 262.38)",
+          "oklch(95.00% 0.01326 262.38)"
+        ]
+      },
+      "nav-selected": {
+        "role": "primary",
+        "displayName": "Selected navigation wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.02459 265.59)",
+          "oklch(26.43% 0.02459 265.59)",
+          "oklch(37.86% 0.02459 265.59)",
+          "oklch(49.29% 0.02459 265.59)",
+          "oklch(60.71% 0.02459 265.59)",
+          "oklch(72.14% 0.02459 265.59)",
+          "oklch(83.57% 0.02459 265.59)",
+          "oklch(95.00% 0.02459 265.59)"
+        ]
+      },
+      "nav-selected-text": {
+        "role": "primary",
+        "displayName": "Selected navigation ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.13616 266.15)",
+          "oklch(26.43% 0.13616 266.15)",
+          "oklch(37.86% 0.13616 266.15)",
+          "oklch(49.29% 0.13616 266.15)",
+          "oklch(60.71% 0.13616 266.15)",
+          "oklch(72.14% 0.13616 266.15)",
+          "oklch(83.57% 0.13616 266.15)",
+          "oklch(95.00% 0.13616 266.15)"
+        ]
+      },
+      "idea": {
+        "role": "neutral",
+        "displayName": "Idea wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.01695 267.79)",
+          "oklch(26.43% 0.01695 267.79)",
+          "oklch(37.86% 0.01695 267.79)",
+          "oklch(49.29% 0.01695 267.79)",
+          "oklch(60.71% 0.01695 267.79)",
+          "oklch(72.14% 0.01695 267.79)",
+          "oklch(83.57% 0.01695 267.79)",
+          "oklch(95.00% 0.01695 267.79)"
+        ]
+      },
+      "idea-border": {
+        "role": "neutral",
+        "displayName": "Idea boundary",
+        "tonalRamp": [
+          "oklch(15.00% 0.02635 264.44)",
+          "oklch(26.43% 0.02635 264.44)",
+          "oklch(37.86% 0.02635 264.44)",
+          "oklch(49.29% 0.02635 264.44)",
+          "oklch(60.71% 0.02635 264.44)",
+          "oklch(72.14% 0.02635 264.44)",
+          "oklch(83.57% 0.02635 264.44)",
+          "oklch(95.00% 0.02635 264.44)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Writing field boundary",
+        "tonalRamp": [
+          "oklch(15.00% 0.01805 261.34)",
+          "oklch(26.43% 0.01805 261.34)",
+          "oklch(37.86% 0.01805 261.34)",
+          "oklch(49.29% 0.01805 261.34)",
+          "oklch(60.71% 0.01805 261.34)",
+          "oklch(72.14% 0.01805 261.34)",
+          "oklch(83.57% 0.01805 261.34)",
+          "oklch(95.00% 0.01805 261.34)"
+        ]
+      },
+      "field-focus": {
+        "role": "neutral",
+        "displayName": "Writing field focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.10220 267.45)",
+          "oklch(26.43% 0.10220 267.45)",
+          "oklch(37.86% 0.10220 267.45)",
+          "oklch(49.29% 0.10220 267.45)",
+          "oklch(60.71% 0.10220 267.45)",
+          "oklch(72.14% 0.10220 267.45)",
+          "oklch(83.57% 0.10220 267.45)",
+          "oklch(95.00% 0.10220 267.45)"
+        ]
+      },
+      "field-focus-ring": {
+        "role": "neutral",
+        "displayName": "Writing field focus halo",
+        "tonalRamp": [
+          "oklch(15.00% 0.03703 268.90)",
+          "oklch(26.43% 0.03703 268.90)",
+          "oklch(37.86% 0.03703 268.90)",
+          "oklch(49.29% 0.03703 268.90)",
+          "oklch(60.71% 0.03703 268.90)",
+          "oklch(72.14% 0.03703 268.90)",
+          "oklch(83.57% 0.03703 268.90)",
+          "oklch(95.00% 0.03703 268.90)"
+        ]
+      },
+      "field-label": {
+        "role": "neutral",
+        "displayName": "Field label graphite",
+        "tonalRamp": [
+          "oklch(15.00% 0.04526 261.84)",
+          "oklch(26.43% 0.04526 261.84)",
+          "oklch(37.86% 0.04526 261.84)",
+          "oklch(49.29% 0.04526 261.84)",
+          "oklch(60.71% 0.04526 261.84)",
+          "oklch(72.14% 0.04526 261.84)",
+          "oklch(83.57% 0.04526 261.84)",
+          "oklch(95.00% 0.04526 261.84)"
+        ]
+      },
+      "field-disabled": {
+        "role": "neutral",
+        "displayName": "Disabled field paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00412 271.37)",
+          "oklch(26.43% 0.00412 271.37)",
+          "oklch(37.86% 0.00412 271.37)",
+          "oklch(49.29% 0.00412 271.37)",
+          "oklch(60.71% 0.00412 271.37)",
+          "oklch(72.14% 0.00412 271.37)",
+          "oklch(83.57% 0.00412 271.37)",
+          "oklch(95.00% 0.00412 271.37)"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Text selection wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.03871 267.96)",
+          "oklch(26.43% 0.03871 267.96)",
+          "oklch(37.86% 0.03871 267.96)",
+          "oklch(49.29% 0.03871 267.96)",
+          "oklch(60.71% 0.03871 267.96)",
+          "oklch(72.14% 0.03871 267.96)",
+          "oklch(83.57% 0.03871 267.96)",
+          "oklch(95.00% 0.03871 267.96)"
+        ]
+      },
+      "selection-text": {
+        "role": "neutral",
+        "displayName": "Selected text",
+        "tonalRamp": [
+          "oklch(15.00% 0.07556 266.32)",
+          "oklch(26.43% 0.07556 266.32)",
+          "oklch(37.86% 0.07556 266.32)",
+          "oklch(49.29% 0.07556 266.32)",
+          "oklch(60.71% 0.07556 266.32)",
+          "oklch(72.14% 0.07556 266.32)",
+          "oklch(83.57% 0.07556 266.32)",
+          "oklch(95.00% 0.07556 266.32)"
+        ]
+      },
+      "badge-text": {
+        "role": "neutral",
+        "displayName": "Badge slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.04210 259.74)",
+          "oklch(26.43% 0.04210 259.74)",
+          "oklch(37.86% 0.04210 259.74)",
+          "oklch(49.29% 0.04210 259.74)",
+          "oklch(60.71% 0.04210 259.74)",
+          "oklch(72.14% 0.04210 259.74)",
+          "oklch(83.57% 0.04210 259.74)",
+          "oklch(95.00% 0.04210 259.74)"
+        ]
+      },
+      "badge-border": {
+        "role": "neutral",
+        "displayName": "Badge boundary",
+        "tonalRamp": [
+          "oklch(15.00% 0.01335 262.38)",
+          "oklch(26.43% 0.01335 262.38)",
+          "oklch(37.86% 0.01335 262.38)",
+          "oklch(49.29% 0.01335 262.38)",
+          "oklch(60.71% 0.01335 262.38)",
+          "oklch(72.14% 0.01335 262.38)",
+          "oklch(83.57% 0.01335 262.38)",
+          "oklch(95.00% 0.01335 262.38)"
+        ]
+      },
+      "success-soft": {
+        "role": "neutral",
+        "displayName": "Saved-state wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.01402 155.59)",
+          "oklch(26.43% 0.01402 155.59)",
+          "oklch(37.86% 0.01402 155.59)",
+          "oklch(49.29% 0.01402 155.59)",
+          "oklch(60.71% 0.01402 155.59)",
+          "oklch(72.14% 0.01402 155.59)",
+          "oklch(83.57% 0.01402 155.59)",
+          "oklch(95.00% 0.01402 155.59)"
+        ]
+      },
+      "success-border": {
+        "role": "neutral",
+        "displayName": "Saved-state boundary",
+        "tonalRamp": [
+          "oklch(15.00% 0.02659 155.95)",
+          "oklch(26.43% 0.02659 155.95)",
+          "oklch(37.86% 0.02659 155.95)",
+          "oklch(49.29% 0.02659 155.95)",
+          "oklch(60.71% 0.02659 155.95)",
+          "oklch(72.14% 0.02659 155.95)",
+          "oklch(83.57% 0.02659 155.95)",
+          "oklch(95.00% 0.02659 155.95)"
+        ]
+      },
+      "success-text": {
+        "role": "neutral",
+        "displayName": "Saved-state green",
+        "tonalRamp": [
+          "oklch(15.00% 0.06815 158.49)",
+          "oklch(26.43% 0.06815 158.49)",
+          "oklch(37.86% 0.06815 158.49)",
+          "oklch(49.29% 0.06815 158.49)",
+          "oklch(60.71% 0.06815 158.49)",
+          "oklch(72.14% 0.06815 158.49)",
+          "oklch(83.57% 0.06815 158.49)",
+          "oklch(95.00% 0.06815 158.49)"
+        ]
+      },
+      "warning-soft": {
+        "role": "neutral",
+        "displayName": "Capability-note wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.01766 92.68)",
+          "oklch(26.43% 0.01766 92.68)",
+          "oklch(37.86% 0.01766 92.68)",
+          "oklch(49.29% 0.01766 92.68)",
+          "oklch(60.71% 0.01766 92.68)",
+          "oklch(72.14% 0.01766 92.68)",
+          "oklch(83.57% 0.01766 92.68)",
+          "oklch(95.00% 0.01766 92.68)"
+        ]
+      },
+      "warning-text": {
+        "role": "neutral",
+        "displayName": "Capability-note ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.05384 89.85)",
+          "oklch(26.43% 0.05384 89.85)",
+          "oklch(37.86% 0.05384 89.85)",
+          "oklch(49.29% 0.05384 89.85)",
+          "oklch(60.71% 0.05384 89.85)",
+          "oklch(72.14% 0.05384 89.85)",
+          "oklch(83.57% 0.05384 89.85)",
+          "oklch(95.00% 0.05384 89.85)"
+        ]
+      },
+      "review-notes": {
+        "role": "neutral",
+        "displayName": "Consistency-note wash",
+        "tonalRamp": [
+          "oklch(15.00% 0.01199 259.82)",
+          "oklch(26.43% 0.01199 259.82)",
+          "oklch(37.86% 0.01199 259.82)",
+          "oklch(49.29% 0.01199 259.82)",
+          "oklch(60.71% 0.01199 259.82)",
+          "oklch(72.14% 0.01199 259.82)",
+          "oklch(83.57% 0.01199 259.82)",
+          "oklch(95.00% 0.01199 259.82)"
+        ]
+      },
+      "kit-secondary-border": {
+        "role": "neutral",
+        "displayName": "Kit secondary boundary",
+        "tonalRamp": [
+          "oklch(15.00% 0.01262 255.51)",
+          "oklch(26.43% 0.01262 255.51)",
+          "oklch(37.86% 0.01262 255.51)",
+          "oklch(49.29% 0.01262 255.51)",
+          "oklch(60.71% 0.01262 255.51)",
+          "oklch(72.14% 0.01262 255.51)",
+          "oklch(83.57% 0.01262 255.51)",
+          "oklch(95.00% 0.01262 255.51)"
+        ]
+      },
+      "kit-secondary-text": {
+        "role": "neutral",
+        "displayName": "Kit secondary ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.03176 264.66)",
+          "oklch(26.43% 0.03176 264.66)",
+          "oklch(37.86% 0.03176 264.66)",
+          "oklch(49.29% 0.03176 264.66)",
+          "oklch(60.71% 0.03176 264.66)",
+          "oklch(72.14% 0.03176 264.66)",
+          "oklch(83.57% 0.03176 264.66)",
+          "oklch(95.00% 0.03176 264.66)"
+        ]
+      },
+      "kit-ghost-text": {
+        "role": "neutral",
+        "displayName": "Kit ghost slate",
+        "tonalRamp": [
+          "oklch(15.00% 0.02631 256.80)",
+          "oklch(26.43% 0.02631 256.80)",
+          "oklch(37.86% 0.02631 256.80)",
+          "oklch(49.29% 0.02631 256.80)",
+          "oklch(60.71% 0.02631 256.80)",
+          "oklch(72.14% 0.02631 256.80)",
+          "oklch(83.57% 0.02631 256.80)",
+          "oklch(95.00% 0.02631 256.80)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Library and Realm page heading; inherits the published Kit sans-serif stack."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Notebook chapter and idea-composer title."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Section heading within reading and authoring views."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Shell body baseline; other roles inherit its font family."
+      },
+      "field": {
+        "displayName": "Field",
+        "purpose": "Authored notebook field values."
+      },
+      "field-label": {
+        "displayName": "Field Label",
+        "purpose": "Visible notebook field labels."
+      },
+      "secondary": {
+        "displayName": "Secondary",
+        "purpose": "Secondary hints, status and navigation support."
+      },
+      "badge": {
+        "displayName": "Badge",
+        "purpose": "Compact text-bearing status markers."
+      },
+      "reading-lead": {
+        "displayName": "Reading Lead",
+        "purpose": "World summary in the notebook reading view."
+      },
+      "reading-body": {
+        "displayName": "Reading Body",
+        "purpose": "Preserved authored prose in the notebook reading view."
+      },
+      "action": {
+        "displayName": "Action",
+        "purpose": "Medium published Kit button label."
+      },
+      "action-small": {
+        "displayName": "Action Small",
+        "purpose": "Small published Kit button label."
+      }
+    },
+    "shadows": [
+      {
+        "name": "kit-base",
+        "value": "0 6px 18px rgba(15,23,42,0.08)",
+        "purpose": "Published Kit secondary-button hover and segmented-control elevation. Not applied to notebook pages or rows."
+      },
+      {
+        "name": "kit-floating",
+        "value": "0 18px 44px rgba(15,23,42,0.16)",
+        "purpose": "Published Kit account popover elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "notebook-hover",
+        "value": "150ms",
+        "purpose": "Background, text or border-color transitions on local navigation, rows and fields."
+      },
+      {
+        "name": "kit-fast",
+        "value": "120ms",
+        "purpose": "Published Kit action-state transition duration."
+      },
+      {
+        "name": "kit-standard-ease",
+        "value": "cubic-bezier(0.2, 0, 0, 1)",
+        "purpose": "Published Kit action-state easing."
+      },
+      {
+        "name": "kit-pressed-scale",
+        "value": "0.97",
+        "purpose": "Published Kit pointer-down feedback."
+      },
+      {
+        "name": "saving-spinner",
+        "value": "1.2s linear infinite",
+        "purpose": "Local saving indicator rotates while work is pending."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none !important; transition: none !important",
+        "purpose": "Applied under prefers-reduced-motion: reduce throughout the shell."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "large-min",
+        "value": "1500px"
+      },
+      {
+        "name": "narrow-max",
+        "value": "1180px"
+      },
+      {
+        "name": "icon-navigation-max",
+        "value": "940px"
+      },
+      {
+        "name": "stacked-max",
+        "value": "700px"
+      },
+      {
+        "name": "protected-session-actions-max",
+        "value": "520px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Published Kit medium primary action with the notebook accent and radius.",
+      "html": "<button type=\"button\" class=\"ds-primary\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg><span>创建世界</span></button>",
+      "css": ".ds-primary{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:var(--studio-accent,#4058ba);border-color:var(--studio-accent,#4058ba);color:#fff;min-height:40px;padding:0 16px;font-size:0.9375rem;}.ds-primary:hover:not(:disabled){background:#3146a0;}.ds-primary:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-primary:active:not(:disabled){transform:scale(0.97);}.ds-primary:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none;}}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Published Kit small secondary action for adoption, retry and explicit candidate recovery.",
+      "html": "<button type=\"button\" class=\"ds-secondary\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg><span>采纳</span></button>",
+      "css": ".ds-secondary{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:var(--nimi-action-secondary-bg,#fff);border-color:var(--nimi-action-secondary-border,rgba(226,232,240,0.9));color:var(--nimi-action-secondary-text,#111827);min-height:32px;padding:0 12px;font-size:0.8125rem;}.ds-secondary:hover:not(:disabled){border-color:var(--nimi-border-strong,rgba(148,163,184,0.34));box-shadow:var(--nimi-elevation-base,0 6px 18px rgba(15,23,42,0.08));}.ds-secondary:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-secondary:active:not(:disabled){transform:scale(0.97);}.ds-secondary:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none;}}"
+    },
+    {
+      "name": "Ghost action",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Published Kit small quiet action used for navigation, copy and undo.",
+      "html": "<button type=\"button\" class=\"ds-ghost\"><span>复制世界手册</span></button>",
+      "css": ".ds-ghost{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:transparent;border-color:transparent;color:var(--nimi-text-secondary,#4b5563);min-height:32px;padding:0 12px;font-size:0.8125rem;}.ds-ghost:hover:not(:disabled){background:var(--nimi-action-ghost-hover,rgba(69,184,214,0.10));color:var(--nimi-text-primary,#111827);}.ds-ghost:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-ghost:active:not(:disabled){transform:scale(0.97);}.ds-ghost:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-ghost{transition:none;}}"
+    },
+    {
+      "name": "Notebook field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Visible label, generous writing field and secondary hint; placeholder is readable slate.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">基础设定</span><textarea class=\"ds-field-input\" rows=\"3\" placeholder=\"这个世界为什么与众不同？\"></textarea><small class=\"ds-field-hint\">描述世界的环境、生活与主要矛盾。</small></label>",
+      "css": ".ds-field{display:grid;gap:8px;margin-bottom:22px;min-width:0;color:var(--studio-ink,#263247);font-size:14px;line-height:1.65;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-field-label{font-size:12px;color:#43516a;font-weight:600;}.ds-field-input{display:block;box-sizing:border-box;width:100%;min-width:0;padding:11px 12px;border:1px solid #d9e0ec;border-radius:7px;background:#fff;color:var(--studio-ink,#263247);font:inherit;font-size:13px;line-height:1.85;resize:vertical;min-height:90px;transition:border-color 150ms;}.ds-field-input::placeholder{color:var(--studio-muted,#64718a);}.ds-field-input:focus{border-color:#718acb;outline:2px solid #dbe5ff;outline-offset:1px;}.ds-field-input:disabled{background:#f8f9fc;color:var(--studio-muted,#64718a);}.ds-field-hint{font-size:11px;color:var(--studio-muted,#64718a);line-height:1.8;}@media(prefers-reduced-motion:reduce){.ds-field-input{transition:none;}}"
+    },
+    {
+      "name": "Library navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Labelled desktop rail items, with persistent accessible names when the rail becomes compact.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"工作室导航\"><a href=\"#library\" class=\"ds-nav-item ds-nav-selected\" aria-current=\"page\" aria-label=\"我的世界\"><svg viewBox=\"0 0 24 24\" width=\"19\" height=\"19\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 7v14\"/><path d=\"M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z\"/></svg><span>我的世界</span></a><a href=\"#drafts\" class=\"ds-nav-item\" aria-label=\"创作草稿\"><svg viewBox=\"0 0 24 24\" width=\"19\" height=\"19\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14.364 13.634a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506l4.013-4.009a1 1 0 0 0-3.004-3.004z\"/><path d=\"M14.487 7.858A1 1 0 0 1 14 7V2\"/><path d=\"M20 19.645V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l2.516 2.516\"/><path d=\"M8 18h1\"/></svg><span>创作草稿</span></a></nav>",
+      "css": ".ds-nav{display:grid;gap:7px;width:188px;padding:14px;background:#f2f5fb;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-nav-item{display:flex;align-items:center;gap:11px;min-height:42px;box-sizing:border-box;padding:8px 12px;border-radius:7px;font-size:13px;line-height:1.65;color:#53617a;text-decoration:none;transition:background 150ms,color 150ms;}.ds-nav-item:hover{background:#e8edf6;color:#263247;}.ds-nav-selected{background:#e1e9fa;color:#304d9e;font-weight:650;}.ds-nav-item:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}@media(prefers-reduced-motion:reduce){.ds-nav-item{transition:none;}}"
+    },
+    {
+      "name": "State badges",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Static labels, not filters: ordinary visibility or draft state and green Realm state.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge\">私密</span><span class=\"ds-badge\">创作草稿</span><span class=\"ds-badge ds-badge-success\">Realm 世界</span></div>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;padding:2px 7px;border:1px solid #e0e5ee;background:#f7f9fc;border-radius:5px;color:#5d6c84;font-size:10px;line-height:1.65;white-space:nowrap;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-badge-success{background:#edf7f0;border-color:#d9ecdf;color:#34644a;}.ds-badges{display:flex;flex-wrap:wrap;gap:10px;}"
+    },
+    {
+      "name": "World collection row",
+      "kind": "custom",
+      "refersTo": "world-row",
+      "description": "Documentation sample of a whole-row open target with a book mark, content and source-backed status in the app.",
+      "html": "<a href=\"#world\" class=\"ds-world-row\"><span class=\"ds-world-mark\" aria-hidden=\"true\">世</span><span class=\"ds-world-copy\"><strong>世界名字</strong><span>世界简介会显示在这里。</span></span><span class=\"ds-badge\">私密</span><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m9 18 6-6-6-6\"/></svg></a>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;padding:2px 7px;border:1px solid #e0e5ee;background:#f7f9fc;border-radius:5px;color:#5d6c84;font-size:10px;line-height:1.65;white-space:nowrap;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-badge-success{background:#edf7f0;border-color:#d9ecdf;color:#34644a;}.ds-world-row{display:flex;align-items:center;gap:18px;padding:22px 8px;border-bottom:1px solid #e0e6f0;color:#263247;text-decoration:none;transition:background 150ms;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-world-row:hover{background:#f8faff;}.ds-world-row:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-world-copy{display:flex;min-width:0;flex:1;flex-direction:column;gap:4px;}.ds-world-copy strong{font-size:15px;font-weight:600;line-height:1.5;}.ds-world-copy>span{font-size:12px;line-height:1.8;color:#64718a;}.ds-world-mark{display:inline-flex;flex-shrink:0;width:54px;height:64px;justify-content:center;align-items:center;background:#e8eefb;color:#48619b;border:1px solid #d7e0f3;border-radius:6px 12px 12px 6px;font-size:25px;font-weight:500;}@media(prefers-reduced-motion:reduce){.ds-world-row{transition:none;}}"
+    },
+    {
+      "name": "Idea composer",
+      "kind": "card",
+      "refersTo": "idea-composer",
+      "description": "Prominent library starting point, with a broad writing area and explicit blank-draft alternative.",
+      "html": "<section class=\"ds-idea\"><div class=\"ds-idea-intro\"><svg viewBox=\"0 0 24 24\" width=\"25\" height=\"25\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z\"/><path d=\"M20 2v4\"/><path d=\"M22 4h-4\"/><circle cx=\"4\" cy=\"20\" r=\"2\"/></svg><div><h2>如果，世界可以不一样。</h2><p>一个地方、一条不可思议的规则，或一群生活在其中的人。</p></div></div><div class=\"ds-idea-form\"><textarea aria-label=\"世界想法\" placeholder=\"从一个世界的想法开始……\"></textarea><div class=\"ds-idea-footer\"><button type=\"button\" class=\"ds-idea-ghost\">从空白开始</button><button type=\"button\" class=\"ds-idea-primary\" disabled>展开这个想法</button></div></div></section>",
+      "css": ".ds-idea{padding:26px 28px 18px;background:#eef3ff;border:1px solid #dce5f7;border-radius:14px;color:#263247;font-size:14px;line-height:1.65;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-idea-intro{display:flex;align-items:center;gap:15px;margin-bottom:20px;}.ds-idea-intro>svg{flex-shrink:0;color:#4058ba;}.ds-idea h2{margin:0;font-size:20px;line-height:1.5;letter-spacing:-0.015em;font-weight:650;}.ds-idea p{margin:5px 0 0;color:#586b8f;font-size:13px;}.ds-idea-form{background:#fff;border-radius:10px;border:1px solid #d4def0;}.ds-idea textarea{display:block;box-sizing:border-box;resize:vertical;width:100%;min-height:85px;padding:17px 20px 9px;background:transparent;border:0;border-radius:10px 10px 0 0;font:inherit;color:#263247;line-height:1.7;}.ds-idea textarea::placeholder{color:#64718a;}.ds-idea textarea:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-idea-footer{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center;padding:10px 12px;}.ds-idea-primary{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:var(--studio-accent,#4058ba);border-color:var(--studio-accent,#4058ba);color:#fff;min-height:40px;padding:0 16px;font-size:0.9375rem;}.ds-idea-primary:hover:not(:disabled){background:#3146a0;}.ds-idea-primary:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-idea-primary:active:not(:disabled){transform:scale(0.97);}.ds-idea-primary:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-idea-primary{transition:none;}}.ds-idea-ghost{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:transparent;border-color:transparent;color:var(--nimi-text-secondary,#4b5563);min-height:40px;padding:0 16px;font-size:0.9375rem;}.ds-idea-ghost:hover:not(:disabled){background:var(--nimi-action-ghost-hover,rgba(69,184,214,0.10));color:var(--nimi-text-primary,#111827);}.ds-idea-ghost:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-idea-ghost:active:not(:disabled){transform:scale(0.97);}.ds-idea-ghost:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-idea-ghost{transition:none;}}"
+    },
+    {
+      "name": "AI suggestion",
+      "kind": "custom",
+      "refersTo": "suggestion",
+      "description": "Documentation sample: subject first, category below, readable candidate content and an explicit adoption action.",
+      "html": "<section class=\"ds-suggestion\"><h4>候选规则</h4><span class=\"ds-suggestion-type\">世界规则</span><p>AI 候选内容会显示在这里。创作者阅读后决定是否采纳。</p><button type=\"button\" class=\"ds-adopt\"><svg viewBox=\"0 0 24 24\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg><span>采纳</span></button></section>",
+      "css": ".ds-suggestion{display:flex;flex-direction:column;align-items:flex-start;padding:20px 0;border-top:1px solid #e0e6f0;background:#f7f9fd;color:#263247;line-height:1.65;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-suggestion h4{margin:0;font-size:14px;font-weight:650;}.ds-suggestion-type{display:block;font-size:10px;color:#64718a;margin-top:5px;}.ds-suggestion p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.9;color:#53617a;margin:8px 0 12px;}.ds-adopt{display:inline-flex;max-width:100%;flex-shrink:0;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border:1px solid;border-radius:8px;font-weight:600;letter-spacing:0;line-height:1.65;cursor:pointer;transition:background-color 120ms cubic-bezier(0.2,0,0,1),border-color 120ms cubic-bezier(0.2,0,0,1),color 120ms cubic-bezier(0.2,0,0,1),box-shadow 120ms cubic-bezier(0.2,0,0,1),transform 120ms cubic-bezier(0.2,0,0,1);font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);background:var(--nimi-action-secondary-bg,#fff);border-color:var(--nimi-action-secondary-border,rgba(226,232,240,0.9));color:var(--nimi-action-secondary-text,#111827);min-height:32px;padding:0 12px;font-size:0.8125rem;}.ds-adopt:hover:not(:disabled){border-color:var(--nimi-border-strong,rgba(148,163,184,0.34));box-shadow:var(--nimi-elevation-base,0 6px 18px rgba(15,23,42,0.08));}.ds-adopt:focus-visible{outline:2px solid var(--studio-accent,#4058ba);outline-offset:3px;}.ds-adopt:active:not(:disabled){transform:scale(0.97);}.ds-adopt:disabled{cursor:default;opacity:var(--nimi-opacity-disabled,0.56);}@media(prefers-reduced-motion:reduce){.ds-adopt{transition:none;}}"
+    },
+    {
+      "name": "Consistency review notes",
+      "kind": "card",
+      "refersTo": "review-notes",
+      "description": "A quiet reading region for actual review notes; no decorative heading is repeated inside a review result.",
+      "html": "<section class=\"ds-review-notes\"><div><strong>审阅项目</strong><p>问题说明会显示在这里。</p><p>可供创作者考虑的建议会显示在这里。</p></div></section>",
+      "css": ".ds-review-notes{background:#edf2fa;border-radius:8px;padding:15px;font-size:11px;line-height:1.65;color:#263247;font-family:var(--nimi-font-sans,\"Inter\",\"Noto Sans SC\",\"Source Han Sans SC\",\"PingFang SC\",\"Microsoft YaHei UI\",\"Segoe UI\",system-ui,sans-serif);}.ds-review-notes>div{margin-top:18px;}.ds-review-notes p{margin:6px 0 0;color:#5c6d88;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The World Reference Notebook",
+    "overview": "Cool white writing pages sit beside slate-blue navigation and a quiet AI review rail. Graphite text, cornflower selection and fine dividers make the creator's words the visual center. Controls are compact; editable and readable content gets the space.\n\nThe system uses the existing Nimi Kit font stack, controls and platform surfaces. Its notebook character comes from page structure, book-shaped world marks and chapter navigation. It adds no shipping raster illustrations, textures or image-generated composition.",
+    "keyCharacteristics": [
+      "Cool paper, graphite text and a single cornflower action accent.",
+      "Flat writing surfaces separated by tone, whitespace and fine rules.",
+      "Compact controls around generous, resizable writing fields.",
+      "Headings precede chapter progress and suggestion categories.",
+      "Local drafts, AI candidates and Realm records have distinct visible labels."
+    ],
+    "rules": [
+      {
+        "name": "The Readable Slate Rule",
+        "body": "Keep placeholders and secondary guidance on the recorded muted token; do not lighten them to create hierarchy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Heading First Rule",
+        "body": "Put the readable subject before chapter progress or suggestion category. Metadata sits below the heading rather than forming a decorative kicker.",
+        "section": "typography"
+      },
+      {
+        "name": "The Quiet Surface Rule",
+        "body": "Use tone and dividers for notebook structure; reserve the existing Kit elevation for the controls and overlays that already own it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** preserve cool paper, graphite text and the cornflower action hierarchy.",
+      "**Do** use the recorded muted color for placeholders and secondary guidance.",
+      "**Do** keep headings above progress text and suggestion categories.",
+      "**Do** give authored content generous line spacing and resizable writing fields.",
+      "**Do** reuse Kit controls, icons with accessible labels and platform-owned settings surfaces.",
+      "**Do** distinguish drafts, AI candidates and Realm records with truthful text-bearing states.",
+      "**Do** keep responsive changes tied to the implemented layout breakpoints and preserve readable labels where they fit."
+    ],
+    "donts": [
+      "**Don't** add decorative glass, dramatic shadows or raster scenery to the notebook's flat writing surfaces.",
+      "**Don't** present invented worlds, inventory counts, activity or AI output as real data.",
+      "**Don't** use pale placeholder text or decorative metadata above headings to create hierarchy.",
+      "**Don't** turn book-mark tones or preview tonal ramps into extra brand accents.",
+      "**Don't** copy platform settings or session responsibilities into a separate app-owned control system.",
+      "**Don't** treat this derived design record or its screenshots as product authority or proof of unexecuted behavior."
+    ]
+  }
+}

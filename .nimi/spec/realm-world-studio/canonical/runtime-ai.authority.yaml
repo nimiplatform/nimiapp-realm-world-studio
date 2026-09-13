@@ -8,12 +8,14 @@ units:
     meaning: "The admitted platform substrate: Runtime account SDK and IPC surfaces, kit model-config surfaces with injected SDK and Runtime services, and @nimiplatform/sdk Runtime, AI, and generation surfaces."
   - id: definition.realm-world-studio.runtime-ai.materialization-output
     kind: definition
+    lifecycle: removed
     title: Materialization output
-    meaning: Runtime-owned materialization state created only after an admitted typed Runtime operation receives a canonical CharacterSourceRef; source materialization packets are never exposed to this App or the public Realm SDK.
+    reason: The creator scope is World and WorldCharacter source authoring only; LocalAgent materialization and trials are outside Studio operations and acceptance.
   - id: definition.realm-world-studio.runtime-ai.reference-only-materialization-redesign
     kind: definition
+    lifecycle: removed
     title: Reference-only materialization redesign
-    meaning: "The approved Runtime materialization redesign: Realm World Studio never creates or receives a source materialization packet and may send only a canonical CharacterSourceRef to a future admitted Runtime-owned materialization operation."
+    reason: The creator scope is World and WorldCharacter source authoring only; LocalAgent materialization and trials are outside Studio operations and acceptance.
   - id: rule.realm-world-studio.runtime-ai.r001
     kind: rule
     title: Runtime account custody
@@ -61,14 +63,14 @@ units:
     reason: Superseded by rule.realm-world-studio.runtime-ai.r012 after approval of the reference-only Runtime materialization redesign.
   - id: rule.realm-world-studio.runtime-ai.r006
     kind: rule
-    title: No synthetic readiness
-    modality: must_not
-    statement: Runtime readiness summaries, checksums, source counts, or blocked states are synthesized as creator success metrics.
-    condition: When source materialization or Runtime readiness is displayed.
-    failure: Render the metric as unavailable or blocked and withhold creator success.
+    title: Source save and downstream readiness are separate
+    modality: must
+    statement: Realm source validity and canonical save results remain faithful to the returned DTO; materialization readiness, Runtime health, source counts and checksums are never synthesized or used as Studio creation quality, completion status, required next actions or acceptance gates.
+    condition: When Studio presents world or world-character source state.
+    failure: Preserve actual source fields and report only the affected source-write or field failure; never require a ready LocalAgent or downstream materialization to complete source authoring.
     relations:
       - type: applies_to
-        target: definition.realm-world-studio.runtime-ai.materialization-output
+        target: definition.realm-world-studio.core.world-character-core
   - id: rule.realm-world-studio.runtime-ai.r007
     kind: rule
     title: No private LocalAgent material
@@ -121,15 +123,37 @@ units:
         target: definition.realm-world-studio.core.protected-operation-carrier
   - id: rule.realm-world-studio.runtime-ai.r012
     kind: rule
-    title: Reference-only Runtime materialization
-    modality: must
-    statement: Realm World Studio never creates or receives a source materialization packet; a future admitted materialization action may send only a canonical CharacterSourceRef to the Runtime-owned materialization operation.
-    condition: When source materialization is requested.
-    failure: Render source materialization as unavailable when the exact Runtime-owned operation is not admitted, and never substitute an app-created or app-received materialization packet.
+    title: World source authoring excludes LocalAgent workflows
+    modality: must_not
+    statement: Realm World Studio creates, resolves, previews, configures or converses with a Runtime LocalAgent, starts materialization, receives a materialization packet, or hands these workflows to Desktop as part of world or world-character authoring or acceptance.
+    condition: Always.
+    failure: Remove the LocalAgent workflow and its completion gates rather than leaving a disabled future action; retain the protected Realm source-writing and AI candidate paths.
     relations:
       - type: applies_to
-        target: definition.realm-world-studio.runtime-ai.materialization-output
+        target: definition.realm-world-studio.core.thin-product-layer
       - type: applies_to
-        target: definition.realm-world-studio.runtime-ai.reference-only-materialization-redesign
+        target: definition.realm-world-studio.core.world-character-core
       - type: supersedes
         target: rule.realm-world-studio.runtime-ai.r005
+  - id: rule.realm-world-studio.runtime-ai.r013
+    kind: rule
+    title: Reviewed world coauthoring
+    modality: must
+    statement: World premise development, character concept proposals and consistency review use localApp.ai.text.generateCandidate through runtime.consume and text.generate; output is validated, shown separately from the editable draft and adopted only by a creator action; no candidate creates or replaces a Realm world or world-character automatically.
+    condition: When the creator asks the AI coauthor for a world, cast or review proposal.
+    failure: Preserve the draft and existing proposal on generation failure, truncation, content filtering or malformed output and show an actionable failure; the creator may explicitly request a separate AI formatting pass over malformed candidate text, whose result must pass the same validation and still requires creator review.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces
+  - id: rule.realm-world-studio.runtime-ai.r014
+    kind: rule
+    title: Protected draft persistence
+    modality: must
+    statement: World notebooks, character concepts and AI review proposals persist only through the admitted localApp.storage JSON surface; persisted drafts remain distinct from Realm records and failed reads or writes never report saved state or overwrite unread storage.
+    condition: When a creator resumes or edits a world notebook.
+    failure: Preserve the current in-memory draft, show unsaved state with a retry action and do not claim persisted work.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate

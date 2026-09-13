@@ -7,13 +7,14 @@ cargo_package_name: nimiapp-realm-world-studio-shell
 tauri_identifier: ai.nimi.apps.nimi.realm-world-studio
 package_author: Nimi Team
 submission_role: developer-submitted-input
-capability_contract_refs: []
+capability_contract_refs:
+  - text.generate
 required_standardized_feature_refs: []
 storage_policy:
   kind: app-owned-os-storage
   os_storage_disclosure:
     - path_pattern: <Electron userData>/**
-      purpose: 保存语言偏好及 Electron/Chromium 运行所需的本地设置与缓存；世界和角色资料以 Realm 为准。从 Nimi 卸载应用后，这些本地文件仍会保留。
+      purpose: 保存语言偏好及 Electron/Chromium 运行所需的本地设置与缓存。创作草稿与 AI 候选通过 Nimi protected storage 保存，始终不是 Realm 正式资料。从 Nimi 卸载应用后，OS 本地文件仍会保留。
       expected_size_band: 语言偏好为少量文本；其余占用随 Chromium 缓存和使用情况变化，应用未设置缓存大小上限。
 support_manifest:
   diagnostics_bundle_fields:

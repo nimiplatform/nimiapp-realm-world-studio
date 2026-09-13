@@ -1,10 +1,8 @@
 import type { Realm } from '@nimiplatform/sdk/realm';
-import {
-  getStudioLocalAppClient,
-  requireStudioProtectedOperation,
-} from '@renderer/app-shell/studio-platform.js';
+import { getStudioLocalAppClient } from '@renderer/app-shell/studio-platform.js';
 
 export const STUDIO_REALM_SURFACE_METHODS = [
+  'worldCoreControllerGetWorldCreationEligibility',
   'worldCoreControllerListWorldCores',
   'worldCoreControllerGetWorldCore',
   'worldCoreControllerCreateWorldCore',
@@ -15,6 +13,7 @@ export const STUDIO_REALM_SURFACE_METHODS = [
   'worldCoreControllerReplaceWorldCharacter',
   'worldCoreControllerListWorldEntities',
   'worldCoreControllerGetWorldEntity',
+  'worldCoreControllerCreateWorldEntity',
   'worldCoreControllerListWorldRelationships',
   'worldCoreControllerGetWorldRelationship',
 ] as const;
@@ -23,30 +22,23 @@ export type StudioRealmSurfaceMethod = typeof STUDIO_REALM_SURFACE_METHODS[numbe
 export type StudioRealmSurface = Pick<Realm['worldCore'], StudioRealmSurfaceMethod>;
 
 export function createStudioRealmClient(): StudioRealmSurface {
+  const worlds = getStudioLocalAppClient().realm.worldCore;
   return {
+    worldCoreControllerGetWorldCreationEligibility: () => worlds.getCreationEligibility(),
     worldCoreControllerListWorldCores: async (request) =>
-      getStudioLocalAppClient().realm.worldCore.list(request.query),
+      worlds.list(request.query),
     worldCoreControllerCreateWorldCore: async (request) =>
-      getStudioLocalAppClient().realm.worldCore.create(request.body),
-    worldCoreControllerGetWorldCore: () =>
-      requireStudioProtectedOperation('Realm world detail'),
-    worldCoreControllerReplaceWorldCore: () =>
-      requireStudioProtectedOperation('Realm world replacement'),
-    worldCoreControllerListWorldCharacters: () =>
-      requireStudioProtectedOperation('Realm world-character list'),
-    worldCoreControllerGetWorldCharacter: () =>
-      requireStudioProtectedOperation('Realm world-character detail'),
-    worldCoreControllerCreateWorldCharacter: () =>
-      requireStudioProtectedOperation('Realm world-character creation'),
-    worldCoreControllerReplaceWorldCharacter: () =>
-      requireStudioProtectedOperation('Realm world-character replacement'),
-    worldCoreControllerListWorldEntities: () =>
-      requireStudioProtectedOperation('Realm world-entity list'),
-    worldCoreControllerGetWorldEntity: () =>
-      requireStudioProtectedOperation('Realm world-entity detail'),
-    worldCoreControllerListWorldRelationships: () =>
-      requireStudioProtectedOperation('Realm world-relationship list'),
-    worldCoreControllerGetWorldRelationship: () =>
-      requireStudioProtectedOperation('Realm world-relationship detail'),
+      worlds.create(request.body),
+    worldCoreControllerGetWorldCore: request => worlds.get(request.path.worldId),
+    worldCoreControllerReplaceWorldCore: request => worlds.replace(request.path.worldId, request.body),
+    worldCoreControllerListWorldCharacters: request => worlds.listCharacters(request.path.worldId, request.query),
+    worldCoreControllerGetWorldCharacter: request => worlds.getCharacter(request.path.characterId),
+    worldCoreControllerCreateWorldCharacter: request => worlds.createCharacter(request.path.worldId, request.body),
+    worldCoreControllerReplaceWorldCharacter: request => worlds.replaceCharacter(request.path.characterId, request.body),
+    worldCoreControllerListWorldEntities: request => worlds.listEntities(request.path.worldId, request.query),
+    worldCoreControllerGetWorldEntity: request => worlds.getEntity(request.path.entityId),
+    worldCoreControllerCreateWorldEntity: request => worlds.createEntity(request.path.worldId, request.body),
+    worldCoreControllerListWorldRelationships: request => worlds.listRelationships(request.path.worldId, request.query),
+    worldCoreControllerGetWorldRelationship: request => worlds.getRelationship(request.path.relationshipId),
   };
 }
