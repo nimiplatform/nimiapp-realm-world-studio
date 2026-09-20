@@ -1,6 +1,6 @@
 app_id: nimi.realm-world-studio
 display_name: Realm World Studio
-version: 0.1.4
+version: 0.1.5
 profile: standalone
 npm_package_name: nimiapp-realm-world-studio
 cargo_package_name: nimiapp-realm-world-studio-shell
@@ -16,6 +16,29 @@ storage_policy:
     - path_pattern: <Electron userData>/**
       purpose: 保存语言偏好及 Electron/Chromium 运行所需的本地设置与缓存。创作草稿与 AI 候选通过 Nimi protected storage 保存，始终不是 Realm 正式资料。从 Nimi 卸载应用后，OS 本地文件仍会保留。
       expected_size_band: 语言偏好为少量文本；其余占用随 Chromium 缓存和使用情况变化，应用未设置缓存大小上限。
+safety_profile:
+  ai:
+    direct_interaction: true
+    interaction_notice: absent
+    outputs:
+      - export_visible_marking: absent
+        exposure: publishable
+        in_product_notice: absent
+        machine_readable_marking: absent
+        modality: text
+        publication_control: user-confirmed
+    risk_features: []
+    subject_notice: not-applicable
+  content_descriptors: []
+  data_practices:
+    commercial_features: []
+    publisher_direct_external_network: false
+    sensitive_data_categories: []
+    telemetry: []
+    third_party_account: none
+    user_content_sharing: public
+  high_impact_decision_uses: []
+  intended_audience: general
 support_manifest:
   diagnostics_bundle_fields:
     - app_version

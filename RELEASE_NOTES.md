@@ -1,3 +1,7 @@
+# Realm World Studio 0.1.5
+
+补充受众、AI 文字输出及经用户确认公开世界资料的事实声明，供支持该字段的 Nimi 展示。保留 SDK 0.11 / Kit 0.7 配对；不新增业务能力或运行门禁。发行与 Catalog 准入独立进行，声明不构成安全认证。
+
 # Realm World Studio 0.1.4
 
 本次候选版本接入 Nimi App v2 发行信息协议：

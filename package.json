@@ -1,6 +1,6 @@
 {
   "name": "nimiapp-realm-world-studio",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.34.5",
@@ -58,8 +58,8 @@
     "vite": "^7.3.6",
     "vitest": "^4.1.7",
     "yaml": "^2.9.0",
-    "@nimiplatform/app-tools": "^0.5.1",
-    "@nimiplatform/nimi-coding": "0.6.2"
+    "@nimiplatform/app-tools": "^0.7.5",
+    "@nimiplatform/nimi-coding": "0.6.3"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.11",
