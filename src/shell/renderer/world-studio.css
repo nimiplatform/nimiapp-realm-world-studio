@@ -186,6 +186,8 @@
 .studio-generating p { color: var(--studio-muted); font-size: 11px; margin: 8px 0 18px; }
 .studio-proposal > h3 { font-size: 15px; }
 .studio-proposal > p { font-size: 11px; color: var(--studio-muted); margin: 7px 0 16px; }
+.studio-proposal__finish { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--studio-line); }
+.studio-proposal__finish .studio-help { margin: 0; }
 .studio-suggestion { padding: 20px 0; border-top: 1px solid var(--studio-line); }
 .studio-suggestion p { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.9; color: #53617a; margin: 8px 0 12px; }
 .studio-suggestion dl { font-size: 11px; line-height: 1.85; margin: 10px 0 14px; }

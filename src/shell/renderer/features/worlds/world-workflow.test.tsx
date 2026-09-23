@@ -25,12 +25,15 @@ const proposal = {
 };
 const storage = { readJson: vi.fn(), writeJson: vi.fn() };
 const generate = vi.fn();
+let storedDocument: unknown;
 
 beforeEach(async () => {
   vi.clearAllMocks();
   await setStudioLocale('en');
   vi.mocked(getStudioLocalAppClient).mockReturnValue({ storage, ai: { text: { generateCandidate: generate } } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
-  storage.writeJson.mockImplementation(async (_path, value) => ({ value, sizeBytes: JSON.stringify(value).length }));
+  storedDocument = { drafts: [], activityOutbox: [] };
+  storage.readJson.mockImplementation(async () => ({ value: structuredClone(storedDocument) }));
+  storage.writeJson.mockImplementation(async (_path, value) => { storedDocument = structuredClone(value); return { value, sizeBytes: JSON.stringify(value).length }; });
   useWorldDrafts.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
 });
 
@@ -115,7 +118,7 @@ describe('Protected draft storage', () => {
     { task: 'review', accepted: [], notes: [{ title: {}, detail: 'Issue', suggestion: 'Fix' }], traceId: 'trace', sourceUpdatedAt: 'now' },
   ])('rejects unreadable persisted proposals without overwriting storage: $task', async invalidProposal => {
     useWorldDrafts.setState({ loaded: false });
-    storage.readJson.mockResolvedValue({ value: [{ ...createWorldDraft(), proposal: invalidProposal }] });
+    storage.readJson.mockResolvedValue({ value: { drafts: [{ ...createWorldDraft(), proposal: invalidProposal }], activityOutbox: [] } });
     await loadWorldDrafts();
     expect(useWorldDrafts.getState().loaded).toBe(false);
     expect(useWorldDrafts.getState().error).toContain('unreadable');
@@ -127,7 +130,7 @@ describe('Protected draft storage', () => {
     const draft = createWorldDraft('A city of memories');
     draft.proposal = { ...parseWorldProposal(JSON.stringify(proposal)), task: 'develop', traceId: 'trace', sourceUpdatedAt: draft.updatedAt, accepted: [] };
     useWorldDrafts.setState({ loaded: false });
-    storage.readJson.mockResolvedValue({ value: [draft] });
+    storage.readJson.mockResolvedValue({ value: { drafts: [draft], activityOutbox: [] } });
     await loadWorldDrafts();
     expect(useWorldDrafts.getState().loaded).toBe(true);
     expect(useWorldDrafts.getState().drafts).toEqual([draft]);
@@ -217,7 +220,7 @@ describe('Creator review interaction', () => {
     expect(screen.getByLabelText('World name')).toHaveValue('The Glass Tide');
     fireEvent.click(screen.getByRole('button', { name: 'Undo last addition' }));
     expect(screen.getByLabelText('World name')).toHaveValue('');
-    await persistWorldDrafts();
+    await act(async () => { await persistWorldDrafts(); });
   });
 
   it('requires human review and a canonical response before showing Realm success', async () => {
@@ -233,6 +236,6 @@ describe('Creator review interaction', () => {
     vi.mocked(createCreatorWorldCore).mockResolvedValueOnce({ ...TEST_WORLD_CORE, id: draft.id });
     fireEvent.click(screen.getByRole('button', { name: 'Create in Realm' }));
     await waitFor(() => expect(useWorldDrafts.getState().drafts[0]?.savedWorld?.id).toBe(draft.id));
-    await persistWorldDrafts();
+    await act(async () => { await persistWorldDrafts(); });
   });
 });

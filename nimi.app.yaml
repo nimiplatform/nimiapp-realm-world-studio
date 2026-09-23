@@ -1,11 +1,12 @@
 app_id: nimi.realm-world-studio
 display_name: Realm World Studio
-version: 0.1.5
+version: 0.1.6
 profile: standalone
 manifest_role: submitted-input
 app_access:
   - realm.data
   - runtime.consume
+  - app.activity
 local_development:
   electron:
     renderer_origin: http://127.0.0.1:1451

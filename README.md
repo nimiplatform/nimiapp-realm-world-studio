@@ -86,6 +86,25 @@ active. A new registration has a different protected storage owner, so it does
 not reopen an earlier registration's drafts. This differs from restarting the
 same registered App.
 
+Development drafts and pending review activity now share one protected JSON
+document, so a completed or deleted review can be recovered after a restart.
+The previous array format fails closed and is never overwritten automatically.
+For existing local development data, resume its exact registration and use
+`scripts/convert-development-world-drafts.ts` once from that supervised
+renderer while the old-format storage error has the notebook locked:
+
+```js
+const { convertDevelopmentWorldDrafts } = await import('/@fs/<absolute-app-root>/scripts/convert-development-world-drafts.ts');
+await convertDevelopmentWorldDrafts(); // Preview counts; no writes.
+await convertDevelopmentWorldDrafts({ apply: true }); // Validate, back up, convert.
+location.reload();
+```
+
+Use the real checkout path in the import, with forward slashes. This explicit
+development utility uses the same protected SDK storage, preserves the old
+outbox and a backup, and stops on session invalidation or malformed data.
+It is not an App startup migration or part of the production bundle.
+
 ## Windows package and release
 
 The production target is Windows x86_64 using Desktop-supervised Electron.

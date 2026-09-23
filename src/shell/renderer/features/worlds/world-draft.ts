@@ -14,6 +14,8 @@ export type WorldProposal = {
   notes: { title: string; detail: string; suggestion: string }[];
   traceId: string;
   sourceUpdatedAt: string;
+  /** When the candidate became available for review; absent on older stored candidates. */
+  generatedAt?: string;
   accepted: string[];
 } & ({ task: 'develop'; content: WorldContent } | { task: 'cast'; characters: DraftCharacter[] } | { task: 'review' });
 export type WorldDraft = WorldContent & {

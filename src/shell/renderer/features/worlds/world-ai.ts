@@ -77,7 +77,7 @@ export async function generateWorldProposal(draft: WorldDraft, task: CoauthorTas
     maxTokens: 4096,
   });
   if (result.finishReason !== 'stop') throw new Error(result.finishReason === 'length' ? 'AI_OUTPUT_TRUNCATED' : 'AI_OUTPUT_FILTERED');
-  const meta = { traceId: result.traceId, sourceUpdatedAt: draft.updatedAt, accepted: [] };
+  const meta = { traceId: result.traceId, sourceUpdatedAt: draft.updatedAt, generatedAt: new Date().toISOString(), accepted: [] };
   try {
     if (task === 'develop') return { ...parseWorldProposal(result.text), task, ...meta };
     const data = parseJson(result.text);

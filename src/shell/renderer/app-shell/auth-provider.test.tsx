@@ -68,6 +68,16 @@ describe('Realm World Studio protected-session UI', () => {
     expect(screen.queryByTestId('world-workbench')).toBeNull();
   });
 
+  it('stops the workbench and offers reopening once the bound session ended', () => {
+    useAppStore.setState({ bootstrapReady: true, bootstrapError: null, bootstrapFailure: null, sessionEnded: true });
+
+    render(<AuthProvider><div data-testid="world-workbench">world workbench</div></AuthProvider>);
+    expect(screen.getByTestId('world-studio-session-ended')).toBeTruthy();
+    expect(screen.queryByTestId('world-workbench')).toBeNull();
+    expect((screen.getByTestId('world-studio-session-reopen') as HTMLButtonElement).disabled).toBe(false);
+    useAppStore.setState({ sessionEnded: false });
+  });
+
   it('keeps technical details collapsed when no machine codes are present', () => {
     useAppStore.setState({
       bootstrapFailure: {

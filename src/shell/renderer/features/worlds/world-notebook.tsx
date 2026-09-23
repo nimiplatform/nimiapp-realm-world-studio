@@ -6,10 +6,11 @@ import { ArrowLeft, ArrowRight, BookOpen, Check, Copy, FileCheck2, FilePenLine, 
 import { Button, EmptyState, InlineAlert, LoadingSkeleton, nimiToast } from '@nimiplatform/kit/ui';
 import { createCreatorWorldCore, getCreatorWorld, replaceCreatorWorldCore, getWorldCreationEligibility, CREATION_ELIGIBILITY_KEY, worldRecordKey } from './world-core-client.js';
 import { WORLD_RECORDS_KEY } from './world-library.js';
-import { addWorldDraft, persistWorldDrafts, removeWorldDraft, updateWorldDraft } from './world-draft-store.js';
+import { addWorldDraft, persistWorldDrafts, publishAfterDraftSave, removeWorldDraft, updateWorldDraft } from './world-draft-store.js';
 import { draftIssues, newDraftId, newDraftRule, notebookMarkdown, worldContentFromRecord, worldCreateInput, worldReplaceInput, WorldRevisionConflict, type WorldContent, type WorldDraft, type WorldRecord } from './world-draft.js';
 import { WorldCharacterList } from './world-character-list.js';
 import { WorldCoauthor } from './world-coauthor.js';
+import { coauthorActivity } from './world-activity-model.js';
 import { DraftStorageNotice, FailureNotice, Field, SaveStatus, WorldMark, useDraftLibrary } from './studio-ui.js';
 
 const CHAPTERS = [
@@ -71,6 +72,7 @@ function DraftReview({ draft, change, busy }: { draft: WorldDraft; change: (patc
     },
     onSuccess: world => {
       updateWorldDraft(draft.id, { savedWorld: world });
+      if (draft.proposal) publishAfterDraftSave([coauthorActivity(draft, draft.proposal, 'cancelled', new Date().toISOString())]);
       queryClient.setQueryData<readonly typeof world[]>(WORLD_RECORDS_KEY, old => [world, ...(old ?? []).filter(item => item.id !== world.id)]);
       queryClient.setQueryData(worldRecordKey(world.id), world);
       nimiToast.success(t(draft.source ? 'studio.updateSuccess' : 'studio.createSuccess'));

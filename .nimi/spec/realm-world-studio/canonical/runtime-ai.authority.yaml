@@ -157,3 +157,15 @@ units:
     relations:
       - type: applies_to
         target: definition.realm-world-studio.core.local-candidate
+  - id: rule.realm-world-studio.runtime-ai.r015
+    kind: rule
+    title: Coauthor candidates are published as review todos
+    modality: must
+    statement: Each generated coauthor candidate is published through localApp.activity.put under app.activity as one open todo keyed by its draft and trace, with the draft as its only source object, a localized title and summary, and the world name, task, suggestion and note counts as extension data; the creator's explicit finish-review action clears the stored candidate and publishes the higher completed revision with the adopted count, while a replaced candidate, a deleted draft or a draft saved to Realm publishes the higher cancelled revision; a publication follows only the successful draft save that holds its change, then waits in the account's protected-storage outbox until Runtime accepts or already holds that revision, and a publication Runtime does not accept stays in the outbox, is shown as not synced, and can be retried explicitly; when the Host reports the bound session invalidated, pending draft saves and in-flight publications stop before their next write or publication and Studio asks to be reopened, resuming only from the current account's storage; stored candidates still awaiting review are republished after each session start; an open request for a draft of the current account navigates to that draft before confirming opened and reports an unknown or deleted draft as object unavailable.
+    condition: When a coauthor candidate is generated, reviewed, replaced or abandoned, when a session starts, or when another App or Home opens a published candidate.
+    failure: Keep the draft and candidate unchanged when publication fails, publish nothing for a draft change whose save failed, retry from the current account's outbox without reporting publication success or silently dropping a publication, never publish or store one account's pending publications in another account, and never confirm opened before navigation or publish draft setting, rule, place or character text or AI candidate content as activity content.
+    relations:
+      - type: applies_to
+        target: definition.realm-world-studio.core.local-candidate
+      - type: applies_to
+        target: definition.realm-world-studio.runtime-ai.sdk-surfaces

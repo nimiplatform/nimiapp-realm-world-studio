@@ -10,6 +10,7 @@ import {
 
 const REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio';
 const REALM_WORLD_STUDIO_APP_NAME = 'Realm World Studio';
+const SESSION_INVALIDATED_CHANNEL = 'realm-world-studio:session-invalidated';
 
 declare const __NIMI_ELECTRON_PRODUCTION__: boolean;
 const IS_PRODUCTION_BUNDLE = typeof __NIMI_ELECTRON_PRODUCTION__ !== 'undefined'
@@ -36,6 +37,12 @@ async function bootstrapElectron(): Promise<void> {
     allowedRendererUrls: [activeRendererUrl()],
     assetMediaPlatform: { protocol, webRequest: session.defaultSession.webRequest, webContents },
     ipcMain,
+    // The renderer stops the ended session's work and asks to be reopened.
+    onSessionInvalidated: () => {
+      for (const window of BrowserWindow.getAllWindows()) {
+        if (!window.isDestroyed()) window.webContents.send(SESSION_INVALIDATED_CHANNEL);
+      }
+    },
   });
 
   await createMainWindow();

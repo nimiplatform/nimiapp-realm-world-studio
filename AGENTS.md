@@ -111,7 +111,8 @@ When editing admission inputs:
   `submission.yaml`, `scripts/pack.mjs`, Runtime/SDK callers, and the Tauri
   identifier. Do not introduce a second OS-bundle-only app identity.
 - Keep the `app_access` domain set in `nimi.app.yaml` minimal — declare only
-  domains the product actually consumes (currently `realm.data` and `runtime.consume`).
+  domains the product actually consumes (currently `realm.data`, `runtime.consume`
+  and `app.activity`).
   Unknown entries are inert; do not declare speculative domains.
 - Never add fields that claim grant/approval semantics
   (`permission_grant: granted`, `public_admission_truth: true`, etc.).

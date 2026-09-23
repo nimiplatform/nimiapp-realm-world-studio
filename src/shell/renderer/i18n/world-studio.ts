@@ -69,6 +69,14 @@ export const worldStudioEn = {
   'studio.deleteDraft': 'Delete draft', 'studio.deleteConfirm': 'Delete this draft? This does not delete a Realm world.', 'studio.keepDraft': 'Keep draft',
   'studio.chapterOf': 'Chapter {{current}} of {{total}}', 'studio.noProposal': 'No new suggestions yet.', 'studio.notFoundDraft': 'This draft is not available.',
   'studio.retry': 'Try again', 'studio.refresh': 'Refresh worlds', 'studio.resume': 'Continue writing', 'studio.modelSettings': 'Open AI settings',
+  'studio.finishReview': 'Finish review', 'studio.finishReviewHint': 'Closes this proposal. Anything you added stays in your draft.',
+  'activity.coauthor.title.develop': 'Review the world proposal for {{name}}',
+  'activity.coauthor.title.cast': 'Review character concepts for {{name}}',
+  'activity.coauthor.title.review': 'Review consistency notes for {{name}}',
+  'activity.coauthor.summary': '{{suggestions}} suggestions · {{notes}} notes',
+  'activity.unsynced': 'Some review updates have not synced to Nimi yet ({{count}}). Studio keeps retrying.',
+  'activity.storageUnavailable': 'Review updates could not be read or saved. Existing records are preserved, and Studio will retry.',
+  'activity.retryNow': 'Retry now',
 };
 
 export const worldStudioZh: Record<keyof typeof worldStudioEn, string> = {
@@ -142,4 +150,12 @@ export const worldStudioZh: Record<keyof typeof worldStudioEn, string> = {
   'studio.deleteDraft': '删除草稿', 'studio.deleteConfirm': '删除这份草稿？这不会删除 Realm 中的世界。', 'studio.keepDraft': '保留草稿',
   'studio.chapterOf': '第 {{current}} 章，共 {{total}} 章', 'studio.noProposal': '还没有新的建议。', 'studio.notFoundDraft': '这份草稿暂时不可用。',
   'studio.retry': '重试', 'studio.refresh': '刷新世界', 'studio.resume': '继续创作', 'studio.modelSettings': '打开 AI 设置',
+  'studio.finishReview': '完成审阅', 'studio.finishReviewHint': '结束这份提案的审阅，已加入草稿的内容会保留。',
+  'activity.coauthor.title.develop': '审阅「{{name}}」的世界提案',
+  'activity.coauthor.title.cast': '审阅「{{name}}」的角色构想',
+  'activity.coauthor.title.review': '查看「{{name}}」的一致性检查意见',
+  'activity.coauthor.summary': '{{suggestions}} 条建议 · {{notes}} 条意见',
+  'activity.unsynced': '有 {{count}} 条审阅进展还未同步到 Nimi，Studio 会继续重试。',
+  'activity.storageUnavailable': '暂时无法读取或保存审阅进展。已有记录会保留，Studio 会继续重试。',
+  'activity.retryNow': '立即重试',
 };

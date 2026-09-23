@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, Plus, Sparkles, Undo2 } from 'lucide-react';
+import { Check, CheckCheck, Plus, Sparkles, Undo2 } from 'lucide-react';
 import { Button, LoadingSkeleton } from '@nimiplatform/kit/ui';
 import { generateWorldProposal, type CoauthorTask } from './world-ai.js';
-import { updateWorldDraft, useWorldDrafts } from './world-draft-store.js';
+import { publishAfterDraftSave, updateWorldDraft, useWorldDrafts } from './world-draft-store.js';
 import { type WorldDraft } from './world-draft.js';
+import { coauthorActivity } from './world-activity-model.js';
 import { FailureNotice, Field } from './studio-ui.js';
 
 export function WorldCoauthor({ draft, disabled = false }: { draft: WorldDraft; disabled?: boolean }) {
@@ -26,7 +27,14 @@ export function WorldCoauthor({ draft, disabled = false }: { draft: WorldDraft; 
     try {
       const generated = await generateWorldProposal(draft, task, instruction, i18n.language, repairText);
       const latest = useWorldDrafts.getState().drafts.find(item => item.id === draft.id);
-      if (latest) updateWorldDraft(draft.id, { proposal: generated });
+      if (latest) {
+        updateWorldDraft(draft.id, { proposal: generated });
+        // A replaced candidate no longer awaits review; the new one does.
+        publishAfterDraftSave([
+          ...(latest.proposal ? [coauthorActivity(latest, latest.proposal, 'cancelled', generated.generatedAt!)] : []),
+          coauthorActivity(latest, generated, 'open', generated.generatedAt!),
+        ]);
+      }
       setUndo(null);
     } catch (failure) { setError(failure); }
     finally { setPending(false); }
@@ -36,6 +44,13 @@ export function WorldCoauthor({ draft, disabled = false }: { draft: WorldDraft; 
     if (!proposal || disabled) return;
     updateWorldDraft(draft.id, { ...patch, proposal: { ...proposal, accepted: [...proposal.accepted, key] } });
     setUndo({ before: draft, after: useWorldDrafts.getState().drafts.find(item => item.id === draft.id)!.updatedAt });
+  }
+
+  function finishReview() {
+    if (!proposal || disabled) return;
+    updateWorldDraft(draft.id, { proposal: null });
+    setUndo(null);
+    publishAfterDraftSave([coauthorActivity(draft, proposal, 'completed', new Date().toISOString())]);
   }
 
   function acceptButton(key: string, patch: Partial<WorldDraft>, label = 'studio.adopt') {
@@ -72,6 +87,7 @@ export function WorldCoauthor({ draft, disabled = false }: { draft: WorldDraft; 
         </>}
         {characterSuggestions.map(character => <section className="studio-suggestion" key={character.id}><h4>{character.name} · {character.role}</h4><span className="studio-suggestion__type">{t('studio.characters')}</span><p>{character.summary}</p><dl><dt>{t('studio.desire')}</dt><dd>{character.desire}</dd><dt>{t('studio.flaw')}</dt><dd>{character.flaw}</dd><dt>{t('studio.voice')}</dt><dd>{character.voice}</dd></dl>{acceptButton(character.id, { characters: [...draft.characters, character] })}</section>)}
         {proposal.notes.length > 0 && <section className="studio-review-notes">{proposal.task !== 'review' && <h4>{t('studio.aiNotes')}</h4>}{proposal.notes.map((note, index) => <div key={index}><strong>{note.title}</strong><p>{note.detail}</p><p>{note.suggestion}</p></div>)}</section>}
+        <div className="studio-proposal__finish"><p className="studio-help">{t('studio.finishReviewHint')}</p><Button size="sm" tone="secondary" disabled={disabled} leadingIcon={<CheckCheck size={14} />} onClick={finishReview} data-testid="world-coauthor-finish-review">{t('studio.finishReview')}</Button></div>
       </div>}
     </div>
   </aside>;

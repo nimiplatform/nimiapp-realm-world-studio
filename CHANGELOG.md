@@ -7,7 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Coauthor candidates are published as App activity review todos
+  (`app.activity`): generating a proposal opens a todo for its draft, the new
+  Finish review action completes it with the adopted count, and a replaced
+  candidate, deleted draft or Realm save cancels it. Publications follow a
+  successful draft save and wait in an account-scoped protected-storage outbox
+  committed in the same document write, including completed and deleted reviews;
+  a publication Nimi has not accepted is shown as not synced with a retry, and
+  open candidates are republished after session start. When the Nimi session
+  changes, Studio stops its pending saves and publications and asks to be
+  reopened. Opening the todo from Nimi Home or another App navigates to the
+  draft before confirming.
+
+### Fixed
+- Recheck the session before queued draft writes and after asynchronous writes,
+  so ended-session work cannot continue into a rebound account.
+- Preserve failed review publications for retry and restart recovery. Reject
+  malformed draft/outbox documents without overwriting them, and show storage
+  failures without inventing a pending count.
+
 ### Changed
+- Moved to the SDK 0.16 / Kit 0.12 pairing (App Tools 0.8.0) for the App
+  activity carrier.
+
 - Adapted to the declarative Nimi App Access model as a third-party local app:
   `nimi.app.yaml` declares `app_access: [realm.data]` (replacing the retired
   `permissions` field), the Electron main process registers the Kit app bridge

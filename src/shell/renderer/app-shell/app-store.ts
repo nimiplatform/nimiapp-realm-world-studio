@@ -12,12 +12,15 @@ interface AppState {
   bootstrapReady: boolean;
   bootstrapError: string | null;
   bootstrapFailure: StudioProtectedSessionFailure | null;
+  /** The bound session was invalidated; Studio stays stopped until reopened. */
+  sessionEnded: boolean;
 
   setProtectedSessionBound: () => void;
   clearAuthSession: () => void;
   setBootstrapReady: (ready: boolean) => void;
   setBootstrapError: (error: string | null) => void;
   setBootstrapFailure: (failure: StudioProtectedSessionFailure | null) => void;
+  setSessionEnded: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -27,6 +30,7 @@ export const useAppStore = create<AppState>((set) => ({
   bootstrapReady: false,
   bootstrapError: null,
   bootstrapFailure: null,
+  sessionEnded: false,
 
   setProtectedSessionBound() {
     set({ auth: { status: 'authenticated' } });
@@ -39,4 +43,5 @@ export const useAppStore = create<AppState>((set) => ({
   setBootstrapReady: (ready) => set({ bootstrapReady: ready }),
   setBootstrapError: (error) => set({ bootstrapError: error }),
   setBootstrapFailure: (failure) => set({ bootstrapFailure: failure }),
+  setSessionEnded: () => set({ sessionEnded: true }),
 }));

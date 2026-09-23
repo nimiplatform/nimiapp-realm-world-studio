@@ -7,6 +7,7 @@ import { AppRoutes } from './app-shell/routes.js';
 import { ShellLayout } from './app-shell/shell-layout.js';
 import { AuthProvider } from './app-shell/auth-provider.js';
 import { studioQueryClient } from './infra/query-client.js';
+import { WorldActivityBridge } from './features/worlds/world-activity-bridge.js';
 
 export function App() {
   const { t } = useTranslation();
@@ -21,6 +22,7 @@ export function App() {
         <TooltipProvider>
           <HashRouter>
             <AuthProvider>
+              <WorldActivityBridge />
               <ShellLayout>
                 <AppRoutes />
               </ShellLayout>

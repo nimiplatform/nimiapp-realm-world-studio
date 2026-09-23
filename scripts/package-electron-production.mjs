@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { packager } from '@electron/packager';
 import { build } from 'esbuild';
+import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 
 const APP_EXECUTABLE_NAME = "nimiapp-realm-world-studio-shell";
 const APP_PRODUCT_NAME = "Realm World Studio";
@@ -52,7 +53,7 @@ const nativeEntry = requireFromKit.resolve(NATIVE_BINDING_PACKAGE);
 const nativePackageRoot = await findPackageRoot(nativeEntry, NATIVE_BINDING_PACKAGE);
 
 await rm(outputRoot, { recursive: true, force: true });
-const stagingRoot = await mkdtemp(path.join(tmpdir(), 'nimi-electron-packager-'));
+const stagingRoot = await realpath(await mkdtemp(path.join(tmpdir(), 'nimi-electron-packager-')));
 const productionSourceRoot = path.join(stagingRoot, 'app');
 const packagerTempRoot = path.join(stagingRoot, 'packager');
 let packageCompleted = false;
@@ -76,11 +77,15 @@ try {
 
   await mkdir(path.join(productionSourceRoot, 'dist-electron'), { recursive: true });
   await copyFile(path.join(appRoot, 'package.json'), path.join(productionSourceRoot, 'package.json'));
-  await copyFile(path.join(appRoot, 'pnpm-lock.yaml'), path.join(productionSourceRoot, 'pnpm-lock.yaml'));
+  // Local package archives resolve relative to the App; rebase them for the
+  // isolated staging directory so the build installs the same packages.
+  const dependencyLock = parseYaml(await readFile(path.join(appRoot, 'pnpm-lock.yaml'), 'utf8'));
+  await writeFile(path.join(productionSourceRoot, 'pnpm-lock.yaml'), stringifyYaml(rebaseLocalPackagePaths(dependencyLock, appRoot, productionSourceRoot)));
   await cp(path.join(appRoot, 'dist'), path.join(productionSourceRoot, 'dist'), { recursive: true, force: false });
   await copyFile(path.join(appRoot, 'dist-electron', 'main.js'), path.join(productionSourceRoot, 'dist-electron', 'main.js'));
   await copyFile(path.join(appRoot, 'dist-electron', 'preload.cjs'), path.join(productionSourceRoot, 'dist-electron', 'preload.cjs'));
-  await copyFile(path.join(appRoot, 'pnpm-workspace.yaml'), path.join(productionSourceRoot, 'pnpm-workspace.yaml'));
+  const workspace = parseYaml(await readFile(path.join(appRoot, 'pnpm-workspace.yaml'), 'utf8'));
+  await writeFile(path.join(productionSourceRoot, 'pnpm-workspace.yaml'), stringifyYaml({ ...rebaseLocalPackagePaths(workspace, appRoot, productionSourceRoot), packages: ['.'] }));
   await installProductionDependencies(productionSourceRoot);
   await rm(path.join(productionSourceRoot, 'pnpm-workspace.yaml'));
 
@@ -151,6 +156,32 @@ try {
   const cleanupTasks = [rm(stagingRoot, { recursive: true, force: true })];
   if (!packageCompleted) cleanupTasks.push(rm(outputRoot, { recursive: true, force: true }));
   await Promise.all(cleanupTasks);
+}
+
+function rebaseLocalPackagePaths(value, sourceDir, targetDir) {
+  // Parsed pnpm documents retain complete locators in overrides, specifiers
+  // and resolutions. Reuse those exact strings in package/peer keys instead
+  // of guessing whether a parenthesis belongs to a path or a peer suffix.
+  const replacements = new Map();
+  const collect = (item) => {
+    if (typeof item === 'string' && /^file:[^\r\n]+\.(?:tgz|tar\.gz)$/u.test(item)) {
+      replacements.set(item, 'file:' + path.relative(targetDir, path.resolve(sourceDir, item.slice(5))).split(path.sep).join('/'));
+    } else if (Array.isArray(item)) item.forEach(collect);
+    else if (item && typeof item === 'object') Object.values(item).forEach(collect);
+  };
+  collect(value);
+  if (replacements.size === 0) return value;
+  const pattern = new RegExp([...replacements.keys()].sort((a, b) => b.length - a.length)
+    .map((locator) => locator.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')).join('|'), 'gu');
+  const rebase = (text) => text.replace(pattern, (locator) => replacements.get(locator));
+  const rewrite = (item) => {
+    if (typeof item === 'string') return rebase(item);
+    if (Array.isArray(item)) return item.map(rewrite);
+    if (item && typeof item === 'object') return Object.fromEntries(Object.entries(item)
+      .map(([key, child]) => [rebase(key), rewrite(child)]));
+    return item;
+  };
+  return rewrite(value);
 }
 
 async function installProductionDependencies(projectRoot) {

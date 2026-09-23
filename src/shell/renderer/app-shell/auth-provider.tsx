@@ -1,5 +1,5 @@
 import { useCallback, useEffect, type ReactNode } from 'react';
-import { LockKeyhole, ShieldAlert } from 'lucide-react';
+import { LockKeyhole, RotateCw, ShieldAlert } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   AmbientBackground,
@@ -11,6 +11,7 @@ import {
 import { useAppStore } from './app-store.js';
 import { runStudioBootstrap } from '../infra/studio-bootstrap.js';
 import { LanguageSwitcher } from './language-switcher.js';
+import { watchStudioSession } from './session-boundary.js';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -18,14 +19,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const bootstrapReady = useAppStore((state) => state.bootstrapReady);
   const bootstrapError = useAppStore((state) => state.bootstrapError);
   const bootstrapFailure = useAppStore((state) => state.bootstrapFailure);
+  const sessionEnded = useAppStore((state) => state.sessionEnded);
 
   useEffect(() => {
     void runStudioBootstrap();
   }, []);
 
+  useEffect(() => watchStudioSession(), []);
+
   const retryBootstrap = useCallback(() => {
     void runStudioBootstrap({ force: true });
   }, []);
+
+  if (sessionEnded) {
+    return (
+      <BootstrapFrame>
+        <Surface
+          data-testid="world-studio-session-ended"
+          tone="card"
+          material="solid"
+          elevation="raised"
+          padding="md"
+          className="ras-protected-session"
+        >
+          <div className="ras-protected-session__stack">
+            <div className="ras-protected-session__heading">
+              <div className="ras-protected-session__icon" aria-hidden="true">
+                <ShieldAlert size={22} />
+              </div>
+              <div className="ras-protected-session__copy">
+                <p className="ras-protected-session__eyebrow">{t('auth.protectedSession.eyebrow')}</p>
+                <h1>{t('auth.sessionChanged.title')}</h1>
+                <p>{t('auth.sessionChanged.description')}</p>
+              </div>
+            </div>
+            <div className="ras-protected-session__actions">
+              <Button
+                data-testid="world-studio-session-reopen"
+                tone="primary"
+                leadingIcon={<RotateCw size={16} aria-hidden="true" />}
+                onClick={() => window.location.reload()}
+              >
+                {t('auth.sessionChanged.reopen')}
+              </Button>
+            </div>
+          </div>
+        </Surface>
+      </BootstrapFrame>
+    );
+  }
 
   if (bootstrapFailure) {
     return (
