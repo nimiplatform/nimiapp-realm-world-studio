@@ -82,7 +82,6 @@ export function draftIssues(draft: WorldContent): string[] {
 export function worldCreateInput(draft: WorldDraft): RealmModel<'CreateWorldCoreDto'> {
   if (draft.source || draft.savedWorld) throw new Error('Only an unpublished new-world draft can create a Realm world.');
   if (draftIssues(draft).length) throw new Error('Complete the required world fields before creating a Realm world.');
-  const now = new Date().toISOString();
   return {
     id: draft.id,
     visibility: draft.visibility,
@@ -97,7 +96,7 @@ export function worldCreateInput(draft: WorldDraft): RealmModel<'CreateWorldCore
       systems: draft.rules.filter(rule => rule.systemRef).map(rule => ({ systemId: rule.systemRef!, name: rule.name.trim(), summary: rule.statement.trim(), principles: [rule.statement.trim()] })),
       scenes: draft.places.map(place => ({ sceneId: place.id, name: place.name.trim(), summary: place.summary.trim() })),
       timeline: { events: [] },
-      timeModel: { mode: 'static', isPaused: true, flowRatio: 1, calendar: null, displayFormat: null, pausedWorldTime: now, anchor: { realStartedAt: now, worldStartedAt: now, worldStartedAtDisplay: now } },
+      timeModel: { mode: 'static', label: null },
     },
     lorebookDeclaration: {
       identityBaseSetting: draft.setting,

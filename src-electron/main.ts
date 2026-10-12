@@ -1,12 +1,22 @@
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { app, BrowserWindow, ipcMain, Menu, protocol, session, webContents } from 'electron';
-import {
+import { configureNimiElectronAppHostProfile } from '@nimiplatform/kit/shell/electron/host-profile';
+
+try {
+  configureNimiElectronAppHostProfile(app);
+} catch (error) {
+  process.stderr.write(`[nimi-app-host-profile] ${error instanceof Error ? error.message : String(error)}\n`);
+  app.exit(78);
+  throw error;
+}
+
+const {
   createNimiElectronStandardApplicationMenuTemplate,
   isAllowedElectronRendererUrl,
   registerNimiElectronAppAssetProtocolScheme,
   registerNimiElectronAppBridge,
-} from '@nimiplatform/kit/shell/electron/main';
+} = await import('@nimiplatform/kit/shell/electron/main');
 
 const REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio';
 const REALM_WORLD_STUDIO_APP_NAME = 'Realm World Studio';

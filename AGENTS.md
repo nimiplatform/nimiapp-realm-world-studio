@@ -26,7 +26,7 @@
 The platform packages consume the public versions selected by app-tools sync through their built exports.
 
 For the user-authorized local world/character closure iteration, SDK, Kit and the
-native carrier may consume the matching built artifacts from `D:\nimi-realm\nimi`.
+native carrier may consume complete matching npm tarballs built from the current Nimi checkout on the actual development platform.
 Keep that development dependency staging under `.nimi/local/`; it does not establish
 public package availability or authorize a direct Realm transport.
 

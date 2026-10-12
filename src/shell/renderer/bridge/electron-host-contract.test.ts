@@ -27,7 +27,7 @@ describe('Realm World Studio Electron host contract', () => {
     expect(packageJson.scripts['build:electron'] || '').toContain('tsconfig.electron.json');
     expect(packageJson.scripts['acceptance:electron']).toBeUndefined();
     expect(packageJson.scripts['typecheck:electron'] || '').toContain('tsconfig.electron.json');
-    expect(packageJson.devDependencies.electron || '').toMatch(/^\^?42\./);
+    expect(packageJson.devDependencies.electron || '').toMatch(/^\^?44\./);
     expect(packageJson.devDependencies.esbuild || '').toBeTruthy();
   });
 

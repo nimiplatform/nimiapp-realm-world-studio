@@ -1,9 +1,14 @@
 import { beforeEach, expect, it, vi } from 'vitest';
-import { createWorldDraft, draftIssues, newDraftRule, worldReplaceInput, WorldRevisionConflict } from './world-draft.js';
+import { createWorldDraft, draftIssues, newDraftRule, worldCreateInput, worldReplaceInput, WorldRevisionConflict } from './world-draft.js';
 import { characterDeclarationIssues, worldDeclarationIssues } from './lorebook-validation.js';
 import { characterWriteBody, characterForm, characterIssues, newCharacterDraft, saveWorldCharacter } from './world-character-model.js';
 import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
 import { TEST_WORLD_CORE, TEST_WORLD_CHARACTER_CORE } from './world-core-test-fixtures.js';
+
+it('creates a static world with the canonical label variant and no clock state', () => {
+  const draft = { ...createWorldDraft('A quiet archive'), name: 'Archive', summary: 'A static archive', setting: 'An archive outside the passage of time.' };
+  expect(worldCreateInput(draft).core.timeModel).toEqual({ mode: 'static', label: null });
+});
 
 vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioLocalAppClient: vi.fn() }));
 beforeEach(() => vi.clearAllMocks());

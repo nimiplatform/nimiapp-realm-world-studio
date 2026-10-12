@@ -33,17 +33,8 @@ export const TEST_WORLD_CORE: RealmModel<'WorldCoreDto'> = {
     scenes: [],
     systems: [],
     timeModel: {
-      anchor: {
-        realStartedAt: '2026-07-09T00:00:00.000Z',
-        worldStartedAt: '1271-01-01T00:00:00.000Z',
-        worldStartedAtDisplay: '至元八年',
-      },
-      calendar: null,
-      displayFormat: null,
-      flowRatio: 1,
-      isPaused: true,
       mode: 'static',
-      pausedWorldTime: '1271-01-01T00:00:00.000Z',
+      label: '至元八年',
     },
     timeline: { events: [] },
   },
