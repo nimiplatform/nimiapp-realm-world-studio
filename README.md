@@ -1,5 +1,15 @@
 # Realm World Studio
 
+## Published dependency and Catalog acceptance (2026-10-13)
+
+Current public release: [0.1.6](https://github.com/nimiplatform/nimiapp-realm-world-studio/releases/tag/v0.1.6); [Registry admission #82](https://github.com/nimiplatform/nimi-app-registry/pull/82) is merged for macOS arm64 and Windows x64. Frozen locks use published SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.1 and nimi-coding 0.6.5; no local Nimi archive or source-link resolution is required.
+
+Repository checks and managed production builds, package provenance and immutable Release checks passed for both declared targets. Actual Catalog download, installation and AI acceptance ran on macOS arm64 through source Nimi Home and its matching protected Runtime (Nimi main 35498102b). Runtime identity and App Access checks remain enforced.
+
+Real AI coauthoring produced a complete wind-chime island proposal. Title, summary, setting, rule, place and character were adopted through the UI; the saved draft and proposal survived a full Home stop/launch. The installed App read 50 Realm worlds after the bounded Runtime WorldCore heroResourceRef fix.
+
+**NOT-VERIFIED:** Windows GUI installation and AI use. Realm world creation is NOT-VERIFIED: the current account lacks the administrator-managed creator grant, and the actual Create in Realm control stayed disabled. No new grant or world publication was fabricated. The Runtime fix is on Nimi main (35498102b), exercised in the source Runtime; a formal Nimi product release containing it was not performed.
+
 创作者的 Realm 世界工作台
 
 Realm World Studio is the creator-facing desktop workspace for creator-owned
