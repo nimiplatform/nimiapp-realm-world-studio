@@ -64,7 +64,7 @@ it('shows the new canonical version on conflict and requires another review afte
   fireEvent.click(screen.getByRole('button', { name: 'Review & save' }));
   fireEvent.click(screen.getByRole('checkbox'));
   fireEvent.click(screen.getByRole('button', { name: 'Save character changes' }));
-  await screen.findByText('This source has changed in Realm.');
+  await screen.findByText('This content has been updated in Realm.');
   expect(replace).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keep my draft and review against this version' }));
   expect(screen.getByRole('checkbox')).not.toBeChecked();

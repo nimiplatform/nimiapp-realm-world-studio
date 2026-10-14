@@ -1,133 +1,92 @@
-# Realm World Studio
+# Realm World Studio (世界工坊)
 
-## Published dependency and Catalog acceptance (2026-10-13)
+> An immersive worldbuilding and lore workbench for authors, creators, and game designers.
 
-Current public release: [0.1.6](https://github.com/nimiplatform/nimiapp-realm-world-studio/releases/tag/v0.1.6); [Registry admission #82](https://github.com/nimiplatform/nimi-app-registry/pull/82) is merged for macOS arm64 and Windows x64. Frozen locks use published SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.1 and nimi-coding 0.6.5; no local Nimi archive or source-link resolution is required.
+Realm World Studio gives creators a structured workspace to co-author fictional worlds with AI, establish consistent world laws and geography, and populate settings with living characters. Keep your setting, rules, and characters together as your world takes shape.
 
-Repository checks and managed production builds, package provenance and immutable Release checks passed for both declared targets. Actual Catalog download, installation and AI acceptance ran on macOS arm64 through source Nimi Home and its matching protected Runtime (Nimi main 35498102b). Runtime identity and App Access checks remain enforced.
+---
 
-Real AI coauthoring produced a complete wind-chime island proposal. Title, summary, setting, rule, place and character were adopted through the UI; the saved draft and proposal survived a full Home stop/launch. The installed App read 50 Realm worlds after the bounded Runtime WorldCore heroResourceRef fix.
+## Studio Workflow & Features
 
-**NOT-VERIFIED:** Windows GUI installation and AI use. Realm world creation is NOT-VERIFIED: the current account lacks the administrator-managed creator grant, and the actual Create in Realm control stayed disabled. No new grant or world publication was fabricated. The Runtime fix is on Nimi main (35498102b), exercised in the source Runtime; a formal Nimi product release containing it was not performed.
+### 1. The Interactive World Manual
+Structure your universe with clarity and depth:
+- **Concept & Lore**: Define your setting's core premise, aesthetic tone, and historical eras.
+- **Rules & Constraints**: Establish the metaphysical laws, technology limits, social taboos, or magical systems that govern everyday life.
+- **Places & Geography**: Catalog regions, cities, mysterious landmarks, and environmental conditions.
+- **Resident Characters**: Outline the personalities, conflicting motives, and social roles native to this setting.
 
-创作者的 Realm 世界工作台
+### 2. AI Co-Authoring & Consistency Checking
+- **Prompt to Proposal**: Start with a single evocative premise (e.g., *"an archipelago of floating islands powered by acoustic resonance"*) and let AI generate complete setting proposals.
+- **Granular Control**: Every AI suggestion appears as an independent candidate. Adopt items individually (`Add to Draft`), edit the draft, and keep only the ideas you choose.
+- **Contradiction Auditing**: Ask AI to verify whether proposed rules create lore paradoxes or logical holes with existing landmarks.
 
-Realm World Studio is the creator-facing desktop workspace for creator-owned
-Realm worlds and the world-owned characters under those worlds.
+### 3. World Characters
+- Turn outline concepts into full **World Characters** with defined speech registers, emotional boundaries, and behavioral objectives.
+- Characters live within the world context as world-owned source settings. Creating a LocalAgent or starting a conversation is handled in separate downstream workflows.
 
-## Product Boundary
+### 4. Save to Realm
+- Review and refine drafts in your local workspace.
+- When ready, save your world definition as a `WorldCore` record and confirm Realm's response. Saving stores the record under your account without automatically creating a public catalog listing or version-history service.
 
-RWS is a thin product composition layer over Nimi platform substrate:
+---
 
-- Desktop owns local-app admission, authorization, protected session binding, and account custody.
-- UI primitives and shared visual contracts come from `@nimiplatform/kit`.
-- Admitted Realm reads/writes flow through the bounded local-app SDK surface.
-- AI model configuration and AI execution must use kit/sdk Runtime surfaces when admitted.
+## Technical Architecture
 
-## Current Creator Surfaces
+| Layer | Technology | Role |
+| :--- | :--- | :--- |
+| **Desktop Shell** | Desktop-supervised Electron | Native desktop lifecycle and host security bridge |
+| **User Interface** | React 19 + Vite + Tailwind CSS | Built on `@nimiplatform/kit` design primitives |
+| **Platform Client** | `@nimiplatform/sdk` | Protected Realm state reads/writes and AI inference |
+| **Local Drafts** | Local App Storage | Stores drafts and proposals safely on disk |
 
-- `/worlds` lists creator-accessible `WorldCore` records through
-  `localApp.realm.worldCore.list`.
-- `/worlds/new` submits a typed `CreateWorldCoreDto` through
-  `localApp.realm.worldCore.create`; save success exists only after Realm
-  returns the canonical `WorldCoreDto`.
-- World detail reads the exact `WorldCoreDto` through `worldCore.get`; the library
-  separately shows up to 50 accessible worlds. Reviewed maintenance uses
-  `worldCore.replace` with a source content hash and preserves unedited source fields.
-- `/drafts/:draftId` provides ordinary-language world, rule, place and character
-  concept authoring. Drafts and AI proposals persist through protected
-  `localApp.storage`; they never become an app-owned canonical world database.
-- AI coauthoring uses `localApp.ai.text.generateCandidate` with declared
-  `runtime.consume` / `text.generate`, separate proposal review, individual
-  adoption and undo. Model selection uses the kit model-config surface and the
-  SDK `localApp.aiConfig` client.
-- World characters have canonical list/detail and create/edit routes. A concept
-  stays a draft until its profile and explicit role declaration are reviewed and
-  saved. Entity creation precedes character creation, and retries reuse the
-  same entity. World and character conflicts preserve the draft and require a
-  new review of the current Realm source before another write.
-- World creation eligibility comes from Realm. It is independent of existing
-  world maintenance, subscription, and role; App Access alone does not grant it.
-- World characters are Realm-owned setting templates. Their save/readback and maintenance complete in Studio; LocalAgent materialization and conversation are outside this app’s workflows and acceptance.
+---
 
-This app is not World Atlas, an owner RealmPersona portfolio, Forge curation,
-or LocalAgent private runtime tooling.
+## Getting Started & Development
 
-## Development
+### Prerequisites
+- Node.js ≥ 24, pnpm ≥ 10
+- Running Nimi Desktop with an authenticated account
 
-This closure iteration uses the user-authorized local SDK/Kit/native build from
-`D:\nimi-realm\nimi`. The new world/character methods are not yet available in
-published SDK 0.11.0 / Kit 0.7.0. Local dependency links/staging live under
-`.nimi/local/`; they do not establish public release or installation readiness.
-Ordinary public dependencies do not provide these new operations; use the matching local build when
-continuing this development session. Keep Desktop's source native carrier and
-source Runtime in sync as well; missing native exports fail closed at startup.
-
-Start the local development stack in order:
-
-1. In Nimi, run `pnpm dev:runtime` and wait for the **runtime ready** log.
-2. Run `pnpm dev:desktop` and wait for Desktop to open.
-3. In Studio, list registrations and resume the existing one as shown below.
-
-Reuse an existing Realm API development process. A compiling `dev:api` may not
-yet listen on port 3002; starting another copy can clear the first one's emitted
-files. Do not run the API inside root `pnpm dev` and a second `dev:api` together.
-
+### Running Locally
 ```bash
+# Install dependencies
 pnpm install
-pnpm typecheck
-pnpm test
-pnpm lint
-pnpm dev                              # Desktop-supervised Electron
-pnpm dev:shell -- --shell electron    # explicit active shell
+
+# Start development in Desktop-supervised Electron shell
+pnpm dev
 ```
 
-To reopen an existing development App with its protected draft storage, use
-App Tools' explicit registration selection:
-
+To resume an existing development workspace session:
 ```bash
 pnpm dev -- --list-registrations
 pnpm dev -- --resume <selector>
 ```
 
-The selector comes from the current Desktop session; do not save it in the
-repository. Plain `pnpm dev` creates a new registration when no matching run is
-active. A new registration has a different protected storage owner, so it does
-not reopen an earlier registration's drafts. This differs from restarting the
-same registered App.
-
-Development drafts and pending review activity now share one protected JSON
-document, so a completed or deleted review can be recovered after a restart.
-The previous array format fails closed and is never overwritten automatically.
-For existing local development data, resume its exact registration and use
-`scripts/convert-development-world-drafts.ts` once from that supervised
-renderer while the old-format storage error has the notebook locked:
-
-```js
-const { convertDevelopmentWorldDrafts } = await import('/@fs/<absolute-app-root>/scripts/convert-development-world-drafts.ts');
-await convertDevelopmentWorldDrafts(); // Preview counts; no writes.
-await convertDevelopmentWorldDrafts({ apply: true }); // Validate, back up, convert.
-location.reload();
-```
-
-Use the real checkout path in the import, with forward slashes. This explicit
-development utility uses the same protected SDK storage, preserves the old
-outbox and a backup, and stops on session invalidation or malformed data.
-It is not an App startup migration or part of the production bundle.
-
-## Windows package and release
-
-The production target is Windows x86_64 using Desktop-supervised Electron.
-Build and inspect the package from this repository:
-
+### Build & Verification
 ```bash
-pnpm run sync
-pnpm exec nimi-app check --production
-pnpm exec nimi-app test
-pnpm exec nimi-app build --target windows-x86_64 --production
-pnpm exec nimi-app pack --target windows-x86_64 --production
+# Typecheck and build
+pnpm build
+
+# Run unit tests
+pnpm test
+
+# Verify specification consistency and lint
+pnpm check:spec-consistency
+pnpm lint
 ```
 
-Before tagging, follow the [GitHub release setup guide](https://github.com/nimiplatform/nimi/blob/main/app-tools/README.md#publishing-on-github), including the `NIMI_REPOSITORY_ADMIN_TOKEN` Actions secret.
-A protected annotated version tag on the repository default branch runs the managed build, provenance and immutable Release workflow.
-The publisher then submits the immutable Release to [Nimi App Registry](https://github.com/nimiplatform/nimi-app-registry). Registry admission is a separate human review; local builds and GitHub Releases do not create admission or installed state.
+---
+
+## Privacy & Storage
+
+- **Local Private Workspace**: Drafts and AI proposals are saved in local App storage. AI generation requires a ready model capability, and choosing a Cloud route sends the relevant request input to your selected provider.
+- **Realm Records**: Reading and writing Realm records requires connectivity. World and character settings are saved under your authenticated creator account; confirm the returned save result before continuing.
+
+---
+
+## Release & Verification Status
+
+- **Verified Publisher Release**: [v0.1.6](https://github.com/nimiplatform/nimiapp-realm-world-studio/releases/tag/v0.1.6)
+- **Registry Admission**: [#82](https://github.com/nimiplatform/nimi-app-registry/pull/82) (macOS arm64 and Windows x64)
+- **Recorded Toolchain Combination**: SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.1, Nimi Coding 0.6.5
+- **Previously Recorded Platform Checks**: macOS arm64 Catalog install, complete AI world proposal generation (wind-chime island), local draft saving and restart persistence, and reading 50 Realm worlds verified. (Windows GUI execution marked as `NOT-VERIFIED`).

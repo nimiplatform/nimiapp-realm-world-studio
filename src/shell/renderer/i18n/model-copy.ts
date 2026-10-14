@@ -23,7 +23,7 @@ export const worldModelCopyZh: ModelConfigCopy = {
   openCloudConnectorsLabel: '配置云端连接', cloudImplementationLabel: '云端服务', cloudImplementationPlaceholder: '选择云端服务',
   cloudTargetLabel: '云端模型', cloudTargetPlaceholder: '选择模型', cloudTargetDialogTitle: '选择云端模型',
   cloudTargetDialogDescription: '选择通过此连接使用的模型。', cloudNoticeLabel: '云端运行',
-  cloudNoticeDescription: '请求会发送到云端，并可能产生服务费用。', cloudConnectorLabel: '已配置的连接', cloudConnectorPlaceholder: '选择连接',
+  cloudNoticeDescription: "请求及相关上下文可能会发送给所选云端服务商，并可能产生服务费用。", cloudConnectorLabel: '已配置的连接', cloudConnectorPlaceholder: '选择连接',
   cloudLoadFailed: '无法加载云端服务、模型或账号。', retryLabel: '重试', loadFailed: '暂时无法加载模型设置。',
   saveFailed: '设置未能保存，请重试。', technicalDetailsLabel: '技术详情', unsupportedCapabilityLabel: '当前版本不支持这项能力。',
   notConfiguredLabel: '待选择', configuredLabel: '已配置', selectionRequiredLabel: '需要选择模型', blockedLabel: '暂不可用',

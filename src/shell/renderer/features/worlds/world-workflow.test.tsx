@@ -208,7 +208,7 @@ describe('Creator review interaction', () => {
     const draft = createWorldDraft('A city of memories');
     draft.proposal = { task: 'review', notes: [], traceId: 'trace', sourceUpdatedAt: draft.updatedAt, accepted: [] };
     renderDraft(draft);
-    expect(screen.getByText('This review is complete and proposed no specific changes. You can ask it to examine a particular rule or relationship next.')).toBeInTheDocument();
+    expect(screen.getByText('This review is complete and proposed no specific changes. Next, you can ask AI to examine a particular rule or relationship.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Use name & summary' })).not.toBeInTheDocument();
   });
   it('keeps AI proposals separate until a creator adopts them and supports undo', async () => {
