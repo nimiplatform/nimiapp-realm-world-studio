@@ -13,7 +13,6 @@ local_development:
 metadata:
   summary: 与 AI 共创世界设定与角色构想，审阅草稿，创建并整理自己的 Realm 世界。
   icon: assets/app-icon.png
-  readme: APP_GUIDE.md
   release_notes: RELEASE_NOTES.md
   author: Nimi Team
   homepage_url: https://github.com/nimiplatform/nimiapp-realm-world-studio

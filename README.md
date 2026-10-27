@@ -1,3 +1,9 @@
+Current development dependencies are SDK 0.22.2, Kit/native 0.22.1, App Tools 0.14.0 and Nimi Coding 0.7.0. The checked-in pnpm lock resolves these packages from the public registry. Run `pnpm install --frozen-lockfile`, `pnpm exec nimi-app check`, then `pnpm dev` with a matching source-built Nimi Runtime and Home. App versions and published App releases are unchanged. Earlier versioned notes retain their original acceptance scope. Home uses the App-owned root `NIMI_APP.md`; this README remains developer documentation.
+
+Upgrade verification: public-registry installation, frozen-lockfile installation, App Tools checks and the applicable type/Host build checks passed. Desktop-supervised macOS development opened the complete returned page of 50 Realm worlds. New model-output journeys and packaged installation were not rerun; earlier evidence below retains its stated versions and scope.
+
+[App introduction and usage](NIMI_APP.md)
+
 # Realm World Studio (世界工坊)
 
 > An immersive worldbuilding and lore workbench for authors, creators, and game designers.

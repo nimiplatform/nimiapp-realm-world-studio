@@ -29,6 +29,9 @@ const IS_PRODUCTION_BUNDLE = typeof __NIMI_ELECTRON_PRODUCTION__ !== 'undefined'
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
 const appRoot = resolveAppRoot(currentDir);
+if (process.platform === 'win32') app.setAppUserModelId(`ai.nimi.${app.isPackaged ? '' : 'dev.'}apps.nimi.realm-world-studio`);
+// Native presentation is separate from metadata.icon artwork shown in Nimi Home.
+const nativeAppIconPath = path.join(appRoot, 'assets', 'native', process.platform === 'win32' ? 'windows.ico' : process.platform === 'darwin' ? 'macos.png' : 'app.png');
 const preloadPath = path.join(currentDir, 'preload.cjs');
 const rendererDistIndex = path.join(appRoot, 'dist', 'index.html');
 const rendererDistUrl = pathToFileURL(rendererDistIndex).toString();
@@ -42,6 +45,7 @@ registerNimiElectronAppAssetProtocolScheme(protocol);
 void app.whenReady().then(bootstrapElectron).catch(handleElectronStartupFailure);
 
 async function bootstrapElectron(): Promise<void> {
+  if (process.platform === 'darwin' && !app.isPackaged) app.dock?.setIcon(nativeAppIconPath);
   registerNimiElectronAppBridge({
     appId: REALM_WORLD_STUDIO_APP_ID,
     allowedRendererUrls: [activeRendererUrl()],
@@ -99,6 +103,7 @@ app.on('window-all-closed', () => {
 
 async function createMainWindow(): Promise<BrowserWindow> {
   const window = new BrowserWindow({
+    icon: nativeAppIconPath,
     width: 1360,
     height: 860,
     minWidth: 390,
