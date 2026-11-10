@@ -33,7 +33,7 @@ const enTranslations = {
   'shell.account.openMenu': 'Open account menu',
   'shell.account.menuAria': 'Account menu',
   'shell.account.fallbackDisplayName': 'Creator',
-  'shell.account.emailFallback': 'Managed by Nimi Desktop',
+  'shell.account.emailFallback': 'Nimi account',
   'shell.account.worlds': 'Worlds',
 
   'worlds.eyebrow': 'Realm core workspace',
@@ -238,7 +238,7 @@ export const zhCNTranslations: Record<StudioTranslationKey, string> = {
   'shell.account.openMenu': '打开账号菜单',
   'shell.account.menuAria': '账号菜单',
   'shell.account.fallbackDisplayName': '创作者',
-  'shell.account.emailFallback': '由 Nimi Desktop 管理',
+  'shell.account.emailFallback': 'Nimi 账号',
   'shell.account.worlds': '世界',
 
   'worlds.eyebrow': 'Realm Core 工作区',
