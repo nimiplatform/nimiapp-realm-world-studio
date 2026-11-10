@@ -110,6 +110,23 @@ describe('World creation and proposal contracts', () => {
     expect(candidate.traceId).toBe('format-trace');
     expect(draft.characters).toHaveLength(0);
   });
+
+  it('retains an invalid empty-note candidate for explicit AI repair without inventing review findings', async () => {
+    const draft = createWorldDraft('A small bookshop');
+    const raw = JSON.stringify({ ...proposal, notes: [{ title: '', detail: '', suggestion: '' }] });
+    generate.mockResolvedValueOnce({ text: raw, finishReason: 'stop', traceId: 'invalid-notes' });
+    await expect(generateWorldProposal(studioTestScope, draft, 'develop', '', 'en')).rejects.toMatchObject({
+      message: 'AI_OUTPUT_INVALID', cause: raw,
+    });
+    expect(generate).toHaveBeenCalledTimes(1);
+    generate.mockResolvedValueOnce({ text: JSON.stringify({ ...proposal, notes: [] }), finishReason: 'stop', traceId: 'repaired-notes' });
+    const result = await generateWorldProposal(studioTestScope, draft, 'develop', '', 'en', raw);
+    expect(result.notes).toEqual([]);
+    expect(result.task === 'develop' && result.content.name).toBe(proposal.name);
+    expect(generate.mock.calls[1]?.[0].messages[0].text).toContain('Omit empty note placeholders');
+    expect(generate.mock.calls[1]?.[0].messages[1].text).toContain(raw);
+    expect(draft.name).toBe('');
+  });
 });
 
 describe('Protected draft storage', () => {
