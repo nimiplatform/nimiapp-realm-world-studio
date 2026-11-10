@@ -27,6 +27,33 @@ it('world replacement preserves hidden source fields and stable rule identities'
   expect(source.core.identity.name).toBe(TEST_WORLD_CORE.core.identity.name);
 });
 
+it('creates JSON-compatible world input when optional genre and era are blank', () => {
+  const draft = { ...createWorldDraft(), name: 'Archive', summary: 'A quiet archive', setting: 'A library opens in the rain.', genre: '  ', era: '' };
+  const input = worldCreateInput(draft);
+  expect(input).toStrictEqual(JSON.parse(JSON.stringify(input)));
+  expect(input.core.identity).not.toHaveProperty('genre');
+  expect(input.core.identity).not.toHaveProperty('era');
+  draft.genre = ' Fiction ';
+  draft.era = ' Modern ';
+  expect(worldCreateInput(draft).core.identity).toMatchObject({ genre: 'Fiction', era: 'Modern' });
+});
+
+it('clears optional world identity fields without sending undefined or retaining old values', () => {
+  const source = {
+    ...TEST_WORLD_CORE,
+    core: { ...TEST_WORLD_CORE.core, identity: { ...TEST_WORLD_CORE.core.identity, genre: 'Fiction', era: 'Modern' } },
+  };
+  const draft = createWorldDraft('', source);
+  draft.genre = '  ';
+  draft.era = '';
+  const input = worldReplaceInput(draft, source);
+  expect(input).toStrictEqual(JSON.parse(JSON.stringify(input)));
+  expect(input.core.identity).not.toHaveProperty('genre');
+  expect(input.core.identity).not.toHaveProperty('era');
+  expect(input.core.identity.themes).toEqual(source.core.identity.themes);
+  expect(source.core.identity).toMatchObject({ genre: 'Fiction', era: 'Modern' });
+});
+
 it('world replacement refuses a changed source before producing a write', () => {
   const draft = createWorldDraft('', TEST_WORLD_CORE);
   expect(() => worldReplaceInput(draft, { ...TEST_WORLD_CORE, contentHash: 'f'.repeat(64) })).toThrow(WorldRevisionConflict);

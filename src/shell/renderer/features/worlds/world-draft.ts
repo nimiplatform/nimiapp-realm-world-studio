@@ -87,7 +87,7 @@ export function worldCreateInput(draft: WorldDraft): RealmModel<'CreateWorldCore
     visibility: draft.visibility,
     origin: { kind: 'manual' },
     core: {
-      identity: { name: draft.name.trim(), summary: draft.summary.trim(), genre: draft.genre.trim() || undefined, era: draft.era.trim() || undefined },
+      identity: { name: draft.name.trim(), summary: draft.summary.trim(), ...(draft.genre.trim() ? { genre: draft.genre.trim() } : {}), ...(draft.era.trim() ? { era: draft.era.trim() } : {}) },
       presentation: { displayName: draft.name.trim() },
       assets: { intents: [], resourceRefs: [] },
       authoring: { source: 'realm-world-studio' },
@@ -132,9 +132,10 @@ export function worldReplaceInput(draft: WorldDraft, latest: WorldRecord): Realm
     if (system) system.name = rule.name.trim();
     else systems.push({ systemId: rule.systemRef, name: rule.name.trim(), summary: rule.statement.trim(), principles: [rule.statement.trim()] });
   }
-  const core = {
+  const { genre: _genre, era: _era, ...identity } = original.identity;
+  const core: WorldRecord['core'] = {
     ...original,
-    identity: { ...original.identity, name: draft.name.trim(), summary: draft.summary.trim(), genre: draft.genre.trim() || undefined, era: draft.era.trim() || undefined },
+    identity: { ...identity, name: draft.name.trim(), summary: draft.summary.trim(), ...(draft.genre.trim() ? { genre: draft.genre.trim() } : {}), ...(draft.era.trim() ? { era: draft.era.trim() } : {}) },
     presentation: { ...original.presentation, ...(draft.name !== latest.core.identity.name && original.presentation.displayName === latest.core.identity.name ? { displayName: draft.name.trim() } : {}) },
     systems,
     scenes: draft.places.map(place => ({ ...original.scenes.find(scene => scene.sceneId === place.id), sceneId: place.id, name: place.name.trim(), summary: place.summary.trim() })),
