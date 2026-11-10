@@ -7,10 +7,10 @@ import { ArrowLeft, ArrowRight, Check, FilePenLine, ShieldCheck, Sparkles, UserR
 import { Button, InlineAlert, LoadingSkeleton, nimiToast } from '@nimiplatform/kit/ui';
 import { getCreatorWorld, getCreatorWorldCharacterCore, worldCharacterKey, worldCharactersKey, worldRecordKey } from './world-core-client.js';
 import { CHARACTER_FIELDS, characterMatchesWorld, CharacterRevisionConflict, characterIssues, characterForm, generateCharacterProposal, newCharacterDraft, saveWorldCharacter, type CharacterForm } from './world-character-model.js';
-import { changeCharacterDraft, loadCharacterDrafts, persistCharacterDrafts, putCharacterDraft, useCharacterDrafts, getCharacterDraftState } from './character-draft-store.js';
+import { changeCharacterDraft, loadCharacterDrafts, persistCharacterDrafts, reloadConflictingCharacterDraft, putCharacterDraft, useCharacterDrafts, getCharacterDraftState } from './character-draft-store.js';
 import { newDraftId } from './world-draft.js';
 import { loadWorldDrafts } from './world-draft-store.js';
-import { FailureNotice, Field, useDraftLibrary } from './studio-ui.js';
+import { DraftConflictNotice, FailureNotice, Field, useDraftLibrary } from './studio-ui.js';
 
 const PROFILE_FIELDS = ['name', 'summary', 'role', 'drives', 'traits', 'tone', 'greeting'] as const;
 const DECLARATION_FIELDS = ['identityStatement', 'behavior', 'speaking', 'boundaries'] as const;
@@ -108,7 +108,8 @@ export function WorldCharacterEditorPage() {
   const fields = chapter === 'profile' ? PROFILE_FIELDS : DECLARATION_FIELDS;
   return <div className="studio-notebook studio-character-editor">
     <header className="studio-notebook__top"><Link className="studio-back" to={`/worlds/${worldId}`}><ArrowLeft size={16} />{world.data.core.identity.name}</Link><div className="studio-notebook__identity"><h1>{draft.form.name || t('ops.newCharacter')}</h1><span className="studio-badge">{t('studio.draft')}</span></div><span className="studio-save-status" role="status">{t(store.error ? 'studio.unsaved' : store.saving ? 'studio.saving' : 'studio.savedDraft')}</span></header>
-    {store.error && <FailureNotice message={t('studio.storageError')} error={store.error} retry={() => void persistCharacterDrafts(scope).catch(() => {})} />}
+    {store.conflictId ? <DraftConflictNotice reload={() => void reloadConflictingCharacterDraft(scope, store.conflictId!)} />
+      : store.error && <FailureNotice message={t('studio.storageError')} error={store.error} retry={() => void persistCharacterDrafts(scope).catch(() => {})} />}
     <div className="studio-notebook__layout"><div className="studio-notebook__work">
       <nav className="studio-chapters" aria-label={t('ops.characterEditor')}>{(['profile', 'declaration', 'review'] as const).map(key => { const Icon = CHAPTER_ICONS[key]; return <button key={key} type="button" className={chapter === key ? 'is-current' : ''} aria-current={chapter === key ? 'step' : undefined} disabled={save.isPending} onClick={() => setChapter(key)}><Icon size={16} />{t(`ops.chapter.${key}`)}</button>; })}</nav>
       <div className="studio-manuscript"><div className="studio-editor-fields"><header className="studio-chapter-title"><h2>{t(`ops.chapter.${chapter}`)}</h2><p>{t(`ops.hint.${chapter}`)}</p></header>

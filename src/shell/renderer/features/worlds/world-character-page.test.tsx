@@ -1,3 +1,4 @@
+import { worldDraftStorageFixture } from '../../../../test/world-draft-storage.js';
 import { studioTestScope, renderStudio as render } from '../../../../test/studio-scope.js';
 import '@testing-library/jest-dom/vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -24,6 +25,7 @@ const draft = () => {
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  getCharacterDraftState(studioTestScope).savedDrafts.clear();
   await setStudioLocale('en');
   getWorldDraftState(studioTestScope).store.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
   getCharacterDraftState(studioTestScope).store.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
@@ -32,7 +34,7 @@ beforeEach(async () => {
 
 function mount(value: ReturnType<typeof draft>, api: Record<string, unknown>, editing = false) {
   getCharacterDraftState(studioTestScope).store.setState({ drafts: [value] });
-  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api }, storage: { writeJson: vi.fn(async () => ({})) } } as unknown as ReturnType<typeof getStudioClient>);
+  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api }, storage: worldDraftStorageFixture().storage } as unknown as ReturnType<typeof getStudioClient>);
   const url = editing ? `/worlds/${value.worldId}/characters/${value.id}/edit` : `/worlds/${value.worldId}/characters/new?characterDraftId=${value.id}`;
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={[url]}><Routes><Route path="/worlds/:worldId/characters/new" element={<WorldCharacterEditorPage />} /><Route path="/worlds/:worldId/characters/:characterId/edit" element={<WorldCharacterEditorPage />} /><Route path="/worlds/:worldId/characters/:characterId" element={<p>Canonical character route</p>} /></Routes></MemoryRouter></QueryClientProvider>);
 }

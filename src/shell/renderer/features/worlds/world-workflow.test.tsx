@@ -1,7 +1,8 @@
-import { studioTestScope, renderStudio as render } from '../../../../test/studio-scope.js';
+import { worldDraftStorageFixture } from '../../../../test/world-draft-storage.js';
+import { createStudioTestScope, StudioTestProviders } from '../../../../test/studio-scope.js';
 import '@testing-library/jest-dom/vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { setStudioLocale } from '../../i18n/index.js';
@@ -24,17 +25,16 @@ const proposal = {
   characters: [{ name: 'Ira', role: 'Wall keeper', summary: 'Keeps the tide away.', desire: 'Recover a lost name.', flaw: 'Afraid to remember.', voice: 'Short, guarded sentences.' }],
   notes: [{ title: 'A limit', detail: 'Memories run out.', suggestion: 'Decide what happens when nobody can pay.' }],
 };
-const storage = { readJson: vi.fn(), writeJson: vi.fn() };
+let storage = worldDraftStorageFixture().storage;
+let studioTestScope = createStudioTestScope();
 const generate = vi.fn();
-let storedDocument: unknown;
 
 beforeEach(async () => {
   vi.clearAllMocks();
   await setStudioLocale('en');
+  storage = worldDraftStorageFixture().storage;
+  studioTestScope = createStudioTestScope();
   vi.mocked(getStudioClient).mockReturnValue({ storage, ai: { text: { generateCandidate: generate } } } as unknown as ReturnType<typeof getStudioClient>);
-  storedDocument = { drafts: [], activityOutbox: [] };
-  storage.readJson.mockImplementation(async () => ({ value: structuredClone(storedDocument) }));
-  storage.writeJson.mockImplementation(async (_path, value) => { storedDocument = structuredClone(value); return { value, sizeBytes: JSON.stringify(value).length }; });
   getWorldDraftState(studioTestScope).store.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
 });
 
@@ -141,7 +141,7 @@ describe('Protected draft storage', () => {
     expect(getWorldDraftState(studioTestScope).store.getState().loaded).toBe(false);
     expect(getWorldDraftState(studioTestScope).store.getState().error).toContain('unreadable');
     await expect(persistWorldDrafts(studioTestScope)).rejects.toThrow();
-    expect(storage.writeJson).not.toHaveBeenCalled();
+    expect(storage.assets.write).not.toHaveBeenCalled();
   });
 
   it('loads complete persisted proposals without changing their content or identities', async () => {
@@ -160,7 +160,7 @@ describe('Protected draft storage', () => {
     await loadWorldDrafts(studioTestScope);
     expect(getWorldDraftState(studioTestScope).store.getState().loaded).toBe(false);
     await expect(persistWorldDrafts(studioTestScope)).rejects.toThrow();
-    expect(storage.writeJson).not.toHaveBeenCalled();
+    expect(storage.assets.write).not.toHaveBeenCalled();
   });
 
   it('distinguishes a missing file from a transport failure', async () => {
@@ -169,7 +169,7 @@ describe('Protected draft storage', () => {
     await loadWorldDrafts(studioTestScope);
     expect(getWorldDraftState(studioTestScope).store.getState().loaded).toBe(true);
     getWorldDraftState(studioTestScope).store.setState({ loaded: false });
-    storage.readJson.mockRejectedValue(new Error('transport unavailable'));
+    storage.assets.list.mockRejectedValue(new Error('transport unavailable'));
     await loadWorldDrafts(studioTestScope);
     expect(getWorldDraftState(studioTestScope).store.getState().loaded).toBe(false);
   });
@@ -177,7 +177,7 @@ describe('Protected draft storage', () => {
   it('preserves in-memory work and exposes write failure', async () => {
     const draft = createWorldDraft('Keep my work');
     getWorldDraftState(studioTestScope).store.setState({ drafts: [draft] });
-    storage.writeJson.mockRejectedValue(new Error('storage unavailable'));
+    storage.assets.write.mockRejectedValue(new Error('storage unavailable'));
     await expect(persistWorldDrafts(studioTestScope)).rejects.toThrow('storage unavailable');
     expect(getWorldDraftState(studioTestScope).store.getState().drafts[0]?.brief).toBe('Keep my work');
     expect(getWorldDraftState(studioTestScope).store.getState().error).toBe('storage unavailable');
@@ -186,7 +186,7 @@ describe('Protected draft storage', () => {
   it('restores a draft when its deletion cannot be persisted', async () => {
     const draft = createWorldDraft('Keep on failed deletion');
     getWorldDraftState(studioTestScope).store.setState({ drafts: [draft] });
-    storage.writeJson.mockRejectedValueOnce(new Error('storage unavailable'));
+    storage.assets.write.mockRejectedValueOnce(new Error('storage unavailable'));
     await expect(removeWorldDraft(studioTestScope, draft.id)).rejects.toThrow();
     expect(getWorldDraftState(studioTestScope).store.getState().drafts[0]?.id).toBe(draft.id);
   });
@@ -194,7 +194,7 @@ describe('Protected draft storage', () => {
 
 function renderDraft(draft: ReturnType<typeof createWorldDraft>, chapter = 'overview') {
   getWorldDraftState(studioTestScope).store.setState({ drafts: [draft] });
-  return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={[`/drafts/${draft.id}?chapter=${chapter}`]}><Routes><Route path="/drafts/:draftId" element={<WorldDraftPage />} /></Routes></MemoryRouter></QueryClientProvider>);
+  return render(<StudioTestProviders scope={studioTestScope}><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={[`/drafts/${draft.id}?chapter=${chapter}`]}><Routes><Route path="/drafts/:draftId" element={<WorldDraftPage />} /></Routes></MemoryRouter></QueryClientProvider></StudioTestProviders>);
 }
 
 describe('Creator review interaction', () => {

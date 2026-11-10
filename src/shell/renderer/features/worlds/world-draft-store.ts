@@ -1,12 +1,12 @@
 import { useStudioScope, type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import { create } from 'zustand';
 import { createWorldDraft, type WorldDraft, type WorldRecord } from './world-draft.js';
-import { coauthorActivity, mergeWorldActivities, type WorldActivityPublication } from './world-activity-model.js';
+import { coauthorActivity, draftIdFromObjectRef, mergeWorldActivities, type WorldActivityPublication } from './world-activity-model.js';
 import { flushWorldActivity } from './world-activity.js';
-import { endWorldDraftStorageSession, readWorldDraftDocument, updateWorldDraftDocument } from './world-draft-storage.js';
+import { DraftWriteConflict, endWorldDraftStorageSession, readSavedWorldDraft, readWorldDraftDocument, updateWorldDraftRecords } from './world-draft-storage.js';
 
 type DraftState = {
-  drafts: WorldDraft[]; loaded: boolean; loading: boolean; saving: boolean; error: string | null;
+  drafts: WorldDraft[]; loaded: boolean; loading: boolean; saving: boolean; error: string | null; conflictId?: string;
 };
 
 function errorText(error: unknown): string { return error instanceof Error ? error.message : String(error); }
@@ -18,7 +18,9 @@ export async function loadWorldDrafts(scope: StudioScope): Promise<void> {
   getWorldDraftState(scope).store.setState({ loading: true, error: null });
   try {
     const document = await readWorldDraftDocument(scope);
-    getWorldDraftState(scope).store.setState({ drafts: document.drafts, loaded: true, loading: false });
+    const state = getWorldDraftState(scope);
+    state.savedDrafts = new Map(document.drafts.map(draft => [draft.id, draft]));
+    state.store.setState({ drafts: document.drafts, loaded: true, loading: false });
   } catch (error) { getWorldDraftState(scope).store.setState({ loading: false, error: errorText(error) }); }
 }
 
@@ -36,25 +38,47 @@ export function persistWorldDrafts(scope: StudioScope): Promise<void> {
   return saveWorldDrafts(scope);
 }
 
-function saveWorldDrafts(scope: StudioScope, extraPublications: readonly WorldActivityPublication[] = []): Promise<void> {
-  if (getWorldDraftState(scope).sessionEnded) return Promise.reject(new Error('The Nimi session ended; reopen Realm World Studio.'));
-  if (!getWorldDraftState(scope).store.getState().loaded) return Promise.reject(new Error('Draft storage has not loaded.'));
-  clearTimeout(getWorldDraftState(scope).saveTimer);
-  const currentRevision = ++getWorldDraftState(scope).revision;
-  const publications = getWorldDraftState(scope).pendingPublications;
-  getWorldDraftState(scope).store.setState({ saving: true, error: null });
-  const drafts = JSON.parse(JSON.stringify(getWorldDraftState(scope).store.getState().drafts)) as WorldDraft[];
-  return updateWorldDraftDocument(scope, current => ({
-    drafts,
-    activityOutbox: mergeWorldActivities(current.activityOutbox, [...publications, ...extraPublications]),
-  })).then(document => {
-    getWorldDraftState(scope).pendingPublications = getWorldDraftState(scope).pendingPublications.filter(entry => !publications.includes(entry));
-    if (currentRevision === getWorldDraftState(scope).revision) getWorldDraftState(scope).store.setState({ saving: false, error: null });
-    if (document.activityOutbox.length) void flushWorldActivity(scope).catch(() => undefined);
-  }).catch(error => {
-    if (currentRevision === getWorldDraftState(scope).revision) getWorldDraftState(scope).store.setState({ saving: false, error: errorText(error) });
+async function saveWorldDrafts(scope: StudioScope, extraPublications: readonly WorldActivityPublication[] = [], onlyId?: string): Promise<void> {
+  const state = getWorldDraftState(scope);
+  if (state.sessionEnded) throw new Error('The Nimi session ended; reopen Realm World Studio.');
+  if (!state.store.getState().loaded) throw new Error('Draft storage has not loaded.');
+  if (!onlyId) clearTimeout(state.saveTimer);
+  const currentRevision = ++state.revision;
+  const drafts = new Map(state.store.getState().drafts.map(draft => [draft.id, draft]));
+  const edits = new Set(onlyId ? [onlyId] : [...drafts.keys(), ...state.savedDrafts.keys()]);
+  if (!onlyId) {
+    for (const id of edits) if (drafts.get(id) === state.savedDrafts.get(id)) edits.delete(id);
+  }
+  const publications = [...state.pendingPublications, ...extraPublications];
+  const ids = new Set(edits);
+  for (const entry of publications) {
+    const id = draftIdFromObjectRef(entry.objectRef);
+    if (id && (!onlyId || id === onlyId)) ids.add(id);
+  }
+  state.store.setState({ saving: true, error: null, conflictId: undefined });
+  try {
+    const records = await updateWorldDraftRecords(scope, new Map([...ids].map(id => [id, current => {
+      if (edits.has(id) && JSON.stringify(current?.draft ?? null) !== JSON.stringify(state.savedDrafts.get(id) ?? null)) {
+        throw new DraftWriteConflict(id);
+      }
+      return {
+        id, draft: edits.has(id) ? drafts.get(id) ?? null : current?.draft ?? null,
+        activityOutbox: mergeWorldActivities(current?.activityOutbox ?? [], publications.filter(entry => draftIdFromObjectRef(entry.objectRef) === id)),
+      };
+    }])), ({ id, draft }) => {
+      if (edits.has(id)) {
+        if (draft) state.savedDrafts.set(id, draft);
+        else state.savedDrafts.delete(id);
+      }
+      state.pendingPublications = state.pendingPublications.filter(entry => !publications.includes(entry)
+        || draftIdFromObjectRef(entry.objectRef) !== id);
+    });
+    if (currentRevision === state.revision) state.store.setState({ saving: false, error: null });
+    if (records.some(record => record.activityOutbox.length)) void flushWorldActivity(scope).catch(() => undefined);
+  } catch (error) {
+    if (currentRevision === state.revision) state.store.setState({ saving: false, error: errorText(error), conflictId: error instanceof DraftWriteConflict ? error.draftId : undefined });
     throw error;
-  });
+  }
 }
 
 /** Stops the ended session's pending draft saves and their publications. */
@@ -86,14 +110,29 @@ export function updateWorldDraft(scope: StudioScope, id: string, patch: Partial<
 export async function removeWorldDraft(scope: StudioScope, id: string): Promise<void> {
   if (getWorldDraftState(scope).sessionEnded) throw new Error('The Nimi session ended; reopen Realm World Studio.');
   const removed = getWorldDraftState(scope).store.getState().drafts.find(draft => draft.id === id);
+  if (!removed) return;
   getWorldDraftState(scope).store.setState(state => ({ drafts: state.drafts.filter(draft => draft.id !== id) }));
   try {
-    await saveWorldDrafts(scope, removed?.proposal
-      ? [coauthorActivity(removed, removed.proposal, 'cancelled', new Date().toISOString())] : []);
+    await saveWorldDrafts(scope, removed.proposal
+      ? [coauthorActivity(removed, removed.proposal, 'cancelled', new Date().toISOString())] : [], id);
   }
   catch (error) {
-    if (removed) getWorldDraftState(scope).store.setState(state => ({ drafts: [...state.drafts, removed] }));
+    getWorldDraftState(scope).store.setState(state => ({ drafts: [...state.drafts, removed] }));
     throw error;
+  }
+}
+
+export async function reloadConflictingWorldDraft(scope: StudioScope, id: string): Promise<void> {
+  const state = getWorldDraftState(scope);
+  try {
+    const draft = await readSavedWorldDraft(scope, id);
+    if (state.sessionEnded || state.store.getState().conflictId !== id) return;
+    if (draft) state.savedDrafts.set(id, draft);
+    else state.savedDrafts.delete(id);
+    state.pendingPublications = state.pendingPublications.filter(entry => draftIdFromObjectRef(entry.objectRef) !== id);
+    state.store.setState(view => ({ drafts: [...(draft ? [draft] : []), ...view.drafts.filter(item => item.id !== id)], error: null, conflictId: undefined }));
+  } catch (error) {
+    if (!state.sessionEnded) state.store.setState({ error: errorText(error) });
   }
 }
 
@@ -103,7 +142,7 @@ function createWorldDraftState() {
   const saveTimer = undefined as ReturnType<typeof setTimeout> | undefined;
   const pendingPublications: WorldActivityPublication[] = [];
   const sessionEnded = false;
-  return { store: useWorldDrafts, revision, saveTimer, pendingPublications, sessionEnded };
+  return { store: useWorldDrafts, revision, saveTimer, pendingPublications, sessionEnded, savedDrafts: new Map<string, WorldDraft>() };
 }
 const states = new WeakMap<StudioScope, ReturnType<typeof createWorldDraftState>>();
 export function getWorldDraftState(scope: StudioScope) {

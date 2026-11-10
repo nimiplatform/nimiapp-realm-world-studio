@@ -3,7 +3,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Check, Cloud, Loader2, RefreshCw } from 'lucide-react';
 import { Button, InlineAlert } from '@nimiplatform/kit/ui';
-import { loadWorldDrafts, persistWorldDrafts, useWorldDrafts, getWorldDraftState } from './world-draft-store.js';
+import { loadWorldDrafts, persistWorldDrafts, reloadConflictingWorldDraft, useWorldDrafts, getWorldDraftState } from './world-draft-store.js';
 
 export function useDraftLibrary() {
   const scope = useStudioScope();
@@ -22,8 +22,9 @@ export function useDraftLibrary() {
 export function DraftStorageNotice() {
   const scope = useStudioScope();
   const { t } = useTranslation();
-  const { loaded, error } = useWorldDrafts();
+  const { loaded, error, conflictId } = useWorldDrafts();
   if (!error) return null;
+  if (conflictId) return <DraftConflictNotice reload={() => void reloadConflictingWorldDraft(scope, conflictId)} />;
   return <FailureNotice message={t(loaded ? 'studio.storageError' : 'studio.storageLoadError')} error={error} retry={() => { void (loaded ? persistWorldDrafts(scope) : loadWorldDrafts(scope)).catch(() => {}); }} />;
 }
 
@@ -36,6 +37,13 @@ export function SaveStatus() {
         : <Check size={14} />}
     {t(error ? 'studio.unsaved' : saving ? 'studio.saving' : 'studio.savedDraft')}
   </span>;
+}
+
+export function DraftConflictNotice({ reload }: { reload: () => void }) {
+  const { t } = useTranslation();
+  return <InlineAlert tone="warning" role="alert" action={<Button size="sm" tone="secondary" onClick={reload}>{t('studio.loadSavedDraft')}</Button>}>
+    {t('studio.draftWriteConflict')}
+  </InlineAlert>;
 }
 
 export function FailureNotice({ message, error, retry }: { message: string; error?: unknown; retry?: () => void }) {

@@ -1,4 +1,5 @@
-import { studioTestScope } from '../../../../test/studio-scope.js';
+import { previousWorldDraftPath as DOCUMENT, worldDraftStorageFixture } from '../../../../test/world-draft-storage.js';
+import { createStudioTestScope } from '../../../../test/studio-scope.js';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { getStudioClient } from '../../app-shell/studio-platform.js';
 import {
@@ -20,23 +21,14 @@ vi.mock('../../infra/telemetry/renderer-log.js', () => ({ logRendererEvent: vi.f
 type Entry = { key: string; revision: number; todoState: string };
 type OpenRequest = { activityId: string; objectRef: string; type: string };
 
-const DOCUMENT = 'world-studio/drafts.json';
+let studioTestScope = createStudioTestScope();
 
 function fakeClient(put: (input: Entry) => Promise<unknown>) {
-  const storage = new Map<string, unknown>([[DOCUMENT, { drafts: [], activityOutbox: [] }]]);
+  const { storage, files, document } = worldDraftStorageFixture();
   const attempts: Array<{ key: string; revision: number }> = [];
   let handler: ((request: OpenRequest) => Promise<string>) | undefined;
   const client = {
-    storage: {
-      readJson: vi.fn(async (path: string) => {
-        if (!storage.has(path)) throw Object.assign(new Error('missing'), { reasonCode: 'not-found' });
-        return { value: structuredClone(storage.get(path)) };
-      }),
-      writeJson: vi.fn(async (path: string, value: unknown) => {
-        storage.set(path, structuredClone(value));
-        return { sizeBytes: 1 };
-      }),
-    },
+    storage,
     activity: {
       put: vi.fn(async (input: Entry) => {
         attempts.push({ key: input.key, revision: input.revision });
@@ -49,8 +41,8 @@ function fakeClient(put: (input: Entry) => Promise<unknown>) {
   return {
     client,
     attempts,
-    storage,
-    outbox: () => (storage.get(DOCUMENT) as { activityOutbox: Entry[] }).activityOutbox,
+    storage: files,
+    outbox: () => document().activityOutbox,
     open: (request: OpenRequest) => handler!(request),
   };
 }
@@ -77,6 +69,7 @@ function syncReports() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  studioTestScope = createStudioTestScope();
   beginWorldActivitySession(studioTestScope);
 });
 
@@ -130,9 +123,9 @@ it('never drops a publication Runtime rejects; it stays not synced until a retry
   sync.unsubscribe();
 });
 
-it.each(['readJson', 'writeJson'] as const)('retains and reports a publication when the first %s fails', async (operation) => {
+it.each(['list', 'write'] as const)('retains and reports a publication when the first %s fails', async (operation) => {
   const { client, outbox } = fakeClient(async () => ({ changed: true }));
-  client.storage[operation].mockRejectedValueOnce(new Error('storage unavailable'));
+  client.storage.assets[operation].mockRejectedValueOnce(new Error('storage unavailable'));
   const sync = syncReports();
   const draft = draftWithProposal();
   const completed = coauthorActivity(draft, draft.proposal!, 'completed', draft.updatedAt);
@@ -157,7 +150,7 @@ it.each([
   await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   expect(sync.reports.at(-1)).toBeNull();
   await expect(retryWorldActivity(studioTestScope)).resolves.toBeNull();
-  expect(client.storage.writeJson).not.toHaveBeenCalled();
+  expect(client.storage.assets.write).not.toHaveBeenCalled();
   expect(client.activity.put).not.toHaveBeenCalled();
   expect(storage.get(DOCUMENT)).toEqual(unreadable);
   sync.unsubscribe();
@@ -165,8 +158,8 @@ it.each([
 
 it('retries a publication when cleanup failed without dropping the stored record', async () => {
   const { client, outbox } = fakeClient(async () => ({ changed: true }));
-  const originalWrite = client.storage.writeJson.getMockImplementation()!;
-  client.storage.writeJson.mockImplementationOnce(originalWrite).mockRejectedValueOnce(new Error('cleanup failed'));
+  const originalWrite = client.storage.assets.write.getMockImplementation()!;
+  client.storage.assets.write.mockImplementationOnce(originalWrite).mockRejectedValueOnce(new Error('cleanup failed'));
   await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   expect(outbox()).toHaveLength(1);
   await expect(retryWorldActivity(studioTestScope)).resolves.toBe(0);
@@ -194,30 +187,30 @@ it('preserves a newer draft and publication when acknowledging an older in-fligh
 
 it('does not carry a failed outbox write into another activity session', async () => {
   const first = fakeClient(async () => ({ changed: true }));
-  first.client.storage.writeJson.mockRejectedValueOnce(new Error('storage unavailable'));
+  first.client.storage.assets.write.mockRejectedValueOnce(new Error('storage unavailable'));
   await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   endWorldActivitySession(studioTestScope);
   const next = fakeClient(async () => ({ changed: true }));
   beginWorldActivitySession(studioTestScope);
   await retryWorldActivity(studioTestScope);
   expect(next.client.activity.put).not.toHaveBeenCalled();
-  expect(next.client.storage.writeJson).not.toHaveBeenCalled();
+  expect(next.client.storage.assets.write).not.toHaveBeenCalled();
 });
 
 it('does not write an outbox read that finished after the activity session ended', async () => {
   const { client } = fakeClient(async () => ({ changed: true }));
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
-  client.storage.readJson.mockImplementationOnce(async () => {
+  client.storage.assets.list.mockImplementationOnce(async () => {
     await gate;
-    return { value: { drafts: [], activityOutbox: [] } };
+    return { assets: [], nextCursor: '' };
   });
   const pending = queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
-  await vi.waitFor(() => expect(client.storage.readJson).toHaveBeenCalledTimes(1));
+  await vi.waitFor(() => expect(client.storage.assets.list).toHaveBeenCalledTimes(1));
   endWorldActivitySession(studioTestScope);
   release();
   await pending;
-  expect(client.storage.writeJson).not.toHaveBeenCalled();
+  expect(client.storage.assets.write).not.toHaveBeenCalled();
   expect(client.activity.put).not.toHaveBeenCalled();
 });
 
@@ -239,18 +232,18 @@ it('stops an in-flight flush when the session ends, before its next publication 
   });
   const pending = queueWorldActivity(studioTestScope, [openEntry(first), openEntry(second)]);
   await vi.waitFor(() => expect(attempts).toHaveLength(1));
-  const writesBefore = client.storage.writeJson.mock.calls.length;
+  const writesBefore = client.storage.assets.write.mock.calls.length;
   // The Host reports the session invalidated while the first publication runs.
   endWorldActivitySession(studioTestScope);
   release();
   await pending;
   expect(attempts).toEqual([{ key: openEntry(first).key, revision: 1 }]);
-  expect(client.storage.writeJson.mock.calls.length).toBe(writesBefore);
+  expect(client.storage.assets.write.mock.calls.length).toBe(writesBefore);
   expect(outbox()).toHaveLength(2);
   // Work requested after the session ended never reaches storage or Runtime.
   await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal('trace-late'))]);
   expect(attempts).toHaveLength(1);
-  expect(client.storage.writeJson.mock.calls.length).toBe(writesBefore);
+  expect(client.storage.assets.write.mock.calls.length).toBe(writesBefore);
 });
 
 it('confirms opened only after navigating into an existing draft of this account', async () => {

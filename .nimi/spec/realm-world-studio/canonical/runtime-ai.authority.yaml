@@ -151,7 +151,7 @@ units:
     kind: rule
     title: Protected draft persistence
     modality: must
-    statement: World notebooks, character concepts and AI review proposals persist only through the admitted localApp.storage JSON surface; persisted drafts remain distinct from Realm records and failed reads or writes never report saved state or overwrite unread storage.
+    statement: Each world notebook and its AI review outbox persist together in one independent JSON asset through admitted localApp.storage.assets. Saving a world notebook never rewrites another notebook. Character drafts persist in independent JSON assets through the same admitted surface. Both draft editors compare the loaded content before saving and commit with an atomic content-hash precondition. Activity outbox changes use the same precondition. Conflicts preserve unsaved edits until the creator explicitly reads the saved record. Persisted drafts remain distinct from Realm records and failed reads or writes never report saved state or overwrite unread storage.
     condition: When a creator resumes or edits a world notebook.
     failure: Preserve the current in-memory draft, show unsaved state with a retry action and do not claim persisted work.
     relations:

@@ -11,7 +11,7 @@ import type { WorldDraft, WorldProposal } from './world-draft.js';
 export const COAUTHOR_ACTIVITY_TYPE = 'nimi.realm-world-studio.coauthor-candidate.v1';
 const DRAFT_OBJECT = /^draft:([0-9A-Z]{26})$/u;
 
-export type WorldActivityPublication = Omit<NimiAppActivityPutInput, 'occurredAt' | 'agentHandle'> & { occurredAt: string };
+export type WorldActivityPublication = Omit<NimiAppActivityPutInput, 'occurredAt' | 'agentHandle' | 'objectRef'> & { occurredAt: string; objectRef: string };
 type Outcome = 'open' | 'completed' | 'cancelled';
 
 export function draftObjectRef(draftId: string): string {
