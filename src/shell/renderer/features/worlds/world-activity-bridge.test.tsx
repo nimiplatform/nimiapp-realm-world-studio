@@ -1,5 +1,6 @@
+import { renderStudio as render } from '../../../../test/studio-scope.js';
 import { afterEach, expect, it, vi } from 'vitest';
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { WorldActivityBridge } from './world-activity-bridge.js';
 
@@ -10,12 +11,12 @@ const { activity, toast } = vi.hoisted(() => ({
     endWorldActivitySession: vi.fn(),
     reconcileWorldActivity: vi.fn(async () => undefined),
     retryWorldActivity: vi.fn(async () => 0),
-    subscribeWorldActivitySync: vi.fn((listener: (count: number | null) => void) => {
+    subscribeWorldActivitySync: vi.fn((_scope: unknown, listener: (count: number | null) => void) => {
       activity.reportSync = listener;
       return () => { activity.reportSync = undefined; };
     }),
     reportSync: undefined as ((count: number | null) => void) | undefined,
-    registerWorldActivityOpenHandler: vi.fn((input: { navigate: (path: string) => void }) => {
+    registerWorldActivityOpenHandler: vi.fn((_scope: unknown, input: { navigate: (path: string) => void }) => {
       activity.openNavigate = input.navigate;
       return { stop: vi.fn(async () => undefined) };
     }),
@@ -27,9 +28,9 @@ vi.mock('./world-activity.js', () => activity);
 vi.mock('@nimiplatform/kit/ui', () => ({ nimiToast: toast }));
 vi.mock('./world-draft-store.js', () => ({
   loadWorldDrafts: vi.fn(async () => undefined),
-  useWorldDrafts: { getState: () => ({ loaded: true, drafts: [] }), subscribe: vi.fn() },
+  getWorldDraftState: () => ({ store: { getState: () => ({ loaded: true, drafts: [] }), subscribe: vi.fn() } }),
 }));
-vi.mock('../../bridge/index.js', () => ({ focusMainWindow: vi.fn(async () => undefined) }));
+vi.mock('../../bridge/index.js', () => ({ focusMainWindow: vi.fn(async () => undefined), hasElectronRuntime: () => false }));
 
 afterEach(cleanup);
 

@@ -1,5 +1,6 @@
+import { type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import type { NimiAppActivityOpenRegistration } from '@nimiplatform/sdk/app';
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import { logRendererEvent, describeError } from '../../infra/telemetry/renderer-log.js';
 import type { WorldDraft } from './world-draft.js';
 import { coauthorActivity, COAUTHOR_ACTIVITY_TYPE, draftIdFromObjectRef, mergeWorldActivities, type WorldActivityPublication } from './world-activity-model.js';
@@ -12,20 +13,12 @@ import { readWorldDraftDocument, updateWorldDraftDocument } from './world-draft-
 // outbox write and Studio asks to be reopened; a reopened Studio resumes from
 // the current account's outbox. A publication Runtime does not accept stays in
 // the outbox, is reported as not synced, and can be retried; none is dropped.
-let pendingPublications: WorldActivityPublication[] = [];
 
-let queue: Promise<unknown> = Promise.resolve();
-let sessionEpoch = 0;
-let sessionActive = false;
-let retryTimer: ReturnType<typeof setTimeout> | undefined;
-let retryDelayMs = 15_000;
 // null means the storage failure prevents determining an accurate count.
-let unsynced: number | null = 0;
-const syncListeners = new Set<(unsynced: number | null) => void>();
 
-function serialized<T>(task: () => Promise<T>): Promise<T> {
-  const run = queue.then(task, task);
-  queue = run.then(() => undefined, () => undefined);
+function serialized<T>(scope: StudioScope, task: () => Promise<T>): Promise<T> {
+  const run = getWorldActivityState(scope).queue.then(task, task);
+  getWorldActivityState(scope).queue = run.then(() => undefined, () => undefined);
   return run;
 }
 
@@ -43,145 +36,163 @@ function settled(error: unknown): boolean {
   return reasonCode === 'content-conflict' || reasonCode === 'APP_ACTIVITY_REVISION_CONFLICT';
 }
 
-function reportUnsynced(count: number | null): void {
-  unsynced = count;
-  for (const listener of syncListeners) listener(count);
+function reportUnsynced(scope: StudioScope, count: number | null): void {
+  getWorldActivityState(scope).unsynced = count;
+  for (const listener of getWorldActivityState(scope).syncListeners) listener(count);
 }
 
-function clearRetry(): void {
-  if (retryTimer !== undefined) clearTimeout(retryTimer);
-  retryTimer = undefined;
+function clearRetry(scope: StudioScope): void {
+  if (getWorldActivityState(scope).retryTimer !== undefined) clearTimeout(getWorldActivityState(scope).retryTimer);
+  getWorldActivityState(scope).retryTimer = undefined;
 }
 
-function scheduleRetry(epoch: number): void {
-  if (!sessionActive || epoch !== sessionEpoch) return;
-  clearRetry();
-  retryTimer = setTimeout(() => { void flushWorldActivity().catch(() => undefined); }, retryDelayMs);
-  retryDelayMs = Math.min(retryDelayMs * 2, 5 * 60_000);
+function scheduleRetry(scope: StudioScope, epoch: number): void {
+  if (!getWorldActivityState(scope).sessionActive || epoch !== getWorldActivityState(scope).sessionEpoch) return;
+  clearRetry(scope);
+  getWorldActivityState(scope).retryTimer = setTimeout(() => { void flushWorldActivity(scope).catch(() => undefined); }, getWorldActivityState(scope).retryDelayMs);
+  getWorldActivityState(scope).retryDelayMs = Math.min(getWorldActivityState(scope).retryDelayMs * 2, 5 * 60_000);
 }
 
 /** Reports, after every publication attempt, how many publications are still not synced. */
-export function subscribeWorldActivitySync(listener: (unsynced: number | null) => void): () => void {
-  syncListeners.add(listener);
-  listener(unsynced);
-  return () => { syncListeners.delete(listener); };
+export function subscribeWorldActivitySync(scope: StudioScope, listener: (unsynced: number | null) => void): () => void {
+  getWorldActivityState(scope).syncListeners.add(listener);
+  listener(getWorldActivityState(scope).unsynced);
+  return () => { getWorldActivityState(scope).syncListeners.delete(listener); };
 }
 
 /** Starts activity work for the session that is bound now. */
-export function beginWorldActivitySession(): void {
-  endWorldActivitySession();
-  sessionActive = true;
+export function beginWorldActivitySession(scope: StudioScope): void {
+  endWorldActivitySession(scope);
+  getWorldActivityState(scope).sessionActive = true;
 }
 
 /** Ends the session's activity work: in-flight steps stop before their next publication or write. */
-export function endWorldActivitySession(): void {
-  sessionEpoch += 1;
-  sessionActive = false;
-  pendingPublications = [];
-  clearRetry();
-  retryDelayMs = 15_000;
-  reportUnsynced(0);
+export function endWorldActivitySession(scope: StudioScope): void {
+  getWorldActivityState(scope).sessionEpoch += 1;
+  getWorldActivityState(scope).sessionActive = false;
+  getWorldActivityState(scope).pendingPublications = [];
+  clearRetry(scope);
+  getWorldActivityState(scope).retryDelayMs = 15_000;
+  reportUnsynced(scope, 0);
 }
 
 /**
  * Reconciled candidates remain queued if their outbox write fails. Lifecycle
  * changes enter the durable outbox atomically with their draft save instead.
  */
-export function queueWorldActivity(entries: readonly WorldActivityPublication[]): Promise<void> {
-  if (!sessionActive) {
+export function queueWorldActivity(scope: StudioScope, entries: readonly WorldActivityPublication[]): Promise<void> {
+  if (!getWorldActivityState(scope).sessionActive) {
     logRendererEvent({ level: 'info', area: 'world-activity', message: 'action:activity-session-ended', details: { entries: entries.length } });
     return Promise.resolve();
   }
-  pendingPublications = mergeWorldActivities(pendingPublications, entries);
-  return flushWorldActivity().then(() => undefined);
+  getWorldActivityState(scope).pendingPublications = mergeWorldActivities(getWorldActivityState(scope).pendingPublications, entries);
+  return flushWorldActivity(scope).then(() => undefined);
 }
 
 /** Publishes every outbox entry; resolves with the number still not synced. */
-export function flushWorldActivity(): Promise<number | null> {
-  if (!sessionActive) return Promise.resolve(unsynced);
-  const epoch = sessionEpoch;
-  return serialized(() => flush(epoch));
+export function flushWorldActivity(scope: StudioScope): Promise<number | null> {
+  if (!getWorldActivityState(scope).sessionActive) return Promise.resolve(getWorldActivityState(scope).unsynced);
+  const epoch = getWorldActivityState(scope).sessionEpoch;
+  return serialized(scope, () => flush(scope, epoch));
 }
 
 /** The user's explicit retry: publishes now and restarts the retry backoff. */
-export function retryWorldActivity(): Promise<number | null> {
-  retryDelayMs = 15_000;
-  return flushWorldActivity();
+export function retryWorldActivity(scope: StudioScope): Promise<number | null> {
+  getWorldActivityState(scope).retryDelayMs = 15_000;
+  return flushWorldActivity(scope);
 }
 
-async function flush(epoch: number): Promise<number | null> {
-  if (epoch !== sessionEpoch) return unsynced;
-  clearRetry();
+async function flush(scope: StudioScope, epoch: number): Promise<number | null> {
+  if (epoch !== getWorldActivityState(scope).sessionEpoch) return getWorldActivityState(scope).unsynced;
+  clearRetry(scope);
   try {
-    const pending = pendingPublications;
-    const isCurrent = () => sessionActive && epoch === sessionEpoch;
+    const pending = getWorldActivityState(scope).pendingPublications;
+    const isCurrent = () => !scope.signal.aborted && getWorldActivityState(scope).sessionActive && epoch === getWorldActivityState(scope).sessionEpoch;
     const document = pending.length
-      ? await updateWorldDraftDocument(current => ({
+      ? await updateWorldDraftDocument(scope, current => ({
         ...current, activityOutbox: mergeWorldActivities(current.activityOutbox, pending),
       }), isCurrent)
-      : await readWorldDraftDocument();
-    if (!isCurrent()) return unsynced;
-    pendingPublications = pendingPublications.filter(entry => !pending.includes(entry));
+      : await readWorldDraftDocument(scope);
+    if (!isCurrent()) return getWorldActivityState(scope).unsynced;
+    getWorldActivityState(scope).pendingPublications = getWorldActivityState(scope).pendingPublications.filter(entry => !pending.includes(entry));
     const outbox = document.activityOutbox;
     const done = new Set<string>();
     for (const entry of outbox) {
-      if (epoch !== sessionEpoch) return unsynced;
+      if (epoch !== getWorldActivityState(scope).sessionEpoch) return getWorldActivityState(scope).unsynced;
       try {
-        await getStudioLocalAppClient().activity.put(entry);
+        await getStudioClient(scope).activity.put(entry);
         done.add(identity(entry));
       } catch (error) {
         if (settled(error)) done.add(identity(entry));
         else logRendererEvent({ level: 'warn', area: 'world-activity', message: 'action:activity-publication-failed', details: { key: entry.key, error: describeError(error) } });
       }
     }
-    if (epoch !== sessionEpoch) return unsynced;
+    if (epoch !== getWorldActivityState(scope).sessionEpoch) return getWorldActivityState(scope).unsynced;
     let remaining = outbox.length - done.size;
     if (done.size) {
       // Only the handled entries leave the outbox; anything queued meanwhile stays.
-      const latest = await updateWorldDraftDocument(current => ({
+      const latest = await updateWorldDraftDocument(scope, current => ({
         ...current, activityOutbox: current.activityOutbox.filter(entry => !done.has(identity(entry))),
       }), isCurrent);
-      if (!isCurrent()) return unsynced;
+      if (!isCurrent()) return getWorldActivityState(scope).unsynced;
       remaining = latest.activityOutbox.length;
     }
-    reportUnsynced(remaining);
-    if (remaining) scheduleRetry(epoch);
-    else retryDelayMs = 15_000;
+    reportUnsynced(scope, remaining);
+    if (remaining) scheduleRetry(scope, epoch);
+    else getWorldActivityState(scope).retryDelayMs = 15_000;
     return remaining;
   } catch (error) {
-    if (epoch !== sessionEpoch) return unsynced;
+    if (epoch !== getWorldActivityState(scope).sessionEpoch) return getWorldActivityState(scope).unsynced;
     logRendererEvent({ level: 'warn', area: 'world-activity', message: 'action:activity-outbox-unavailable', details: { error: describeError(error) } });
-    reportUnsynced(null);
-    scheduleRetry(epoch);
-    return unsynced;
+    reportUnsynced(scope, null);
+    scheduleRetry(scope, epoch);
+    return getWorldActivityState(scope).unsynced;
   }
 }
 
 /** Republishes every stored candidate that still awaits review. */
-export function reconcileWorldActivity(drafts: readonly WorldDraft[]): Promise<void> {
+export function reconcileWorldActivity(scope: StudioScope, drafts: readonly WorldDraft[]): Promise<void> {
   const open = drafts
     .filter((draft) => draft.proposal && !draft.savedWorld)
     .map((draft) => coauthorActivity(draft, draft.proposal!, 'open', draft.proposal!.generatedAt ?? draft.proposal!.sourceUpdatedAt));
-  return open.length ? queueWorldActivity(open) : flushWorldActivity().then(() => undefined);
+  return open.length ? queueWorldActivity(scope, open) : flushWorldActivity(scope).then(() => undefined);
 }
 
 /**
  * Confirms an open request only after Studio has navigated into the
  * requested draft of the current account.
  */
-export function registerWorldActivityOpenHandler(input: {
+export function registerWorldActivityOpenHandler(scope: StudioScope, input: {
   readonly findDraft: (draftId: string) => Promise<WorldDraft | undefined>;
   readonly navigate: (path: string) => void;
-  readonly focus: () => Promise<void>;
+  readonly focus?: () => Promise<void>;
 }): NimiAppActivityOpenRegistration {
-  const epoch = sessionEpoch;
-  return getStudioLocalAppClient().activity.onOpenRequest(async (request) => {
+  const epoch = getWorldActivityState(scope).sessionEpoch;
+  return getStudioClient(scope).activity.onOpenRequest(async (request) => {
     const draftId = draftIdFromObjectRef(request.objectRef);
     if (!draftId || request.type !== COAUTHOR_ACTIVITY_TYPE) return 'object-unavailable';
     const draft = await input.findDraft(draftId);
-    if (!draft || !sessionActive || epoch !== sessionEpoch) return 'object-unavailable';
+    if (scope.signal.aborted || !draft || !getWorldActivityState(scope).sessionActive || epoch !== getWorldActivityState(scope).sessionEpoch) return 'object-unavailable';
     input.navigate(`/drafts/${encodeURIComponent(draft.id)}`);
-    await input.focus().catch(() => undefined);
+    await input.focus?.().catch(() => undefined);
     return 'opened';
   });
+}
+
+function createWorldActivityState() {
+  const pendingPublications: WorldActivityPublication[] = [];
+  const queue: Promise<unknown> = Promise.resolve();
+  const sessionEpoch = 0;
+  const sessionActive = false;
+  const retryTimer = undefined as ReturnType<typeof setTimeout> | undefined;
+  const retryDelayMs = 15_000;
+  const unsynced: number | null = 0;
+  const syncListeners = new Set<(unsynced: number | null) => void>();
+  return { pendingPublications, queue, sessionEpoch, sessionActive, retryTimer, retryDelayMs, unsynced: unsynced as number | null, syncListeners };
+}
+const states = new WeakMap<StudioScope, ReturnType<typeof createWorldActivityState>>();
+export function getWorldActivityState(scope: StudioScope) {
+  let state = states.get(scope);
+  if (!state) { state = createWorldActivityState(); states.set(scope, state); }
+  return state;
 }

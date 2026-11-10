@@ -1,5 +1,6 @@
+import { studioTestScope } from '../../../../test/studio-scope.js';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import {
   beginWorldActivitySession,
   endWorldActivitySession,
@@ -13,7 +14,7 @@ import { coauthorActivity, COAUTHOR_ACTIVITY_TYPE } from './world-activity-model
 import { readWorldDraftDocument, updateWorldDraftDocument } from './world-draft-storage.js';
 import { createWorldDraft, type WorldDraft, type WorldProposal } from './world-draft.js';
 
-vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioLocalAppClient: vi.fn() }));
+vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioClient: vi.fn() }));
 vi.mock('../../infra/telemetry/renderer-log.js', () => ({ logRendererEvent: vi.fn(), describeError: (error: unknown) => String(error) }));
 
 type Entry = { key: string; revision: number; todoState: string };
@@ -44,7 +45,7 @@ function fakeClient(put: (input: Entry) => Promise<unknown>) {
       onOpenRequest: vi.fn((next: typeof handler) => { handler = next; return { stop: async () => undefined }; }),
     },
   };
-  vi.mocked(getStudioLocalAppClient).mockReturnValue(client as never);
+  vi.mocked(getStudioClient).mockReturnValue(client as never);
   return {
     client,
     attempts,
@@ -70,17 +71,17 @@ function openEntry(draft: WorldDraft) {
 
 function syncReports() {
   const reports: (number | null)[] = [];
-  const unsubscribe = subscribeWorldActivitySync((count) => reports.push(count));
+  const unsubscribe = subscribeWorldActivitySync(studioTestScope, (count) => reports.push(count));
   return { reports, unsubscribe };
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
-  beginWorldActivitySession();
+  beginWorldActivitySession(studioTestScope);
 });
 
 afterEach(() => {
-  endWorldActivitySession();
+  endWorldActivitySession(studioTestScope);
 });
 
 it('publishes a candidate as a todo whose revision follows its review lifecycle', () => {
@@ -104,14 +105,14 @@ it('keeps a failed publication, reports it as not synced, and publishes it on an
   });
   const sync = syncReports();
   const draft = draftWithProposal();
-  await queueWorldActivity([openEntry(draft)]);
+  await queueWorldActivity(studioTestScope, [openEntry(draft)]);
   expect(outbox()).toHaveLength(1);
   // A later state of the same record replaces the pending one.
-  await queueWorldActivity([coauthorActivity(draft, draft.proposal!, 'completed', '2026-09-23T02:00:00.000Z')]);
+  await queueWorldActivity(studioTestScope, [coauthorActivity(draft, draft.proposal!, 'completed', '2026-09-23T02:00:00.000Z')]);
   expect(outbox()!.map((entry) => [entry.revision, entry.todoState])).toEqual([[2, 'completed']]);
   expect(sync.reports.at(-1)).toBe(1);
   available = true;
-  await expect(retryWorldActivity()).resolves.toBe(0);
+  await expect(retryWorldActivity(studioTestScope)).resolves.toBe(0);
   expect(outbox()).toEqual([]);
   expect(sync.reports.at(-1)).toBe(0);
   expect(client.activity.put).toHaveBeenLastCalledWith(expect.objectContaining({ revision: 2, todoState: 'completed' }));
@@ -121,10 +122,10 @@ it('keeps a failed publication, reports it as not synced, and publishes it on an
 it('never drops a publication Runtime rejects; it stays not synced until a retry succeeds', async () => {
   const { outbox } = fakeClient(async () => { throw Object.assign(new Error('rejected'), { reasonCode: 'local-app-operation-unavailable' }); });
   const sync = syncReports();
-  await queueWorldActivity([openEntry(draftWithProposal())]);
+  await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   expect(outbox()).toHaveLength(1);
   expect(sync.reports.at(-1)).toBe(1);
-  await expect(retryWorldActivity()).resolves.toBe(1);
+  await expect(retryWorldActivity(studioTestScope)).resolves.toBe(1);
   expect(outbox()).toHaveLength(1);
   sync.unsubscribe();
 });
@@ -135,10 +136,10 @@ it.each(['readJson', 'writeJson'] as const)('retains and reports a publication w
   const sync = syncReports();
   const draft = draftWithProposal();
   const completed = coauthorActivity(draft, draft.proposal!, 'completed', draft.updatedAt);
-  await queueWorldActivity([completed]);
+  await queueWorldActivity(studioTestScope, [completed]);
   expect(client.activity.put).not.toHaveBeenCalled();
   expect(sync.reports.at(-1)).toBeNull();
-  await expect(retryWorldActivity()).resolves.toBe(0);
+  await expect(retryWorldActivity(studioTestScope)).resolves.toBe(0);
   expect(client.activity.put).toHaveBeenCalledWith(completed);
   expect(outbox()).toEqual([]);
   sync.unsubscribe();
@@ -153,9 +154,9 @@ it.each([
   const { client, storage } = fakeClient(async () => ({ changed: true }));
   storage.set(DOCUMENT, unreadable);
   const sync = syncReports();
-  await queueWorldActivity([openEntry(draftWithProposal())]);
+  await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   expect(sync.reports.at(-1)).toBeNull();
-  await expect(retryWorldActivity()).resolves.toBeNull();
+  await expect(retryWorldActivity(studioTestScope)).resolves.toBeNull();
   expect(client.storage.writeJson).not.toHaveBeenCalled();
   expect(client.activity.put).not.toHaveBeenCalled();
   expect(storage.get(DOCUMENT)).toEqual(unreadable);
@@ -166,9 +167,9 @@ it('retries a publication when cleanup failed without dropping the stored record
   const { client, outbox } = fakeClient(async () => ({ changed: true }));
   const originalWrite = client.storage.writeJson.getMockImplementation()!;
   client.storage.writeJson.mockImplementationOnce(originalWrite).mockRejectedValueOnce(new Error('cleanup failed'));
-  await queueWorldActivity([openEntry(draftWithProposal())]);
+  await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   expect(outbox()).toHaveLength(1);
-  await expect(retryWorldActivity()).resolves.toBe(0);
+  await expect(retryWorldActivity(studioTestScope)).resolves.toBe(0);
   expect(outbox()).toEqual([]);
   expect(client.activity.put).toHaveBeenCalledTimes(2);
 });
@@ -178,27 +179,27 @@ it('preserves a newer draft and publication when acknowledging an older in-fligh
   const gate = new Promise<void>(resolve => { release = resolve; });
   const { client, outbox } = fakeClient(async () => { await gate; return { changed: true }; });
   const draft = draftWithProposal();
-  const pending = queueWorldActivity([openEntry(draft)]);
+  const pending = queueWorldActivity(studioTestScope, [openEntry(draft)]);
   await vi.waitFor(() => expect(client.activity.put).toHaveBeenCalledTimes(1));
   const completed = coauthorActivity(draft, draft.proposal!, 'completed', draft.updatedAt);
   const newerDraft = { ...draft, name: 'Updated during publication', proposal: null };
-  await updateWorldDraftDocument(() => ({ drafts: [newerDraft], activityOutbox: [completed] }));
+  await updateWorldDraftDocument(studioTestScope, () => ({ drafts: [newerDraft], activityOutbox: [completed] }));
   release();
   await pending;
   expect(outbox()).toEqual([completed]);
-  expect((await readWorldDraftDocument()).drafts).toEqual([newerDraft]);
-  await retryWorldActivity();
+  expect((await readWorldDraftDocument(studioTestScope)).drafts).toEqual([newerDraft]);
+  await retryWorldActivity(studioTestScope);
   expect(client.activity.put).toHaveBeenLastCalledWith(completed);
 });
 
 it('does not carry a failed outbox write into another activity session', async () => {
   const first = fakeClient(async () => ({ changed: true }));
   first.client.storage.writeJson.mockRejectedValueOnce(new Error('storage unavailable'));
-  await queueWorldActivity([openEntry(draftWithProposal())]);
-  endWorldActivitySession();
+  await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
+  endWorldActivitySession(studioTestScope);
   const next = fakeClient(async () => ({ changed: true }));
-  beginWorldActivitySession();
-  await retryWorldActivity();
+  beginWorldActivitySession(studioTestScope);
+  await retryWorldActivity(studioTestScope);
   expect(next.client.activity.put).not.toHaveBeenCalled();
   expect(next.client.storage.writeJson).not.toHaveBeenCalled();
 });
@@ -211,9 +212,9 @@ it('does not write an outbox read that finished after the activity session ended
     await gate;
     return { value: { drafts: [], activityOutbox: [] } };
   });
-  const pending = queueWorldActivity([openEntry(draftWithProposal())]);
+  const pending = queueWorldActivity(studioTestScope, [openEntry(draftWithProposal())]);
   await vi.waitFor(() => expect(client.storage.readJson).toHaveBeenCalledTimes(1));
-  endWorldActivitySession();
+  endWorldActivitySession(studioTestScope);
   release();
   await pending;
   expect(client.storage.writeJson).not.toHaveBeenCalled();
@@ -222,7 +223,7 @@ it('does not write an outbox read that finished after the activity session ended
 
 it('treats an existing revision as settled and republishes stored candidates on session start', async () => {
   const { outbox, client } = fakeClient(async () => { throw Object.assign(new Error('conflict'), { reasonCode: 'content-conflict' }); });
-  await reconcileWorldActivity([draftWithProposal(), createWorldDraft('no candidate')]);
+  await reconcileWorldActivity(studioTestScope, [draftWithProposal(), createWorldDraft('no candidate')]);
   expect(client.activity.put).toHaveBeenCalledTimes(1);
   expect(outbox()).toEqual([]);
 });
@@ -236,18 +237,18 @@ it('stops an in-flight flush when the session ends, before its next publication 
     if (input.key.endsWith(':trace-first')) await gate;
     return { changed: true };
   });
-  const pending = queueWorldActivity([openEntry(first), openEntry(second)]);
+  const pending = queueWorldActivity(studioTestScope, [openEntry(first), openEntry(second)]);
   await vi.waitFor(() => expect(attempts).toHaveLength(1));
   const writesBefore = client.storage.writeJson.mock.calls.length;
   // The Host reports the session invalidated while the first publication runs.
-  endWorldActivitySession();
+  endWorldActivitySession(studioTestScope);
   release();
   await pending;
   expect(attempts).toEqual([{ key: openEntry(first).key, revision: 1 }]);
   expect(client.storage.writeJson.mock.calls.length).toBe(writesBefore);
   expect(outbox()).toHaveLength(2);
   // Work requested after the session ended never reaches storage or Runtime.
-  await queueWorldActivity([openEntry(draftWithProposal('trace-late'))]);
+  await queueWorldActivity(studioTestScope, [openEntry(draftWithProposal('trace-late'))]);
   expect(attempts).toHaveLength(1);
   expect(client.storage.writeJson.mock.calls.length).toBe(writesBefore);
 });
@@ -256,7 +257,7 @@ it('confirms opened only after navigating into an existing draft of this account
   const { open } = fakeClient(async () => ({ changed: true }));
   const draft = draftWithProposal();
   const navigate = vi.fn();
-  registerWorldActivityOpenHandler({
+  registerWorldActivityOpenHandler(studioTestScope, {
     findDraft: async (id) => (id === draft.id ? draft : undefined),
     navigate,
     focus: async () => undefined,

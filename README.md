@@ -96,3 +96,11 @@ pnpm lint
 - **Registry Admission**: [#82](https://github.com/nimiplatform/nimi-app-registry/pull/82) (macOS arm64 and Windows x64)
 - **Recorded Toolchain Combination**: SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.1, Nimi Coding 0.6.5
 - **Previously Recorded Platform Checks**: macOS arm64 Catalog install, complete AI world proposal generation (wind-chime island), local draft saving and restart persistence, and reading 50 Realm worlds verified. (Windows GUI execution marked as `NOT-VERIFIED`).
+
+## Web development
+
+The Web entry reuses the world and character renderer with the shared Nimi Kit session. Set `NIMI_WEB_TLS_KEY` and `NIMI_WEB_TLS_CERT` in `.env.local` to browser-trusted certificate files, then run `pnpm dev:web`. The declared local origin is `https://127.0.0.1:4478`; it requires Registry source admission and one PC Home confirmation. The official Nimi login is shared; Realm separately checks world creation eligibility and resource ownership. No public website is deployed by this command.
+
+Use `pnpm build:web` for the browser bundle and the existing `pnpm dev` / `pnpm build` for Desktop. Complete local npm tarballs may be selected through the existing workspace overrides; restart a running dev server after changing those packages. Keep the Runtime and package combination matched. Authored settings, drafts, AI candidates and review behavior stay in this App; connection loss retires its private state and activity handler, and a new connection reads its own storage without replaying business work.
+
+Current Web engineering checks cover types/lint, 116 tests, both builds, App Tools and canonical authority. Real Web WorldCore and activity navigation acceptance is recorded in the local iteration packet; these checks alone do not establish product acceptance or publication.

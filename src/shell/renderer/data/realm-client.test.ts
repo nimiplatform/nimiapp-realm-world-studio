@@ -1,11 +1,12 @@
+import { studioTestScope } from '../../../test/studio-scope.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getStudioLocalAppClientMock } = vi.hoisted(() => ({
-  getStudioLocalAppClientMock: vi.fn(),
+const { getStudioClientMock } = vi.hoisted(() => ({
+  getStudioClientMock: vi.fn(),
 }));
 
 vi.mock('@renderer/app-shell/studio-platform.js', () => ({
-  getStudioLocalAppClient: getStudioLocalAppClientMock,
+  getStudioClient: getStudioClientMock,
   requireStudioProtectedOperation: (operation: string) => {
     throw Object.assign(new Error(`${operation} is not covered by the Nimi App Access operation set available to this app.`), {
       reasonCode: 'world-studio-operation-not-in-app-access',
@@ -28,7 +29,7 @@ describe('studio Realm facade boundary', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    getStudioLocalAppClientMock.mockReturnValue({
+    getStudioClientMock.mockReturnValue({
       realm: { worldCore: { list, create, get, replace, getCreationEligibility } },
     });
   });
@@ -55,7 +56,7 @@ describe('studio Realm facade boundary', () => {
   it('maps world list and create onto the exact local-app Realm carrier', async () => {
     list.mockResolvedValue([]);
     create.mockResolvedValue({ id: 'world-1' });
-    const realm = createStudioRealmClient();
+    const realm = createStudioRealmClient(studioTestScope);
 
     await realm.worldCoreControllerListWorldCores({
       path: {},
@@ -91,7 +92,7 @@ describe('studio Realm facade boundary', () => {
   });
 
   it('forwards exact detail, eligibility and replacement calls and preserves owner failure', async () => {
-    const realm = createStudioRealmClient();
+    const realm = createStudioRealmClient(studioTestScope);
     await realm.worldCoreControllerGetWorldCore({ path: { worldId: 'world-1' } });
     expect(get).toHaveBeenCalledWith('world-1');
     await realm.worldCoreControllerGetWorldCreationEligibility({ path: {} });

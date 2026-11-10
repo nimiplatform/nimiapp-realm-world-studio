@@ -1,4 +1,5 @@
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { type StudioScope } from '@renderer/app-shell/studio-scope.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import { DECLARATION_LIMITS, worldDeclarationIssues } from './lorebook-validation.js';
 import { newDraftId, newDraftRule, type DraftCharacter, type WorldContent, type WorldDraft, type WorldProposal } from './world-draft.js';
 
@@ -52,7 +53,7 @@ function parseCast(data: Record<string, unknown>): DraftCharacter[] {
 }
 
 // @nimi-authority: rule.realm-world-studio.runtime-ai.r013
-export async function generateWorldProposal(draft: WorldDraft, task: CoauthorTask, instruction: string, language: string, repairText?: string): Promise<WorldProposal> {
+export async function generateWorldProposal(scope: StudioScope, draft: WorldDraft, task: CoauthorTask, instruction: string, language: string, repairText?: string): Promise<WorldProposal> {
   const shape = task === 'develop' ? OUTPUT_SHAPE : task === 'cast' ? '{"characters":[{"name":"", "role":"", "summary":"", "desire":"", "flaw":"", "voice":""}],"notes":[{"title":"", "detail":"", "suggestion":""}]}' : '{"notes":[{"title":"", "detail":"", "suggestion":""}]}';
   const declarationLimits = `Shared setting: at most ${DECLARATION_LIMITS.worldSetting} Unicode characters; at most ${DECLARATION_LIMITS.worldRuleRows} world rules, each statement at most ${DECLARATION_LIMITS.worldRule} characters. These limits apply to source declarations, not biography.`;
   const developmentScope = draft.source
@@ -66,7 +67,7 @@ export async function generateWorldProposal(draft: WorldDraft, task: CoauthorTas
     `Places:\n${draft.places.map(place => `- ${place.name}: ${place.summary}`).join('\n')}`,
     `Existing characters (do not repeat them as new proposals):\n${draft.characters.map(character => `- ${character.name}, ${character.role}: ${character.summary} Desire: ${character.desire} Obstacle: ${character.flaw} Voice: ${character.voice}`).join('\n')}`,
   ].join('\n\n');
-  const result = await getStudioLocalAppClient().ai.text.generateCandidate({
+  const result = await getStudioClient(scope).ai.text.generateCandidate({
     messages: repairText ? [
       { role: 'system', text: `You format existing creative proposals as valid JSON. Return ONLY this exact shape: ${shape}. ${declarationLimits} Preserve the supplied wording and facts. If the candidate exceeds these limits, return {"error":"over-limit"}; do not silently shorten it. Remove unrelated keys and repair JSON syntax. Do not invent missing character or world fields. If a required field is missing from the candidate, return {"error":"incomplete"}. Do not add commentary or markdown. Close the JSON object cleanly; no trailing commas or quotes.` },
       { role: 'user', text: `Format this existing candidate without changing its creative content:\n${repairText}\n\nEnd of candidate. Return only the valid JSON object.` },

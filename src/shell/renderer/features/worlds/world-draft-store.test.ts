@@ -1,9 +1,10 @@
+import { studioTestScope } from '../../../../test/studio-scope.js';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { coauthorActivity } from './world-activity-model.js';
 import { createWorldDraft, type WorldProposal } from './world-draft.js';
 import type { WorldDraftDocument } from './world-draft-storage.js';
 
-vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioLocalAppClient: vi.fn() }));
+vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioClient: vi.fn() }));
 vi.mock('./world-activity.js', () => ({ flushWorldActivity: vi.fn(async () => 0) }));
 
 async function loadStore(write: () => Promise<unknown> = async () => undefined) {
@@ -28,11 +29,11 @@ async function loadStore(write: () => Promise<unknown> = async () => undefined) 
       }),
     },
   };
-  vi.mocked(platform.getStudioLocalAppClient).mockReturnValue(client as never);
+  vi.mocked(platform.getStudioClient).mockReturnValue(client as never);
   const store = await import('./world-draft-store.js');
   const activity = await import('./world-activity.js');
   vi.mocked(activity.flushWorldActivity).mockImplementation(async () => { events.push('flush'); return 0; });
-  await store.loadWorldDrafts();
+  await store.loadWorldDrafts(studioTestScope);
   return { store, events, draft, publication, client, document: () => document };
 }
 
@@ -40,10 +41,10 @@ beforeEach(() => { vi.resetModules(); vi.clearAllMocks(); });
 
 it('saves a completed review and its publication together before flushing', async () => {
   const { store, events, draft, publication, client, document } = await loadStore();
-  store.updateWorldDraft(draft.id, { proposal: null });
-  store.publishAfterDraftSave([publication]);
+  store.updateWorldDraft(studioTestScope, draft.id, { proposal: null });
+  store.publishAfterDraftSave(studioTestScope, [publication]);
   expect(events).toEqual([]);
-  await store.persistWorldDrafts();
+  await store.persistWorldDrafts(studioTestScope);
   expect(events).toEqual(['write', 'flush']);
   expect(client.storage.writeJson).toHaveBeenCalledTimes(1);
   expect(document().drafts[0]!.proposal).toBeNull();
@@ -55,15 +56,15 @@ it('keeps the unsaved review and publication for retry if the single write fails
   const { store, events, draft, publication, document } = await loadStore(async () => {
     if (fail) throw new Error('storage unavailable');
   });
-  store.updateWorldDraft(draft.id, { proposal: null });
-  store.publishAfterDraftSave([publication]);
-  await expect(store.persistWorldDrafts()).rejects.toThrow('storage unavailable');
+  store.updateWorldDraft(studioTestScope, draft.id, { proposal: null });
+  store.publishAfterDraftSave(studioTestScope, [publication]);
+  await expect(store.persistWorldDrafts(studioTestScope)).rejects.toThrow('storage unavailable');
   expect(events).toEqual(['write']);
   expect(document().drafts[0]!.proposal).not.toBeNull();
   expect(document().activityOutbox).toEqual([]);
-  expect(store.useWorldDrafts.getState().error).toBe('storage unavailable');
+  expect(store.getWorldDraftState(studioTestScope).store.getState().error).toBe('storage unavailable');
   fail = false;
-  await store.persistWorldDrafts();
+  await store.persistWorldDrafts(studioTestScope);
   expect(events).toEqual(['write', 'write', 'flush']);
   expect(document().drafts[0]!.proposal).toBeNull();
   expect(document().activityOutbox).toEqual([publication]);
@@ -71,22 +72,22 @@ it('keeps the unsaved review and publication for retry if the single write fails
 
 it('recovers the terminal publication after reloading a completed draft', async () => {
   const { store, draft, publication, client } = await loadStore();
-  store.updateWorldDraft(draft.id, { proposal: null });
-  store.publishAfterDraftSave([publication]);
-  await store.persistWorldDrafts();
+  store.updateWorldDraft(studioTestScope, draft.id, { proposal: null });
+  store.publishAfterDraftSave(studioTestScope, [publication]);
+  await store.persistWorldDrafts(studioTestScope);
   vi.resetModules();
   const platform = await import('../../app-shell/studio-platform.js');
-  vi.mocked(platform.getStudioLocalAppClient).mockReturnValue(client as never);
+  vi.mocked(platform.getStudioClient).mockReturnValue(client as never);
   const reopened = await import('./world-draft-store.js');
   const storage = await import('./world-draft-storage.js');
-  await reopened.loadWorldDrafts();
-  expect(reopened.useWorldDrafts.getState().drafts[0]!.proposal).toBeNull();
-  expect((await storage.readWorldDraftDocument()).activityOutbox).toEqual([publication]);
+  await reopened.loadWorldDrafts(studioTestScope);
+  expect(reopened.getWorldDraftState(studioTestScope).store.getState().drafts[0]!.proposal).toBeNull();
+  expect((await storage.readWorldDraftDocument(studioTestScope)).activityOutbox).toEqual([publication]);
 });
 
 it('saves deletion and cancellation atomically without requiring the deleted draft on retry', async () => {
   const { store, draft, document } = await loadStore();
-  await store.removeWorldDraft(draft.id);
+  await store.removeWorldDraft(studioTestScope, draft.id);
   expect(document().drafts).toEqual([]);
   expect(document().activityOutbox).toEqual([expect.objectContaining({ todoState: 'cancelled', revision: 2 })]);
 });
@@ -96,10 +97,10 @@ it('does not cancel a restored draft after its deletion failed', async () => {
   const { store, draft, document } = await loadStore(async () => {
     if (fail) throw new Error('storage unavailable');
   });
-  await expect(store.removeWorldDraft(draft.id)).rejects.toThrow('storage unavailable');
-  expect(store.useWorldDrafts.getState().drafts).toHaveLength(1);
+  await expect(store.removeWorldDraft(studioTestScope, draft.id)).rejects.toThrow('storage unavailable');
+  expect(store.getWorldDraftState(studioTestScope).store.getState().drafts).toHaveLength(1);
   fail = false;
-  await store.persistWorldDrafts();
+  await store.persistWorldDrafts(studioTestScope);
   expect(document().activityOutbox).toEqual([]);
   expect(document().drafts[0]!.id).toBe(draft.id);
 });
@@ -108,12 +109,12 @@ it('stops debounced saves and publications when the session ends', async () => {
   vi.useFakeTimers();
   try {
     const { store, events, draft, publication } = await loadStore();
-    store.updateWorldDraft(draft.id, { name: 'Changed' });
-    store.publishAfterDraftSave([publication]);
-    store.endWorldDraftSession();
+    store.updateWorldDraft(studioTestScope, draft.id, { name: 'Changed' });
+    store.publishAfterDraftSave(studioTestScope, [publication]);
+    store.endWorldDraftSession(studioTestScope);
     await vi.advanceTimersByTimeAsync(1_000);
     expect(events).toEqual([]);
-    await expect(store.persistWorldDrafts()).rejects.toThrow(/session ended/u);
+    await expect(store.persistWorldDrafts(studioTestScope)).rejects.toThrow(/session ended/u);
   } finally {
     vi.useRealTimers();
   }

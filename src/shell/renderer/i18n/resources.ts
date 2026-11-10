@@ -4,6 +4,9 @@ import { worldOperationsEn, worldOperationsZh } from './world-operations.js';
 const enTranslations = {
   ...worldStudioEn,
   ...worldOperationsEn,
+  'shell.account.disconnect': 'Disconnect Runtime',
+  'shell.account.signOut': 'Sign out of this App',
+  'shell.account.saveBeforeExit': 'Your draft could not be saved. Retry saving before leaving.',
   'app.name': 'Realm World Studio',
   'app.rendererFailedTitle': 'Realm World Studio renderer failed',
   'app.rendererFailedHint': 'Restart Realm World Studio after checking renderer diagnostics.',
@@ -206,6 +209,9 @@ export type StudioTranslationKey = keyof typeof enTranslations;
 export const zhCNTranslations: Record<StudioTranslationKey, string> = {
   ...worldStudioZh,
   ...worldOperationsZh,
+  'shell.account.disconnect': '断开 Runtime',
+  'shell.account.signOut': '退出此应用',
+  'shell.account.saveBeforeExit': '草稿未能保存，请重试保存后再退出。',
   'app.name': 'Realm World Studio',
   'app.rendererFailedTitle': "Realm World Studio 渲染失败",
   'app.rendererFailedHint': '检查渲染器诊断信息后重启 Realm World Studio。',

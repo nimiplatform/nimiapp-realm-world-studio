@@ -1,3 +1,4 @@
+import { type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import type { RealmModel } from '@nimiplatform/sdk/realm/generated';
 import {
   createStudioRealmClient,
@@ -20,12 +21,12 @@ export const worldCharactersKey = (worldId: string) => ['world-studio', 'charact
 export const worldCharacterKey = (worldId: string, characterId: string) => ['world-studio', 'character', worldId, characterId] as const;
 export const CREATION_ELIGIBILITY_KEY = ['world-studio', 'creation-eligibility'] as const;
 
-export async function getWorldCreationEligibility(): Promise<{ canCreateWorld: boolean }> {
-  return createStudioRealmClient().worldCoreControllerGetWorldCreationEligibility({ path: {} });
+export async function getWorldCreationEligibility(scope: StudioScope): Promise<{ canCreateWorld: boolean }> {
+  return createStudioRealmClient(scope).worldCoreControllerGetWorldCreationEligibility({ path: {} });
 }
 
-export async function listCreatorWorldCharacters(worldId: string, afterId?: string): Promise<WorldCharacterCore[]> {
-  return [...await createStudioRealmClient().worldCoreControllerListWorldCharacters({
+export async function listCreatorWorldCharacters(scope: StudioScope, worldId: string, afterId?: string): Promise<WorldCharacterCore[]> {
+  return [...await createStudioRealmClient(scope).worldCoreControllerListWorldCharacters({
     path: { worldId }, query: { take: WORLD_CHARACTER_LIST_TAKE, ...(afterId ? { afterId } : {}) },
   })];
 }
@@ -70,13 +71,13 @@ export type CreatorWorldCharacterReplaceInput = {
   origin: RealmCoreOrigin;
 };
 
-export async function listCreatorWorlds(): Promise<CreatorWorldSummary[]> {
-  return (await listCreatorWorldRecords()).map(toCreatorWorldSummary);
+export async function listCreatorWorlds(scope: StudioScope): Promise<CreatorWorldSummary[]> {
+  return (await listCreatorWorldRecords(scope)).map(toCreatorWorldSummary);
 }
 
 // @nimi-authority: rule.realm-world-studio.scope.r014
-export async function listCreatorWorldRecords(): Promise<WorldCore[]> {
-  const realm = createStudioRealmClient();
+export async function listCreatorWorldRecords(scope: StudioScope): Promise<WorldCore[]> {
+  const realm = createStudioRealmClient(scope);
   const worlds = await realm.worldCoreControllerListWorldCores({
     path: {},
     query: { take: WORLD_LIST_TAKE },
@@ -85,9 +86,9 @@ export async function listCreatorWorldRecords(): Promise<WorldCore[]> {
   return [...worlds];
 }
 
-export async function getCreatorWorld(worldId: string): Promise<WorldCore> {
+export async function getCreatorWorld(scope: StudioScope, worldId: string): Promise<WorldCore> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
-  const realm = createStudioRealmClient();
+  const realm = createStudioRealmClient(scope);
   const world = await realm.worldCoreControllerGetWorldCore({
     path: { worldId: normalizedWorldId },
   });
@@ -96,9 +97,9 @@ export async function getCreatorWorld(worldId: string): Promise<WorldCore> {
   return world;
 }
 
-export async function getCreatorWorldWorkbench(worldId: string): Promise<CreatorWorldWorkbench> {
+export async function getCreatorWorldWorkbench(scope: StudioScope, worldId: string): Promise<CreatorWorldWorkbench> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
-  const realm = createStudioRealmClient();
+  const realm = createStudioRealmClient(scope);
   const [world, characters] = await Promise.all([
     realm.worldCoreControllerGetWorldCore({ path: { worldId: normalizedWorldId } }),
     realm.worldCoreControllerListWorldCharacters({
@@ -112,13 +113,13 @@ export async function getCreatorWorldWorkbench(worldId: string): Promise<Creator
   return toCreatorWorldWorkbench(world, characters);
 }
 
-export async function getCreatorWorldCharacterCore(
+export async function getCreatorWorldCharacterCore(scope: StudioScope,
   worldId: string,
   characterId: string,
 ): Promise<WorldCharacterCore> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
   const normalizedCharacterId = requireRouteId(characterId, 'characterId');
-  const realm = createStudioRealmClient();
+  const realm = createStudioRealmClient(scope);
   const character = await realm.worldCoreControllerGetWorldCharacter({
     path: { characterId: normalizedCharacterId },
   });
@@ -128,17 +129,17 @@ export async function getCreatorWorldCharacterCore(
   return character;
 }
 
-export async function getCreatorWorldCharacterDetail(
+export async function getCreatorWorldCharacterDetail(scope: StudioScope,
   worldId: string,
   characterId: string,
 ): Promise<CreatorWorldCharacterDetail> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
-  const character = await getCreatorWorldCharacterCore(normalizedWorldId, characterId);
+  const character = await getCreatorWorldCharacterCore(scope, normalizedWorldId, characterId);
   return toCreatorWorldCharacterDetail(normalizedWorldId, character);
 }
 
-export async function createCreatorWorldCore(input: CreatorWorldCreateInput): Promise<WorldCore> {
-  const realm = createStudioRealmClient();
+export async function createCreatorWorldCore(scope: StudioScope, input: CreatorWorldCreateInput): Promise<WorldCore> {
+  const realm = createStudioRealmClient(scope);
   const id = optionalText(input.id);
   const body: CreateWorldCoreBody = {
     core: requireCore(input.core) as unknown as CreateWorldCoreBody['core'],
@@ -156,12 +157,12 @@ export async function createCreatorWorldCore(input: CreatorWorldCreateInput): Pr
   return world;
 }
 
-export async function replaceCreatorWorldCore(
+export async function replaceCreatorWorldCore(scope: StudioScope,
   worldId: string,
   input: CreatorWorldReplaceInput,
 ): Promise<WorldCore> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
-  const realm = createStudioRealmClient();
+  const realm = createStudioRealmClient(scope);
   const id = optionalText(input.id);
   const body: ReplaceWorldCoreBody = {
     baseContentHash: requireRouteId(input.baseContentHash, 'baseContentHash'),
@@ -180,14 +181,14 @@ export async function replaceCreatorWorldCore(
   return world;
 }
 
-export async function replaceCreatorWorldCharacterCore(
+export async function replaceCreatorWorldCharacterCore(scope: StudioScope,
   worldId: string,
   characterId: string,
   input: CreatorWorldCharacterReplaceInput,
 ): Promise<WorldCharacterCore> {
   const normalizedWorldId = requireRouteId(worldId, 'worldId');
   const normalizedCharacterId = requireRouteId(characterId, 'characterId');
-  const realm = createStudioRealmClient();
+  const realm = createStudioRealmClient(scope);
   const id = optionalText(input.id);
   const body: ReplaceWorldCharacterBody = {
     baseContentHash: requireRouteId(input.baseContentHash, 'baseContentHash'),

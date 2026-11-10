@@ -10,11 +10,11 @@ describe('studio auth bridge boundary', () => {
 
   beforeAll(() => {
     authProviderSource = readFileSync(
-      join(process.cwd(), 'src/shell/renderer/app-shell/auth-provider.tsx'),
+      join(process.cwd(), 'src/shell/renderer/App.tsx'),
       'utf8',
     );
     bootstrapSource = readFileSync(
-      join(process.cwd(), 'src/shell/renderer/infra/studio-bootstrap.ts'),
+      join(process.cwd(), 'src/shell/renderer/main.tsx'),
       'utf8',
     );
     stylesSource = readFileSync(
@@ -59,21 +59,11 @@ describe('studio auth bridge boundary', () => {
     expect(authProviderSource).not.toContain('StudioLoginPage');
   });
 
-  it('uses Kit bootstrap surfaces instead of app-local loading chrome', () => {
-    expect(authProviderSource).toContain('AmbientBackground');
-    expect(authProviderSource).toContain('LoadingSkeleton');
-    expect(authProviderSource).toContain('InlineAlert');
-    expect(authProviderSource).toContain('runStudioBootstrap({ force: true })');
-    expect(authProviderSource).not.toContain('ras-fullscreen-center');
-    expect(authProviderSource).not.toContain('ras-spinner');
+  it('uses the shared access gate and retires App-owned bootstrap state', () => {
+    expect(authProviderSource).toContain('NimiAppAccessGate');
+    expect(bootstrapSource).toContain('createDesktopNimiAppSession');
+    expect(existsSync(join(process.cwd(), 'src/shell/renderer/app-shell/app-store.ts'))).toBe(false);
     expect(stylesSource).not.toContain('.ras-fullscreen-center');
-    expect(stylesSource).not.toContain('.ras-spinner');
-    expect(stylesSource).toMatch(/\.ras-entry-fallback__panel\s*{[^}]*position:\s*relative;[^}]*z-index:\s*1;/s);
   });
 
-  it('clears stale bootstrap failure state before Runtime retry execution', () => {
-    expect(bootstrapSource).toContain('store.setBootstrapReady(false)');
-    expect(bootstrapSource).toContain('store.setBootstrapError(null)');
-    expect(bootstrapSource).toContain('store.setBootstrapFailure(null)');
-  });
 });

@@ -1,6 +1,12 @@
+import { useState } from 'react';
+import { useNimiAppSession } from '@nimiplatform/kit/auth/app';
+import { nimiToast } from '@nimiplatform/kit/ui';
+import { getWorldDraftState, persistWorldDrafts } from '../features/worlds/world-draft-store.js';
+import { getCharacterDraftState, persistCharacterDrafts } from '../features/worlds/character-draft-store.js';
+import { useStudioScope } from '@renderer/app-shell/studio-scope.js';
 import type { MouseEvent as ReactMouseEvent, ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useIsMutating } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, ChevronDown, FilePenLine, PlusCircle, Settings2, User } from 'lucide-react';
 import {
@@ -12,7 +18,7 @@ import {
   PopoverTrigger,
 } from '@nimiplatform/kit/ui';
 import { startStudioWindowDrag } from '../bridge/window-drag.js';
-import { getStudioCurrentUser } from './current-user.js';
+
 import { LanguageSwitcher } from './language-switcher.js';
 
 const MACOS_TRAFFIC_LIGHT_SAFE_ZONE_PX = 84;
@@ -59,20 +65,28 @@ function SidebarItem({
 }
 
 function AccountMenu() {
+  const scope = useStudioScope();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const currentUserQuery = useQuery({
-    queryKey: ['realm-world-studio', 'current-user'] as const,
-    queryFn: getStudioCurrentUser,
-    staleTime: 300_000,
-    retry: false,
-  });
-
-  // currentUser is a display-fact-only Base surface; when it is unavailable
-  // the menu falls back to neutral copy instead of failing the shell.
-  const displayName = currentUserQuery.data?.displayName.trim()
-    || t('shell.account.fallbackDisplayName');
-  const avatarUrl = currentUserQuery.data?.avatarUrl ?? null;
+  const { session, snapshot } = useNimiAppSession();
+  const account = session.account;
+  const [leaving, setLeaving] = useState(false);
+  const mutating = useIsMutating() > 0;
+  const user = snapshot.identity.status === 'signed-in' ? snapshot.identity.user : null;
+  const displayName = user?.displayName.trim() || t('shell.account.fallbackDisplayName');
+  const avatarUrl = user?.avatarUrl ?? null;
+  const leave = async (action: () => void | Promise<void>) => {
+    if (leaving || mutating) return;
+    setLeaving(true);
+    try {
+      const world = getWorldDraftState(scope).store.getState();
+      if (world.loaded && (world.saving || world.error)) await persistWorldDrafts(scope);
+      const character = getCharacterDraftState(scope).store.getState();
+      if (character.loaded && (character.saving || character.error)) await persistCharacterDrafts(scope);
+      scope.signal.throwIfAborted(); await action();
+    } catch { if (!scope.signal.aborted) nimiToast.warning(t('shell.account.saveBeforeExit')); }
+    finally { if (!scope.signal.aborted) setLeaving(false); }
+  };
   const initial = displayName.charAt(0).toUpperCase() || 'O';
 
   return (
@@ -113,7 +127,7 @@ function AccountMenu() {
             <div style={{ minWidth: 0, flex: 1 }}>
               <p className="ras-avatar-menu__name">{displayName}</p>
               <p className="ras-avatar-menu__email">
-                {currentUserQuery.data?.handle ?? t('shell.account.emailFallback')}
+                {user?.handle ?? t('shell.account.emailFallback')}
               </p>
             </div>
           </div>
@@ -131,6 +145,10 @@ function AccountMenu() {
             >
               {t('shell.account.worlds')}
             </Button>
+            {account.kind === 'app-session' ? <>
+              <Button tone="ghost" size="sm" fullWidth role="menuitem" disabled={leaving || mutating} onClick={() => { void leave(() => session.disconnectRuntime()); }}>{t('shell.account.disconnect')}</Button>
+              <Button tone="ghost" size="sm" fullWidth role="menuitem" disabled={leaving || mutating} onClick={() => { void leave(() => account.signOut()); }}>{t('shell.account.signOut')}</Button>
+            </> : null}
           </div>
         </div>
       </PopoverContent>

@@ -1,5 +1,6 @@
+import { renderStudio as render } from '../../../test/studio-scope.js';
 import '@testing-library/jest-dom/vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { useTranslation } from 'react-i18next';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { setStudioLocale } from '../i18n/index.js';

@@ -1,13 +1,15 @@
+import { useStudioScope } from '@renderer/app-shell/studio-scope.js';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ModelConfigAIConfigSurface } from '@nimiplatform/kit/features/model-config';
-import { getStudioLocalAppClient, STUDIO_RUNTIME_APP_ID } from '../../app-shell/studio-platform.js';
+import { getStudioClient, STUDIO_RUNTIME_APP_ID } from '../../app-shell/studio-platform.js';
 import { worldModelCopyZh } from '../../i18n/model-copy.js';
 
 // @nimi-authority: rule.realm-world-studio.runtime-ai.r002
 export function WorldModelsPage() {
+  const scope = useStudioScope();
   const { t, i18n } = useTranslation();
-  const client = getStudioLocalAppClient();
+  const client = getStudioClient(scope);
   const query = useQuery({ queryKey: ['world-studio', 'ai-config'], queryFn: () => client.aiConfig.get(), retry: false });
   return <div className="studio-page studio-settings"><header className="studio-page-title"><h1>{t('studio.modelsTitle')}</h1><p>{t('studio.modelsHint')}</p></header>
     <ModelConfigAIConfigSurface

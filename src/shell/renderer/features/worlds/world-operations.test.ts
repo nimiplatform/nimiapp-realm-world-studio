@@ -1,8 +1,9 @@
+import { studioTestScope } from '../../../../test/studio-scope.js';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { createWorldDraft, draftIssues, newDraftRule, worldCreateInput, worldReplaceInput, WorldRevisionConflict } from './world-draft.js';
 import { characterDeclarationIssues, worldDeclarationIssues } from './lorebook-validation.js';
 import { characterWriteBody, characterForm, characterIssues, newCharacterDraft, saveWorldCharacter } from './world-character-model.js';
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import { TEST_WORLD_CORE, TEST_WORLD_CHARACTER_CORE } from './world-core-test-fixtures.js';
 
 it('creates a static world with the canonical label variant and no clock state', () => {
@@ -10,7 +11,7 @@ it('creates a static world with the canonical label variant and no clock state',
   expect(worldCreateInput(draft).core.timeModel).toEqual({ mode: 'static', label: null });
 });
 
-vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioLocalAppClient: vi.fn() }));
+vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioClient: vi.fn() }));
 beforeEach(() => vi.clearAllMocks());
 
 it('world replacement preserves hidden source fields and stable rule identities', () => {
@@ -131,8 +132,8 @@ it('rejects invalid declarations before creating a character entity', async () =
   const draft = completeCharacter();
   draft.form.identityStatement = '界'.repeat(241);
   const api = { getCharacter: vi.fn().mockRejectedValue({ reasonCode: 'not-found' }), getEntity: vi.fn(), createEntity: vi.fn(), createCharacter: vi.fn() };
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
-  await expect(saveWorldCharacter(draft, async () => {})).rejects.toThrow('CHARACTER_FIELDS_INCOMPLETE');
+  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioClient>);
+  await expect(saveWorldCharacter(studioTestScope, draft, async () => {})).rejects.toThrow('CHARACTER_FIELDS_INCOMPLETE');
   expect(api.createEntity).not.toHaveBeenCalled();
   expect(api.createCharacter).not.toHaveBeenCalled();
 });
@@ -177,10 +178,10 @@ it('reuses a created entity when the character write fails and never reports par
   const failure = Object.assign(new Error('Realm unavailable'), { reasonCode: 'realm-unavailable' });
   const entity = { id: draft.entityId, worldId: draft.worldId, kind: 'character' };
   const api = { getCharacter: vi.fn().mockRejectedValue(notFound), getEntity: vi.fn().mockRejectedValueOnce(notFound).mockResolvedValue(entity), createEntity: vi.fn().mockResolvedValue(entity), createCharacter: vi.fn().mockRejectedValue(failure) };
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
+  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioClient>);
   const checkpoint = vi.fn(async () => {});
-  await expect(saveWorldCharacter(draft, checkpoint)).rejects.toBe(failure);
-  await expect(saveWorldCharacter(draft, checkpoint)).rejects.toBe(failure);
+  await expect(saveWorldCharacter(studioTestScope, draft, checkpoint)).rejects.toBe(failure);
+  await expect(saveWorldCharacter(studioTestScope, draft, checkpoint)).rejects.toBe(failure);
   expect(api.createEntity).toHaveBeenCalledOnce();
   expect(api.createCharacter).toHaveBeenCalledTimes(2);
   expect(checkpoint).toHaveBeenCalledTimes(2);
@@ -190,7 +191,7 @@ it('reuses a created entity when the character write fails and never reports par
 it('rejects a returned entity from another world before creating a character', async () => {
   const draft = completeCharacter();
   const api = { getCharacter: vi.fn().mockRejectedValue({ reasonCode: 'not-found' }), getEntity: vi.fn().mockResolvedValue({ id: draft.entityId, worldId: 'other-world', kind: 'character' }), createCharacter: vi.fn() };
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
-  await expect(saveWorldCharacter(draft, async () => {})).rejects.toThrow('CHARACTER_ENTITY_MISMATCH');
+  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api } } as unknown as ReturnType<typeof getStudioClient>);
+  await expect(saveWorldCharacter(studioTestScope, draft, async () => {})).rejects.toThrow('CHARACTER_ENTITY_MISMATCH');
   expect(api.createCharacter).not.toHaveBeenCalled();
 });

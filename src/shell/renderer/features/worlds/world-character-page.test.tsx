@@ -1,18 +1,19 @@
+import { studioTestScope, renderStudio as render } from '../../../../test/studio-scope.js';
 import '@testing-library/jest-dom/vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { WorldCharacterEditorPage } from './world-character-page.js';
 import { characterWriteBody, newCharacterDraft, type CharacterRecord } from './world-character-model.js';
-import { putCharacterDraft, useCharacterDrafts } from './character-draft-store.js';
-import { useWorldDrafts } from './world-draft-store.js';
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { putCharacterDraft, useCharacterDrafts, getCharacterDraftState } from './character-draft-store.js';
+import { useWorldDrafts, getWorldDraftState } from './world-draft-store.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import { getCreatorWorld, getCreatorWorldCharacterCore, worldCharacterKey, worldRecordKey } from './world-core-client.js';
 import { setStudioLocale } from '../../i18n/index.js';
 import { TEST_WORLD_CORE, TEST_WORLD_CHARACTER_CORE } from './world-core-test-fixtures.js';
 
-vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioLocalAppClient: vi.fn() }));
+vi.mock('../../app-shell/studio-platform.js', () => ({ getStudioClient: vi.fn() }));
 vi.mock('./world-core-client.js', async original => ({ ...await original<typeof import('./world-core-client.js')>(), getCreatorWorld: vi.fn(), getCreatorWorldCharacterCore: vi.fn() }));
 
 const draft = () => {
@@ -24,14 +25,14 @@ const draft = () => {
 beforeEach(async () => {
   vi.clearAllMocks();
   await setStudioLocale('en');
-  useWorldDrafts.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
-  useCharacterDrafts.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
+  getWorldDraftState(studioTestScope).store.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
+  getCharacterDraftState(studioTestScope).store.setState({ drafts: [], loaded: true, loading: false, saving: false, error: null });
   vi.mocked(getCreatorWorld).mockResolvedValue(TEST_WORLD_CORE);
 });
 
 function mount(value: ReturnType<typeof draft>, api: Record<string, unknown>, editing = false) {
-  useCharacterDrafts.setState({ drafts: [value] });
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ realm: { worldCore: api }, storage: { writeJson: vi.fn(async () => ({})) } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
+  getCharacterDraftState(studioTestScope).store.setState({ drafts: [value] });
+  vi.mocked(getStudioClient).mockReturnValue({ realm: { worldCore: api }, storage: { writeJson: vi.fn(async () => ({})) } } as unknown as ReturnType<typeof getStudioClient>);
   const url = editing ? `/worlds/${value.worldId}/characters/${value.id}/edit` : `/worlds/${value.worldId}/characters/new?characterDraftId=${value.id}`;
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><MemoryRouter initialEntries={[url]}><Routes><Route path="/worlds/:worldId/characters/new" element={<WorldCharacterEditorPage />} /><Route path="/worlds/:worldId/characters/:characterId/edit" element={<WorldCharacterEditorPage />} /><Route path="/worlds/:worldId/characters/:characterId" element={<p>Canonical character route</p>} /></Routes></MemoryRouter></QueryClientProvider>);
 }
@@ -47,7 +48,7 @@ it('requires review, then preserves the draft when the canonical character write
   fireEvent.click(screen.getByRole('button', { name: 'Create character in Realm' }));
   await screen.findByText('The character could not be saved. Your draft and any created world entity have been kept for retry.');
   expect(create).toHaveBeenCalledOnce();
-  expect(useCharacterDrafts.getState().drafts[0]).toMatchObject({ saved: false, entityCreated: true, form: value.form });
+  expect(getCharacterDraftState(studioTestScope).store.getState().drafts[0]).toMatchObject({ saved: false, entityCreated: true, form: value.form });
   expect(screen.queryByText('Canonical character route')).not.toBeInTheDocument();
 });
 
@@ -69,41 +70,41 @@ it('shows the new canonical version on conflict and requires another review afte
   fireEvent.click(screen.getByRole('button', { name: 'Keep my draft and review against this version' }));
   expect(screen.getByRole('checkbox')).not.toBeChecked();
   expect(screen.getByRole('button', { name: 'Save character changes' })).toBeDisabled();
-  await waitFor(() => expect(useCharacterDrafts.getState().drafts[0]?.source?.contentHash).toBe(latest.contentHash));
-  expect(useCharacterDrafts.getState().drafts[0]?.form).toEqual(value.form);
+  await waitFor(() => expect(getCharacterDraftState(studioTestScope).store.getState().drafts[0]?.source?.contentHash).toBe(latest.contentHash));
+  expect(getCharacterDraftState(studioTestScope).store.getState().drafts[0]?.form).toEqual(value.form);
 });
 
 it('does not replace a cached character draft when a wrong parent-world route is opened', async () => {
   const source = TEST_WORLD_CHARACTER_CORE;
   const original = newCharacterDraft(source.worldId, source.id, source);
   original.form.summary = 'An unsaved edit that must survive.';
-  useCharacterDrafts.setState({ drafts: [original] });
+  getCharacterDraftState(studioTestScope).store.setState({ drafts: [original] });
   const otherWorld = { ...TEST_WORLD_CORE, id: 'world-b' };
   vi.mocked(getCreatorWorld).mockResolvedValue(otherWorld);
   let rejectSource!: (error: Error) => void;
   vi.mocked(getCreatorWorldCharacterCore).mockReturnValue(new Promise((_, reject) => { rejectSource = reject; }));
   const writeJson = vi.fn(async () => ({}));
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ storage: { writeJson } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
+  vi.mocked(getStudioClient).mockReturnValue({ storage: { writeJson } } as unknown as ReturnType<typeof getStudioClient>);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   client.setQueryData(worldCharacterKey(source.worldId, source.id), source);
   client.setQueryData(worldRecordKey(otherWorld.id), otherWorld);
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[`/worlds/${otherWorld.id}/characters/${source.id}/edit`]}><Routes><Route path="/worlds/:worldId/characters/:characterId/edit" element={<WorldCharacterEditorPage />} /></Routes></MemoryRouter></QueryClientProvider>);
-  await waitFor(() => expect(getCreatorWorldCharacterCore).toHaveBeenCalledWith(otherWorld.id, source.id));
-  expect(useCharacterDrafts.getState().drafts).toEqual([original]);
+  await waitFor(() => expect(getCreatorWorldCharacterCore).toHaveBeenCalledWith(studioTestScope, otherWorld.id, source.id));
+  expect(getCharacterDraftState(studioTestScope).store.getState().drafts).toEqual([original]);
   expect(writeJson).not.toHaveBeenCalled();
   rejectSource(new Error('parent world mismatch'));
   await screen.findByText('This character or its source world could not be loaded. Your drafts are preserved.');
-  expect(useCharacterDrafts.getState().drafts).toEqual([original]);
+  expect(getCharacterDraftState(studioTestScope).store.getState().drafts).toEqual([original]);
   expect(writeJson).not.toHaveBeenCalled();
 });
 
 it('rejects a wrong-world draft before touching existing storage', async () => {
   const source = TEST_WORLD_CHARACTER_CORE;
   const original = newCharacterDraft(source.worldId, source.id, source);
-  useCharacterDrafts.setState({ drafts: [original] });
+  getCharacterDraftState(studioTestScope).store.setState({ drafts: [original] });
   const writeJson = vi.fn();
-  vi.mocked(getStudioLocalAppClient).mockReturnValue({ storage: { writeJson } } as unknown as ReturnType<typeof getStudioLocalAppClient>);
-  await expect(putCharacterDraft({ ...original, worldId: 'world-b' })).rejects.toThrow('CHARACTER_DRAFT_CONTEXT_MISMATCH');
-  expect(useCharacterDrafts.getState().drafts).toEqual([original]);
+  vi.mocked(getStudioClient).mockReturnValue({ storage: { writeJson } } as unknown as ReturnType<typeof getStudioClient>);
+  await expect(putCharacterDraft(studioTestScope, { ...original, worldId: 'world-b' })).rejects.toThrow('CHARACTER_DRAFT_CONTEXT_MISMATCH');
+  expect(getCharacterDraftState(studioTestScope).store.getState().drafts).toEqual([original]);
   expect(writeJson).not.toHaveBeenCalled();
 });

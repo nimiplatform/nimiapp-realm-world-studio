@@ -1,3 +1,5 @@
+import { useMemo as useStudioMemo } from 'react';
+import { useStudioScope } from '@renderer/app-shell/studio-scope.js';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,33 +13,36 @@ import { DraftStorageNotice, FailureNotice, WorldMark, dateLabel, useDraftLibrar
 export const WORLD_RECORDS_KEY = ['world-studio', 'realm-world-records'] as const;
 
 export function WorldIdeaComposer({ disabled = false, spacious = false }: { disabled?: boolean; spacious?: boolean }) {
+  const scope = useStudioScope();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [idea, setIdea] = useState('');
   function start(event?: FormEvent) {
     event?.preventDefault();
     if (disabled) return;
-    const draft = addWorldDraft(idea.trim());
+    const draft = addWorldDraft(scope, idea.trim());
     navigate(`/drafts/${draft.id}`);
   }
   return <section className={`studio-idea${spacious ? ' studio-idea--spacious' : ''}`}>
     <div className="studio-idea__intro"><span className="studio-idea__symbol" aria-hidden="true"><Sparkles size={25} strokeWidth={1.4} /></span><div><h2>{t('studio.ideaTitle')}</h2><p>{t('studio.ideaHint')}</p></div></div>
     <form onSubmit={start}>
       <textarea aria-label={t('studio.brief')} placeholder={t('studio.ideaPlaceholder')} value={idea} onChange={event => setIdea(event.target.value)} rows={spacious ? 5 : 2} />
-      <div className="studio-idea__footer"><Button tone="ghost" onClick={() => { const draft = addWorldDraft(); navigate(`/drafts/${draft.id}`); }} disabled={disabled}>{t('studio.blank')}</Button><Button type="submit" tone="primary" disabled={disabled || !idea.trim()} trailingIcon={<ArrowRight size={16} />}>{t('studio.start')}</Button></div>
+      <div className="studio-idea__footer"><Button tone="ghost" onClick={() => { const draft = addWorldDraft(scope); navigate(`/drafts/${draft.id}`); }} disabled={disabled}>{t('studio.blank')}</Button><Button type="submit" tone="primary" disabled={disabled || !idea.trim()} trailingIcon={<ArrowRight size={16} />}>{t('studio.start')}</Button></div>
     </form>
     <div className="studio-seeds"><span>{t('studio.inspiration')}</span>{(['seed1', 'seed2', 'seed3'] as const).map(key => <button type="button" key={key} onClick={() => setIdea(t(`studio.${key}`))}>{t(`studio.${key}`)}</button>)}</div>
   </section>;
 }
 
 export function CreatorWorldListPage() {
+  const scope = useStudioScope();
+  const scopedListCreatorWorldRecords = useStudioMemo(() => listCreatorWorldRecords.bind(null, scope), [scope]);
   const { t, i18n } = useTranslation();
   const [params, setParams] = useSearchParams();
   const draftsTab = params.get('tab') === 'drafts';
   const [search, setSearch] = useState('');
   const [visibility, setVisibility] = useState('all');
   const { drafts, loaded, error: storageError } = useDraftLibrary();
-  const query = useQuery({ queryKey: WORLD_RECORDS_KEY, queryFn: listCreatorWorldRecords, retry: false });
+  const query = useQuery({ queryKey: WORLD_RECORDS_KEY, queryFn: scopedListCreatorWorldRecords, retry: false });
   const normalizedSearch = search.toLocaleLowerCase();
   const worlds = (query.data ?? []).filter(world => (visibility === 'all' || world.visibility === visibility) && `${world.core.identity.name} ${world.core.identity.summary}`.toLocaleLowerCase().includes(normalizedSearch));
   const filteredDrafts = drafts.filter(draft => `${draft.name} ${draft.summary} ${draft.brief}`.toLocaleLowerCase().includes(normalizedSearch));

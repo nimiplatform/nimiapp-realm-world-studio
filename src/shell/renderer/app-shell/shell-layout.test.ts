@@ -12,13 +12,12 @@ const rendererStylesSource = () =>
   readFileSync(join(process.cwd(), 'src/shell/renderer/styles.css'), 'utf8');
 
 const rendererEntrySource = () =>
-  readFileSync(join(process.cwd(), 'src/shell/renderer/main.tsx'), 'utf8');
+  readFileSync(join(process.cwd(), 'src/shell/renderer/mount-studio.tsx'), 'utf8');
 
 describe('Studio shell kit boundary', () => {
   it('uses governed kit primitives for shell background and account menu behavior', () => {
     const source = shellLayoutSource();
 
-    expect(source).toContain('AmbientBackground');
     expect(source).toContain('variant="minimal"');
     expect(source).toContain('Popover');
     expect(source).toContain('PopoverTrigger');
@@ -71,10 +70,8 @@ describe('Studio shell kit boundary', () => {
   it('does not use a blank renderer-entry lazy fallback', () => {
     const source = rendererEntrySource();
 
-    expect(source).toContain('function EntryFallback');
-    expect(source).toContain('AmbientBackground');
     expect(source).toContain('LoadingSkeleton');
-    expect(source).toContain('fallback={<EntryFallback />}');
+    expect(source).toContain('fallback={<LoadingSkeleton');
     expect(source).not.toContain('fallback={null}');
   });
 });

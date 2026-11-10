@@ -7,20 +7,20 @@
 - **App name (English)**: Realm World Studio
 - **Canonical Nimi app_id**: `nimi.realm-world-studio`
 - **Electron App Access id**: `nimi.realm-world-studio`
-- **One-line**: Creator-facing world and world-character operation desktop app for creator-owned Realm worlds.
+- **One-line**: Creator-facing world and world-character operation Desktop and Web app for creator-owned Realm worlds.
 - **Status**: Pre-Alpha, not yet launched.
 
 ## Architecture
 
 | Layer | Technology | Location |
 |-------|-----------|----------|
-| Desktop shell | Desktop-supervised Electron 42 | `src-electron/` |
+| Desktop shell | Desktop-supervised Electron 45 | `src-electron/` |
 | Renderer | React 19 + Vite 7 + Tailwind 4 | `src/shell/renderer/` |
 | Routing | react-router-dom 7 | `src/shell/renderer/app-shell/routes.tsx` |
-| Auth & runtime bridge | Desktop-supervised protected standard bridge | `src-electron/` |
+| Auth & runtime bridge | Shared Kit session with protected Desktop or admitted direct Web carrier | `src-electron/` |
 | UI components | `@nimiplatform/kit` (npm) | renderer-wide |
 | Platform client | `@nimiplatform/sdk` (npm) | `app-shell/studio-platform.ts` |
-| State | Zustand | `app-shell/app-store.ts` |
+| State | Connection-scoped Zustand and QueryClient | `app-shell/app-store.ts` |
 | Dev port | 1451 | `vite.config.ts` |
 
 The platform packages consume the public versions selected by app-tools sync through their built exports.
@@ -70,8 +70,8 @@ creatorId.
 
 ### Auth boundary
 - Studio does **not** own access or refresh tokens (mirrors parentos PO-SHELL-008 / K-ACCSVC-008).
-- The active development path is Desktop-supervised Electron; account, Realm, AI, and publication operations remain fail-closed unless their exact operation is covered by a declared `app_access` domain.
-- Account projection flows through the Desktop-supervised protected local-app session. Studio must not add embedded login, a generic Runtime bridge, direct Realm transport, environment/argument launch identity, or app-owned release/session material.
+- Desktop follows Home through the supervised carrier. Web uses shared Kit official Nimi login, its admitted HTTPS source and first PC Home source confirmation. Business methods and exact App Access rules are shared.
+- Shared Kit owns the displayed Nimi identity and connection. Draft state, queries, writes and activity subscriptions belong to their captured scope. Studio must not add embedded login, a generic Runtime bridge, direct Realm transport or app-owned credentials.
 
 ## Development Principles
 
@@ -169,7 +169,7 @@ Skip: `node_modules/`, `dist/`, `dist-electron/`, `src-tauri/target/`, `src-taur
 ## Nimi App development
 
 - For auditing adaptation feasibility or cost, creating, adapting, upgrading or releasing this App, read [the lifecycle skill](.agents/skills/nimi-app-lifecycle/SKILL.md) and only the relevant scenario. Audit-only requests do not begin implementation; prior reports remain evidence-dependent.
-- For first integration or foundation wiring changes, use the selected app-tools package's generated reference and reuse its Host, preload, renderer, session, App Access, AIConfig and AI call wiring. Follow the adaptation guide's baseline checks and reuse passing results for ordinary business edits.
+- For first integration or foundation wiring changes, use the selected app-tools package's generated reference for the same carrier and reuse its renderer, session, App Access, AIConfig and AI call wiring; Host/preload apply only to native Desktop, while Web uses official scoped login and its admitted HTTPS source. Follow the adaptation guide's baseline checks and reuse passing results for ordinary business edits.
 - Keep App-owned product behavior, Host code, business accounts and non-AI services with this repository. Use the SDK/Kit Local App carrier for Nimi AI, configuration, storage and session access.
 - Development may consume complete local npm tarballs through the supported explicit overrides and version matrix; public-release preflight uses registry resolutions. Do not substitute source-workspace or directory links.
 - App Tools owns its lifecycle skill, this block, managed workflow and declared engineering fields; preserve other instructions, product source and licenses. Existing adoption does not create fresh scaffold intent or lock.

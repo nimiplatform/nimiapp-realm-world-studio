@@ -1,8 +1,7 @@
-import { createNimiClient } from '@nimiplatform/sdk';
-import type { NimiLocalAppClient } from '@nimiplatform/sdk/app';
+import type { NimiAppRuntimeClient } from '@nimiplatform/sdk/app';
 import { createNimiError } from '@nimiplatform/sdk/types';
 import { REALM_WORLD_STUDIO_APP_ID } from '../../app-identity.js';
-import { createNimiLocalAppStandardShellSurface } from '../bridge/index.js';
+import type { StudioScope } from './studio-scope.js';
 
 export const STUDIO_RUNTIME_APP_ID = REALM_WORLD_STUDIO_APP_ID;
 export const STUDIO_CAPABILITY_UNAVAILABLE_REASON =
@@ -10,15 +9,9 @@ export const STUDIO_CAPABILITY_UNAVAILABLE_REASON =
 export const STUDIO_CAPABILITY_UNAVAILABLE_ACTION =
   'wait_for_platform_app_surface';
 
-let studioLocalAppClient: NimiLocalAppClient | null = null;
-
-export function getStudioLocalAppClient(): NimiLocalAppClient {
-  studioLocalAppClient ??= createNimiClient({
-    localApp: {
-      standardShell: createNimiLocalAppStandardShellSurface(),
-    },
-  });
-  return studioLocalAppClient;
+export function getStudioClient(scope: StudioScope): NimiAppRuntimeClient {
+  scope.signal.throwIfAborted();
+  return scope.client;
 }
 
 export function requireStudioProtectedOperation(operation?: string): never {

@@ -1,5 +1,5 @@
 build_profile_ref: electron-pnpm-vite
-toolchain_version: node>=24;pnpm>=10;electron=42
+toolchain_version: node>=24;pnpm>=10;electron=45
 install_command: pnpm install
 typecheck_command: pnpm typecheck
 lint_command: pnpm lint

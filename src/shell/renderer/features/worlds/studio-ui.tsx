@@ -1,15 +1,17 @@
+import { useStudioScope } from '@renderer/app-shell/studio-scope.js';
 import { useEffect, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Check, Cloud, Loader2, RefreshCw } from 'lucide-react';
 import { Button, InlineAlert } from '@nimiplatform/kit/ui';
-import { loadWorldDrafts, persistWorldDrafts, useWorldDrafts } from './world-draft-store.js';
+import { loadWorldDrafts, persistWorldDrafts, useWorldDrafts, getWorldDraftState } from './world-draft-store.js';
 
 export function useDraftLibrary() {
+  const scope = useStudioScope();
   const state = useWorldDrafts();
-  useEffect(() => { void loadWorldDrafts(); }, []);
+  useEffect(() => { void loadWorldDrafts(scope); }, []);
   useEffect(() => {
     const onBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (useWorldDrafts.getState().saving || useWorldDrafts.getState().error) event.preventDefault();
+      if (getWorldDraftState(scope).store.getState().saving || getWorldDraftState(scope).store.getState().error) event.preventDefault();
     };
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
@@ -18,10 +20,11 @@ export function useDraftLibrary() {
 }
 
 export function DraftStorageNotice() {
+  const scope = useStudioScope();
   const { t } = useTranslation();
   const { loaded, error } = useWorldDrafts();
   if (!error) return null;
-  return <FailureNotice message={t(loaded ? 'studio.storageError' : 'studio.storageLoadError')} error={error} retry={() => { void (loaded ? persistWorldDrafts() : loadWorldDrafts()).catch(() => {}); }} />;
+  return <FailureNotice message={t(loaded ? 'studio.storageError' : 'studio.storageLoadError')} error={error} retry={() => { void (loaded ? persistWorldDrafts(scope) : loadWorldDrafts(scope)).catch(() => {}); }} />;
 }
 
 export function SaveStatus() {

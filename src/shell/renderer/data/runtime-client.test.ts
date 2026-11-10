@@ -10,18 +10,17 @@ describe('studio runtime client gate', () => {
   it('does not construct app-owned Realm or Runtime clients in renderer data modules', () => {
     const realmClientSource = readFileSync(resolve(dataDir, 'realm-client.ts'), 'utf8');
     const bridgeSource = readFileSync(resolve(rendererRoot, 'bridge', 'index.ts'), 'utf8');
-    const appStoreSource = readFileSync(resolve(rendererRoot, 'app-shell', 'app-store.ts'), 'utf8');
+    const appStoreSource = readFileSync(resolve(rendererRoot, 'app-shell', 'studio-scope.tsx'), 'utf8');
     const studioPlatformSource = readFileSync(resolve(rendererRoot, 'app-shell', 'studio-platform.ts'), 'utf8');
     const combinedDataSource = realmClientSource;
 
     expect(existsSync(resolve(dataDir, 'runtime-client.ts'))).toBe(false);
     expect(combinedDataSource).not.toMatch(/VITE_REALM_ACCESS_TOKEN|external_principal|allowAnonymousRealm/);
     expect(combinedDataSource).not.toMatch(/createRealmClient|createPlatformClient/);
-    expect(studioPlatformSource).toContain('createNimiClient');
+    expect(studioPlatformSource).toContain('return scope.client');
     expect(studioPlatformSource).not.toContain("type: 'tauri-ipc'");
     expect(existsSync(resolve(rendererRoot, 'app-shell', 'tauri-runtime.ts'))).toBe(false);
     expect(studioPlatformSource).not.toContain('createInstalledNimiAppBootstrap');
-    expect(studioPlatformSource).toContain('createNimiLocalAppStandardShellSurface');
     expect(studioPlatformSource).not.toContain('createNimiLocalFirstPartyRuntimeAccountCaller');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeAppSessionMetadataProvider');
     expect(studioPlatformSource).not.toContain('createNimiRuntimeFullAppRegistration');

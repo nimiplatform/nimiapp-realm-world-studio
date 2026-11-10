@@ -1,3 +1,4 @@
+import { useStudioScope } from '@renderer/app-shell/studio-scope.js';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,7 +7,7 @@ import { ArrowLeft, ArrowRight, Check, FilePenLine, ShieldCheck, Sparkles, UserR
 import { Button, InlineAlert, LoadingSkeleton, nimiToast } from '@nimiplatform/kit/ui';
 import { getCreatorWorld, getCreatorWorldCharacterCore, worldCharacterKey, worldCharactersKey, worldRecordKey } from './world-core-client.js';
 import { CHARACTER_FIELDS, characterMatchesWorld, CharacterRevisionConflict, characterIssues, characterForm, generateCharacterProposal, newCharacterDraft, saveWorldCharacter, type CharacterForm } from './world-character-model.js';
-import { changeCharacterDraft, loadCharacterDrafts, persistCharacterDrafts, putCharacterDraft, useCharacterDrafts } from './character-draft-store.js';
+import { changeCharacterDraft, loadCharacterDrafts, persistCharacterDrafts, putCharacterDraft, useCharacterDrafts, getCharacterDraftState } from './character-draft-store.js';
 import { newDraftId } from './world-draft.js';
 import { loadWorldDrafts } from './world-draft-store.js';
 import { FailureNotice, Field, useDraftLibrary } from './studio-ui.js';
@@ -22,10 +23,11 @@ function CharacterReading({ form }: { form: CharacterForm }) {
 
 // @nimi-authority: rule.realm-world-studio.runtime-ai.r012
 export function WorldCharacterDetailPage() {
+  const scope = useStudioScope();
   const { worldId = '', characterId = '' } = useParams();
   const { t } = useTranslation();
-  const world = useQuery({ queryKey: worldRecordKey(worldId), queryFn: () => getCreatorWorld(worldId), retry: false });
-  const query = useQuery({ queryKey: worldCharacterKey(worldId, characterId), queryFn: () => getCreatorWorldCharacterCore(worldId, characterId), enabled: Boolean(world.data), retry: false });
+  const world = useQuery({ queryKey: worldRecordKey(worldId), queryFn: () => getCreatorWorld(scope, worldId), retry: false });
+  const query = useQuery({ queryKey: worldCharacterKey(worldId, characterId), queryFn: () => getCreatorWorldCharacterCore(scope, worldId, characterId), enabled: Boolean(world.data), retry: false });
   if (world.isError || query.isError) return <div className="studio-page"><FailureNotice message={t('ops.characterLoadError')} error={world.error ?? query.error} retry={() => { void world.refetch(); void query.refetch(); }} /></div>;
   if (world.data && query.data && (world.data.id !== worldId || !characterMatchesWorld(query.data, worldId, characterId))) return <div className="studio-page"><FailureNotice message={t('ops.characterLoadError')} error={new Error('CHARACTER_SOURCE_MISMATCH')} /></div>;
   if (!world.data || !query.data) return <div className="studio-page"><LoadingSkeleton lines={8} /></div>;
@@ -41,6 +43,7 @@ export function WorldCharacterDetailPage() {
 
 // @nimi-authority: rule.realm-world-studio.scope.r016
 export function WorldCharacterEditorPage() {
+  const scope = useStudioScope();
   const { worldId = '', characterId } = useParams();
   const [params, setParams] = useSearchParams();
   const [newId] = useState(newDraftId);
@@ -54,34 +57,34 @@ export function WorldCharacterEditorPage() {
   const store = useCharacterDrafts();
   const worldDrafts = useDraftLibrary();
   const draft = store.drafts.find(item => item.id === id && item.worldId === worldId);
-  const world = useQuery({ queryKey: worldRecordKey(worldId), queryFn: () => getCreatorWorld(worldId), retry: false });
-  const source = useQuery({ queryKey: worldCharacterKey(worldId, id), queryFn: () => getCreatorWorldCharacterCore(worldId, id), enabled: Boolean(world.data && (characterId || draft?.saved)), retry: false });
+  const world = useQuery({ queryKey: worldRecordKey(worldId), queryFn: () => getCreatorWorld(scope, worldId), retry: false });
+  const source = useQuery({ queryKey: worldCharacterKey(worldId, id), queryFn: () => getCreatorWorldCharacterCore(scope, worldId, id), enabled: Boolean(world.data && (characterId || draft?.saved)), retry: false });
   const concept = worldDrafts.drafts.find(item => item.id === params.get('draftId'))?.characters.find(item => item.id === params.get('conceptId'));
 
-  useEffect(() => { void loadCharacterDrafts(); }, []);
+  useEffect(() => { void loadCharacterDrafts(scope); }, []);
   useEffect(() => {
     if (!characterId && !params.get('characterDraftId')) { const next = new URLSearchParams(params); next.set('characterDraftId', id); setParams(next, { replace: true }); }
   }, [characterId, id, params, setParams]);
   useEffect(() => {
     if (!store.loaded || draft || !world.data || (characterId && !source.data) || (params.get('conceptId') && !concept)) return;
     if (world.data.id !== worldId || (source.data && !characterMatchesWorld(source.data, worldId, id))) return;
-    void putCharacterDraft(newCharacterDraft(worldId, id, source.data ?? null, concept)).catch(() => {});
+    void putCharacterDraft(scope, newCharacterDraft(worldId, id, source.data ?? null, concept)).catch(() => {});
   }, [store.loaded, draft, world.data, characterId, source.data, params, concept, worldId, id]);
   useEffect(() => {
-    const listener = (event: BeforeUnloadEvent) => { const state = useCharacterDrafts.getState(); if (state.saving || state.error) event.preventDefault(); };
+    const listener = (event: BeforeUnloadEvent) => { const state = getCharacterDraftState(scope).store.getState(); if (state.saving || state.error) event.preventDefault(); };
     window.addEventListener('beforeunload', listener);
     return () => window.removeEventListener('beforeunload', listener);
   }, []);
 
-  const generation = useMutation({ mutationFn: () => generateCharacterProposal(draft!.form, world.data!, i18n.language), onSuccess: proposal => { const current = useCharacterDrafts.getState().drafts.find(item => item.id === id)!; void putCharacterDraft({ ...current, proposal }).catch(() => {}); } });
+  const generation = useMutation({ mutationFn: () => generateCharacterProposal(scope, draft!.form, world.data!, i18n.language), onSuccess: proposal => { const current = getCharacterDraftState(scope).store.getState().drafts.find(item => item.id === id)!; void putCharacterDraft(scope, { ...current, proposal }).catch(() => {}); } });
   const save = useMutation({
     mutationFn: async () => {
-      await persistCharacterDrafts();
-      return saveWorldCharacter(draft!, async () => { const current = useCharacterDrafts.getState().drafts.find(item => item.id === id)!; await putCharacterDraft({ ...current, entityCreated: true }); });
+      await persistCharacterDrafts(scope);
+      return saveWorldCharacter(scope, draft!, async () => { const current = getCharacterDraftState(scope).store.getState().drafts.find(item => item.id === id)!; await putCharacterDraft(scope, { ...current, entityCreated: true }); });
     },
     onSuccess: async record => {
-      const current = useCharacterDrafts.getState().drafts.find(item => item.id === id)!;
-      await putCharacterDraft({ ...current, source: record, saved: true, proposal: null }).catch(() => {});
+      const current = getCharacterDraftState(scope).store.getState().drafts.find(item => item.id === id)!;
+      await putCharacterDraft(scope, { ...current, source: record, saved: true, proposal: null }).catch(() => {});
       queryClient.setQueryData(worldCharacterKey(worldId, id), record);
       await queryClient.invalidateQueries({ queryKey: worldCharactersKey(worldId) });
       nimiToast.success(t('ops.savedCharacter'));
@@ -90,29 +93,29 @@ export function WorldCharacterEditorPage() {
     onError: async error => {
       if (error instanceof CharacterRevisionConflict) setConflict(error);
       else if ((error as { reasonCode?: string }).reasonCode === 'content-conflict') {
-        try { setConflict(new CharacterRevisionConflict(await getCreatorWorldCharacterCore(worldId, id))); } catch { /* Preserve the original failure and draft. */ }
+        try { setConflict(new CharacterRevisionConflict(await getCreatorWorldCharacterCore(scope, worldId, id))); } catch { /* Preserve the original failure and draft. */ }
       }
     },
   });
 
-  if (world.isError || source.isError || (!store.loaded && store.error) || (params.get('conceptId') && (worldDrafts.error || (worldDrafts.loaded && !concept && !draft)))) return <div className="studio-page"><Link className="studio-back" to={`/worlds/${worldId}`}>{t('studio.back')}</Link><FailureNotice message={t('ops.characterLoadError')} error={world.error ?? source.error ?? store.error ?? worldDrafts.error} retry={() => { void world.refetch(); if (characterId) void source.refetch(); void loadCharacterDrafts(); void loadWorldDrafts(); }} /></div>;
+  if (world.isError || source.isError || (!store.loaded && store.error) || (params.get('conceptId') && (worldDrafts.error || (worldDrafts.loaded && !concept && !draft)))) return <div className="studio-page"><Link className="studio-back" to={`/worlds/${worldId}`}>{t('studio.back')}</Link><FailureNotice message={t('ops.characterLoadError')} error={world.error ?? source.error ?? store.error ?? worldDrafts.error} retry={() => { void world.refetch(); if (characterId) void source.refetch(); void loadCharacterDrafts(scope); void loadWorldDrafts(scope); }} /></div>;
   if (world.data && source.data && (world.data.id !== worldId || !characterMatchesWorld(source.data, worldId, id))) return <div className="studio-page"><FailureNotice message={t('ops.characterLoadError')} error={new Error('CHARACTER_SOURCE_MISMATCH')} /></div>;
   if (!draft || !world.data) return <div className="studio-page"><LoadingSkeleton lines={8} /></div>;
   if (draft.saved && !characterId) return <div className="studio-page"><InlineAlert tone="success">{t('ops.savedCharacter')}<Link className="studio-text-link" to={`/worlds/${worldId}/characters/${id}`}>{t('ops.openCharacter')}<ArrowRight size={15} /></Link></InlineAlert></div>;
 
-  const change = (patch: Partial<CharacterForm>) => { changeCharacterDraft({ ...draft, form: { ...draft.form, ...patch }, saved: false, updatedAt: new Date().toISOString() }); setReviewedAt(null); };
+  const change = (patch: Partial<CharacterForm>) => { changeCharacterDraft(scope, { ...draft, form: { ...draft.form, ...patch }, saved: false, updatedAt: new Date().toISOString() }); setReviewedAt(null); };
   const issues = characterIssues(draft.form);
   const fields = chapter === 'profile' ? PROFILE_FIELDS : DECLARATION_FIELDS;
   return <div className="studio-notebook studio-character-editor">
     <header className="studio-notebook__top"><Link className="studio-back" to={`/worlds/${worldId}`}><ArrowLeft size={16} />{world.data.core.identity.name}</Link><div className="studio-notebook__identity"><h1>{draft.form.name || t('ops.newCharacter')}</h1><span className="studio-badge">{t('studio.draft')}</span></div><span className="studio-save-status" role="status">{t(store.error ? 'studio.unsaved' : store.saving ? 'studio.saving' : 'studio.savedDraft')}</span></header>
-    {store.error && <FailureNotice message={t('studio.storageError')} error={store.error} retry={() => void persistCharacterDrafts().catch(() => {})} />}
+    {store.error && <FailureNotice message={t('studio.storageError')} error={store.error} retry={() => void persistCharacterDrafts(scope).catch(() => {})} />}
     <div className="studio-notebook__layout"><div className="studio-notebook__work">
       <nav className="studio-chapters" aria-label={t('ops.characterEditor')}>{(['profile', 'declaration', 'review'] as const).map(key => { const Icon = CHAPTER_ICONS[key]; return <button key={key} type="button" className={chapter === key ? 'is-current' : ''} aria-current={chapter === key ? 'step' : undefined} disabled={save.isPending} onClick={() => setChapter(key)}><Icon size={16} />{t(`ops.chapter.${key}`)}</button>; })}</nav>
       <div className="studio-manuscript"><div className="studio-editor-fields"><header className="studio-chapter-title"><h2>{t(`ops.chapter.${chapter}`)}</h2><p>{t(`ops.hint.${chapter}`)}</p></header>
         {chapter !== 'review' ? <fieldset className="studio-editor-fields" disabled={save.isPending}>{fields.map(key => <Field key={key} label={t(`ops.field.${key}`)} hint={key === 'identityStatement' ? t('ops.identityHint') : DECLARATION_FIELDS.includes(key as typeof DECLARATION_FIELDS[number]) ? t('ops.linesHint') : undefined}>{key === 'name' || key === 'role' ? <input value={draft.form[key]} maxLength={150} onChange={event => change({ [key]: event.target.value })} /> : <textarea rows={key === 'summary' ? 4 : 3} value={draft.form[key]} onChange={event => change({ [key]: event.target.value })} />}</Field>)}</fieldset> : <>
           <CharacterReading form={draft.form} />
           {issues.length > 0 && <div className="studio-required"><h3>{t('ops.required')}</h3><ul>{issues.map(key => <li key={key}>{t(`ops.field.${key}`)}</li>)}</ul></div>}
-          {conflict && <section className="studio-conflict" role="alert"><h3>{t('studio.conflictTitle')}</h3><p>{t('studio.conflictHint')}</p><details open><summary>{t('studio.latestRealm')}</summary><CharacterReading form={characterForm(conflict.latest)} /></details><Button tone="secondary" onClick={() => { changeCharacterDraft({ ...draft, source: conflict.latest, saved: false, updatedAt: new Date().toISOString() }); setConflict(null); setReviewedAt(null); save.reset(); }}>{t('studio.rebase')}</Button></section>}
+          {conflict && <section className="studio-conflict" role="alert"><h3>{t('studio.conflictTitle')}</h3><p>{t('studio.conflictHint')}</p><details open><summary>{t('studio.latestRealm')}</summary><CharacterReading form={characterForm(conflict.latest)} /></details><Button tone="secondary" onClick={() => { changeCharacterDraft(scope, { ...draft, source: conflict.latest, saved: false, updatedAt: new Date().toISOString() }); setConflict(null); setReviewedAt(null); save.reset(); }}>{t('studio.rebase')}</Button></section>}
           {save.isError && !conflict && <FailureNotice message={t('ops.characterSaveFailed')} error={save.error} />}
           {draft.entityCreated && !draft.source && <p className="studio-help">{t('ops.entityRetained')}</p>}
           <label className="studio-review-consent"><input type="checkbox" checked={reviewedAt === draft.updatedAt} disabled={save.isPending} onChange={event => setReviewedAt(event.target.checked ? draft.updatedAt : null)} /><span>{t('ops.consent')}</span></label>

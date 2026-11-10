@@ -1,5 +1,6 @@
+import { type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import type { JsonValue } from '@nimiplatform/sdk/types';
-import { getStudioLocalAppClient } from '../../app-shell/studio-platform.js';
+import { getStudioClient } from '../../app-shell/studio-platform.js';
 import type { DraftCharacter, WorldContent, WorldDraft, WorldProposal } from './world-draft.js';
 import { isStoredWorldActivity, type WorldActivityPublication } from './world-activity-model.js';
 
@@ -9,53 +10,52 @@ export type WorldDraftDocument = {
 };
 
 const DRAFT_PATH = 'world-studio/drafts.json';
-let writeChain: Promise<unknown> = Promise.resolve();
-let sessionEnded = false;
 
-function assertSession(): void {
-  if (sessionEnded) throw new Error('The Nimi session ended; reopen Realm World Studio.');
+function assertSession(scope: StudioScope): void {
+  scope.signal.throwIfAborted();
+  if (getWorldDraftStorageState(scope).sessionEnded) throw new Error('The Nimi session ended; reopen Realm World Studio.');
 }
 
-export function endWorldDraftStorageSession(): void {
-  sessionEnded = true;
+export function endWorldDraftStorageSession(scope: StudioScope): void {
+  getWorldDraftStorageState(scope).sessionEnded = true;
 }
 
 // @nimi-authority: rule.realm-world-studio.runtime-ai.r014
-export async function readWorldDraftDocument(): Promise<WorldDraftDocument> {
-  assertSession();
+export async function readWorldDraftDocument(scope: StudioScope): Promise<WorldDraftDocument> {
+  assertSession(scope);
   let value: unknown;
   try {
-    value = (await getStudioLocalAppClient().storage.readJson(DRAFT_PATH)).value;
+    value = (await getStudioClient(scope).storage.readJson(DRAFT_PATH)).value;
   } catch (error) {
-    if ((error as { reasonCode?: string }).reasonCode !== 'not-found') throw error;
+    if (!['not-found', 'APP_STORAGE_ENTRY_NOT_FOUND'].includes(String((error as { reasonCode?: string }).reasonCode))) throw error;
     value = { drafts: [], activityOutbox: [] };
   }
-  assertSession();
+  assertSession(scope);
   assertWorldDraftDocument(value);
   return value;
 }
 
 // @nimi-authority: rule.realm-world-studio.runtime-ai.r015
 /** One serialized write commits the draft and its pending publications together. */
-export function updateWorldDraftDocument(
+export function updateWorldDraftDocument(scope: StudioScope,
   update: (current: WorldDraftDocument) => WorldDraftDocument,
   isCurrent: () => boolean = () => true,
 ): Promise<WorldDraftDocument> {
   const assertCurrent = () => {
-    assertSession();
+    assertSession(scope);
     if (!isCurrent()) throw new Error('The Nimi session ended; reopen Realm World Studio.');
   };
-  const write = writeChain.then(async () => {
+  const write = getWorldDraftStorageState(scope).writeChain.then(async () => {
     assertCurrent();
-    const current = await readWorldDraftDocument();
+    const current = await readWorldDraftDocument(scope);
     assertCurrent();
     const next = update(current);
     assertWorldDraftDocument(next);
-    await getStudioLocalAppClient().storage.writeJson(DRAFT_PATH, JSON.parse(JSON.stringify(next)) as JsonValue);
+    await getStudioClient(scope).storage.writeJson(DRAFT_PATH, JSON.parse(JSON.stringify(next)) as JsonValue);
     assertCurrent();
     return next;
   });
-  writeChain = write.catch(() => undefined);
+  getWorldDraftStorageState(scope).writeChain = write.catch(() => undefined);
   return write;
 }
 
@@ -106,4 +106,16 @@ function isStoredProposal(value: unknown): value is WorldProposal {
   if (proposal.task === 'develop') return isStoredContent(proposal.content);
   if (proposal.task === 'cast') return Array.isArray(proposal.characters) && proposal.characters.every(isStoredCharacter);
   return proposal.task === 'review';
+}
+
+function createWorldDraftStorageState() {
+  const writeChain: Promise<unknown> = Promise.resolve();
+  const sessionEnded = false;
+  return { writeChain, sessionEnded };
+}
+const states = new WeakMap<StudioScope, ReturnType<typeof createWorldDraftStorageState>>();
+export function getWorldDraftStorageState(scope: StudioScope) {
+  let state = states.get(scope);
+  if (!state) { state = createWorldDraftStorageState(); states.set(scope, state); }
+  return state;
 }

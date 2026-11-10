@@ -1,5 +1,6 @@
+import { type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import type { Realm } from '@nimiplatform/sdk/realm';
-import { getStudioLocalAppClient } from '@renderer/app-shell/studio-platform.js';
+import { getStudioClient } from '@renderer/app-shell/studio-platform.js';
 
 export const STUDIO_REALM_SURFACE_METHODS = [
   'worldCoreControllerGetWorldCreationEligibility',
@@ -21,8 +22,8 @@ export const STUDIO_REALM_SURFACE_METHODS = [
 export type StudioRealmSurfaceMethod = typeof STUDIO_REALM_SURFACE_METHODS[number];
 export type StudioRealmSurface = Pick<Realm['worldCore'], StudioRealmSurfaceMethod>;
 
-export function createStudioRealmClient(): StudioRealmSurface {
-  const worlds = getStudioLocalAppClient().realm.worldCore;
+export function createStudioRealmClient(scope: StudioScope): StudioRealmSurface {
+  const worlds = getStudioClient(scope).realm.worldCore;
   return {
     worldCoreControllerGetWorldCreationEligibility: () => worlds.getCreationEligibility(),
     worldCoreControllerListWorldCores: async (request) =>

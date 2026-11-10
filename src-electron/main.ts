@@ -20,7 +20,8 @@ const {
 
 const REALM_WORLD_STUDIO_APP_ID = 'nimi.realm-world-studio';
 const REALM_WORLD_STUDIO_APP_NAME = 'Realm World Studio';
-const SESSION_INVALIDATED_CHANNEL = 'realm-world-studio:session-invalidated';
+let resettingRenderer = false;
+let quitting = false;
 
 declare const __NIMI_ELECTRON_PRODUCTION__: boolean;
 const IS_PRODUCTION_BUNDLE = typeof __NIMI_ELECTRON_PRODUCTION__ !== 'undefined'
@@ -51,12 +52,7 @@ async function bootstrapElectron(): Promise<void> {
     allowedRendererUrls: [activeRendererUrl()],
     assetMediaPlatform: { protocol, webRequest: session.defaultSession.webRequest, webContents },
     ipcMain,
-    // The renderer stops the ended session's work and asks to be reopened.
-    onSessionInvalidated: () => {
-      for (const window of BrowserWindow.getAllWindows()) {
-        if (!window.isDestroyed()) window.webContents.send(SESSION_INVALIDATED_CHANNEL);
-      }
-    },
+    onSessionInvalidated: resetAccountScopedRenderer,
   });
 
   await createMainWindow();
@@ -96,10 +92,24 @@ function installRealmWorldStudioStandardApplicationMenu(): void {
 }
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  if (process.platform !== 'darwin' && !resettingRenderer && BrowserWindow.getAllWindows().length === 0) {
     app.quit();
   }
 });
+
+app.on('before-quit', () => { quitting = true; });
+
+function resetAccountScopedRenderer(): void {
+  const windows = BrowserWindow.getAllWindows();
+  if (quitting || windows.length === 0) return;
+  resettingRenderer = true;
+  try {
+    for (const window of windows) window.destroy();
+    void createMainWindow().catch((error: unknown) => {
+      process.stderr.write(`[nimi-app-session-reset] ${error instanceof Error ? error.message : String(error)}\n`);
+    });
+  } finally { resettingRenderer = false; }
+}
 
 async function createMainWindow(): Promise<BrowserWindow> {
   const window = new BrowserWindow({

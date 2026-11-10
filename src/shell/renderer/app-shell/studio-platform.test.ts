@@ -9,7 +9,7 @@ describe('studio platform runtime auth boundary', () => {
       'utf8',
     );
     const bootstrapSource = readFileSync(
-      join(process.cwd(), 'src/shell/renderer/infra/studio-bootstrap.ts'),
+      join(process.cwd(), 'src/shell/renderer/main.tsx'),
       'utf8',
     );
     const appIdentitySource = readFileSync(
@@ -26,8 +26,8 @@ describe('studio platform runtime auth boundary', () => {
     );
     const combined = `${studioPlatformSource}\n${bootstrapSource}\n${appIdentitySource}`;
 
-    expect(studioPlatformSource).toContain('createNimiClient({');
-    expect(studioPlatformSource).toContain('createNimiLocalAppStandardShellSurface');
+    expect(studioPlatformSource).toContain('return scope.client');
+    expect(bootstrapSource).toContain('createDesktopNimiAppSession');
     expect(appIdentitySource).toContain("'nimi.realm-world-studio'");
     expect(studioPlatformSource).toContain('world-studio-operation-not-in-app-access');
     expect(studioPlatformSource).not.toContain('readInstalledNimiAppLaunchBinding');

@@ -29,7 +29,7 @@ units:
   - id: definition.realm-world-studio.core.protected-operation-carrier
     kind: definition
     title: Protected operation carrier
-    meaning: The Desktop-supervised local-app protected standard bridge used by the active Electron shell; Desktop owns admission, start, identity, authorization, and protected session posture.
+    meaning: The shared Kit App session backed by a Desktop-supervised native carrier or an admitted direct Web carrier. Nimi owns account authentication, application/source admission, operation authorization and connection validity; Studio owns no credentials or generic Runtime transport.
   - id: rule.realm-world-studio.core.r001
     kind: rule
     title: Single app authority
@@ -158,9 +158,9 @@ units:
     kind: rule
     title: Operation admission boundary
     modality: must
-    statement: Every positive product operation uses an admitted bounded public SDK or Kit operation delivered through the Desktop-supervised protected standard bridge; executable status or app-owned metadata alone does not admit account, Realm, AI, publication, lifecycle, storage, or local-asset authority.
+    statement: Every positive product operation uses an admitted bounded public SDK or Kit operation through the shared Desktop or Web App session; executable status, a domain name or App-owned metadata alone does not admit account, Realm, AI, publication, lifecycle, storage or local-asset authority.
     condition: When an account, Realm, AI, publication, lifecycle, storage, or local-asset operation is requested.
-    failure: Keep the operation fail-closed when its admitted Desktop-supervised protected operation is absent.
+    failure: Keep the operation unavailable when its admitted operation or valid connection is absent.
     relations:
       - type: applies_to
         target: definition.realm-world-studio.core.protected-operation-carrier

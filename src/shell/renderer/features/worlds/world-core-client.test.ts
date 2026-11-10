@@ -1,3 +1,4 @@
+import { studioTestScope } from '../../../../test/studio-scope.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createStudioRealmClient, type StudioRealmSurface } from '@renderer/data/realm-client.js';
 import {
@@ -101,7 +102,7 @@ describe('Realm World Studio world-core client writes', () => {
     installRealmSurface({
       worldCoreControllerListWorldCores: vi.fn().mockResolvedValue([{ ...worldCore, lorebookDeclaration: null }]),
     });
-    const worlds = await listCreatorWorlds();
+    const worlds = await listCreatorWorlds(studioTestScope);
     expect(worlds).toHaveLength(1);
     expect(worlds[0]?.id).toBe('world-1');
   });
@@ -111,7 +112,7 @@ describe('Realm World Studio world-core client writes', () => {
       worldCoreControllerCreateWorldCore: vi.fn().mockResolvedValue(worldCore),
     });
 
-    await createCreatorWorldCore({
+    await createCreatorWorldCore(studioTestScope, {
       lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       core: { identity: { name: 'World 1' } },
@@ -139,7 +140,7 @@ describe('Realm World Studio world-core client writes', () => {
       }),
     });
 
-    await replaceCreatorWorldCore('world-1', {
+    await replaceCreatorWorldCore(studioTestScope, 'world-1', {
       lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       baseContentHash: 'hash-world-1',
@@ -170,7 +171,7 @@ describe('Realm World Studio world-core client writes', () => {
       worldCoreControllerListWorldCharacters: vi.fn().mockResolvedValue([]),
     });
 
-    await expect(getCreatorWorldWorkbench('world-1')).rejects.toThrow(/WorldCore response id mismatch/);
+    await expect(getCreatorWorldWorkbench(studioTestScope, 'world-1')).rejects.toThrow(/WorldCore response id mismatch/);
   });
 
   it('fails closed when create returns malformed canonical WorldCore data', async () => {
@@ -181,7 +182,7 @@ describe('Realm World Studio world-core client writes', () => {
       }),
     });
 
-    await expect(createCreatorWorldCore({
+    await expect(createCreatorWorldCore(studioTestScope, {
       lorebookDeclaration: worldLorebookDeclaration,
       id: 'world-1',
       core: { identity: { name: 'World 1' } },
@@ -198,7 +199,7 @@ describe('Realm World Studio world-core client writes', () => {
       }),
     });
 
-    await expect(replaceCreatorWorldCharacterCore('world-1', 'character-1', {
+    await expect(replaceCreatorWorldCharacterCore(studioTestScope, 'world-1', 'character-1', {
       lorebookDeclaration: characterLorebookDeclaration,
       id: 'character-1',
       baseContentHash: 'hash-character-1',

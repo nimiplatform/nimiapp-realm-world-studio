@@ -1,9 +1,10 @@
+import { useStudioScope, type StudioScope } from '@renderer/app-shell/studio-scope.js';
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { nimiToast } from '@nimiplatform/kit/ui';
-import { focusMainWindow } from '../../bridge/index.js';
-import { loadWorldDrafts, useWorldDrafts } from './world-draft-store.js';
+import { focusMainWindow, hasElectronRuntime } from '../../bridge/index.js';
+import { loadWorldDrafts, getWorldDraftState } from './world-draft-store.js';
 import {
   beginWorldActivitySession,
   endWorldActivitySession,
@@ -14,16 +15,20 @@ import {
 } from './world-activity.js';
 import type { WorldDraft } from './world-draft.js';
 
-async function loadedDrafts(): Promise<readonly WorldDraft[]> {
-  await loadWorldDrafts();
-  const state = useWorldDrafts.getState();
+async function loadedDrafts(scope: StudioScope): Promise<readonly WorldDraft[]> {
+  await loadWorldDrafts(scope);
+  const state = getWorldDraftState(scope).store.getState();
   if (state.loaded) return state.drafts;
   if (state.error) throw new Error(state.error);
   return new Promise((resolve, reject) => {
-    const unsubscribe = useWorldDrafts.subscribe((next) => {
-      if (next.loaded) { unsubscribe(); resolve(next.drafts); }
-      else if (!next.loading && next.error) { unsubscribe(); reject(new Error(next.error)); }
+    const cleanup = () => { unsubscribe(); scope.signal.removeEventListener('abort', aborted); };
+    const aborted = () => { cleanup(); reject(scope.signal.reason); };
+    const unsubscribe = getWorldDraftState(scope).store.subscribe((next) => {
+      if (next.loaded) { cleanup(); resolve(next.drafts); }
+      else if (!next.loading && next.error) { cleanup(); reject(new Error(next.error)); }
     });
+    scope.signal.addEventListener('abort', aborted, { once: true });
+    if (scope.signal.aborted) aborted();
   });
 }
 
@@ -34,6 +39,7 @@ async function loadedDrafts(): Promise<readonly WorldDraft[]> {
  * session's activity work, including an in-flight flush.
  */
 export function WorldActivityBridge() {
+  const scope = useStudioScope();
   // The router replaces navigate on every route change; the session must
   // follow this component's mount, not navigation, or a publication queued
   // just before navigating would be dropped as belonging to an ended session.
@@ -42,21 +48,21 @@ export function WorldActivityBridge() {
   navigateRef.current = navigate;
   useEffect(() => {
     let active = true;
-    beginWorldActivitySession();
-    const registration = registerWorldActivityOpenHandler({
-      findDraft: async (draftId) => (await loadedDrafts()).find((draft) => draft.id === draftId),
+    beginWorldActivitySession(scope);
+    const registration = registerWorldActivityOpenHandler(scope, {
+      findDraft: async (draftId) => (await loadedDrafts(scope)).find((draft) => draft.id === draftId),
       navigate: (path) => navigateRef.current(path),
-      focus: focusMainWindow,
+      ...(hasElectronRuntime() ? { focus: focusMainWindow } : {}),
     });
-    void loadedDrafts().then((drafts) => (active ? reconcileWorldActivity(drafts) : undefined)).catch(() => {
+    void loadedDrafts(scope).then((drafts) => (active ? reconcileWorldActivity(scope, drafts) : undefined)).catch(() => {
       // The draft document also holds pending review updates. Surface its read
       // failure even when the creator opened a page without a draft notice.
-      if (active) void retryWorldActivity().catch(() => undefined);
+      if (active) void retryWorldActivity(scope).catch(() => undefined);
     });
     return () => {
       active = false;
       void registration.stop();
-      endWorldActivitySession();
+      endWorldActivitySession(scope);
     };
   }, []);
   useUnsyncedActivityNotice();
@@ -69,6 +75,7 @@ export function WorldActivityBridge() {
  * after a retry that did not sync them all.
  */
 function useUnsyncedActivityNotice() {
+  const scope = useStudioScope();
   const { t } = useTranslation();
   const translate = useRef(t);
   translate.current = t;
@@ -86,13 +93,13 @@ function useUnsyncedActivityNotice() {
         action: {
           label: translate.current('activity.retryNow'),
           onClick: () => {
-            void retryWorldActivity().then((remaining) => { if (remaining !== 0) show(remaining); }).catch(() => show(shown));
+            void retryWorldActivity(scope).then((remaining) => { if (remaining !== 0) show(remaining); }).catch(() => show(shown));
           },
         },
       });
       shown = count;
     };
-    const unsubscribe = subscribeWorldActivitySync((count) => {
+    const unsubscribe = subscribeWorldActivitySync(scope, (count) => {
       if (count === 0) {
         if (toastId) nimiToast.dismiss(toastId);
         toastId = null;
