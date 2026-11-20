@@ -75,7 +75,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/**/*.{ts,mjs}'],
+    files: ['scripts/**/*.{ts,mjs}', 'test/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

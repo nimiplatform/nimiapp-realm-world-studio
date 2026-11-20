@@ -1,6 +1,8 @@
+schema_version: 1
 app_id: nimi.realm-world-studio
+public_slug: realm-world-studio
 display_name: Realm World Studio
-version: 0.1.6
+version: 0.1.7
 profile: standalone
 manifest_role: submitted-input
 app_access:
@@ -11,13 +13,11 @@ local_development:
   electron:
     renderer_origin: http://127.0.0.1:1451
   web:
-    origin: https://127.0.0.1:4478
-    redirect_uri: https://127.0.0.1:4478/
-    client_id: nimi.realm-world-studio.web.dev
-    realm_environment_id: dev
-    realm_url: http://127.0.0.1:3002
-    official_web_url: http://localhost:3000
     command: pnpm run dev:web-renderer
+    local:
+      origin: https://127.0.0.1:4478
+      redirect_uri: https://127.0.0.1:4478/
+      client_id: nimi.realm-world-studio.web.dev
 metadata:
   summary: 与 AI 共创世界设定与角色构想，审阅草稿，创建并整理自己的 Realm 世界。
   icon: assets/app-icon.png

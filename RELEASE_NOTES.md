@@ -1,3 +1,7 @@
+## 0.1.7 · Hosted Web release & published 0.24 RC carrier
+
+Adopts published npm App Tools `0.16.0-rc.10`, SDK `0.24.0-rc.10`, Kit and matching native carrier `0.24.0-rc.16` with frozen registry lockfiles. Adds the hosted Web release entry (`public_slug: realm-world-studio`) sharing the scoped world/character drafting, Realm `WorldCore` authoring, AI co-creation, and activity workflows with Desktop. Includes per-draft concurrent save conflict protection and blank optional identity field handling on world writes. Desktop Catalog stays on `v0.1.6`; this release targets hosted Web (`web-v0.1.7`).
+
 ## 0.1.6 · Published platform dependencies
 
 Uses public npm SDK 0.21.0, Kit/native 0.19.3, App Tools 0.12.1 and nimi-coding 0.6.5 with frozen registry lockfiles. Local Nimi tarball overrides are removed; Desktop-supervised development and installed Apps use the same published carrier.

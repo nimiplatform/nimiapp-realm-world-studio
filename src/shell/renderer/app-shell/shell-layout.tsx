@@ -75,7 +75,7 @@ function AccountMenu() {
   const user = snapshot.identity.status === 'signed-in' ? snapshot.identity.user : null;
   const displayName = user?.displayName.trim() || t('shell.account.fallbackDisplayName');
   const avatarUrl = user?.avatarUrl ?? null;
-  const leave = async (action: () => void | Promise<void>) => {
+  const leave = async (action: () => Promise<void> | void) => {
     if (leaving || mutating) return;
     setLeaving(true);
     try {
