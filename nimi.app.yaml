@@ -2,7 +2,7 @@ schema_version: 1
 app_id: nimi.realm-world-studio
 public_slug: realm-world-studio
 display_name: Realm World Studio
-version: 0.1.7
+version: 0.1.8
 profile: standalone
 manifest_role: submitted-input
 app_access:
